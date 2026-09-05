@@ -1,0 +1,8 @@
+{
+  "app": "Felipe Training OS",
+  "release": "4.0.0-rc3",
+  "deploy_marker": "DEPLOY 2026-09-04-1841-MX",
+  "index_sha256": "b69dfd219dc9ecfdf5dfe20547117e636c217120d8a7555eaa197125cdc3aa45",
+  "architecture": "single-file-no-service-worker",
+  "expected_entry": "/training-os/"
+}
