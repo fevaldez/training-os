@@ -1,0 +1,648 @@
+<!doctype html>
+<html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#f5f5f7"><title>Training OS · FV Hybrid</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Training OS">
+<style>:root{--bg:#f5f5f7;--card:#fff;--ink:#1d1d1f;--muted:#6e6e73;--line:rgba(0,0,0,.10);--blue:#0071e3;--green:#248a3d;--amber:#a15c00;--red:#d70015;--r:22px}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display",system-ui,sans-serif;-webkit-font-smoothing:antialiased}button,input{font:inherit}button{-webkit-tap-highlight-color:transparent}
+.app{max-width:760px;margin:auto;padding:calc(18px + env(safe-area-inset-top)) 14px calc(98px + env(safe-area-inset-bottom))}
+.page{display:none}.page.active{display:block}.eyebrow{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--blue)}h1{font-size:44px;letter-spacing:-.05em;line-height:1;margin:8px 0 10px}h2{font-size:25px;letter-spacing:-.035em;margin:0 0 8px}.sub{color:var(--muted);line-height:1.4}.small{font-size:13px;color:var(--muted);line-height:1.42}.micro{font-size:11px;color:var(--muted)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:17px;margin-top:12px}.btn{border:0;border-radius:14px;min-height:48px;padding:12px 16px;font-weight:800;cursor:pointer}.primary{background:var(--blue);color:#fff}.secondary{background:#e8e8ed;color:var(--ink)}.ghost{background:#fff;border:1px solid var(--line);color:var(--ink)}
+.pill{display:inline-flex;padding:7px 10px;border-radius:999px;background:#f1f1f3;font-size:12px;font-weight:750;margin:3px}.unit{display:inline-flex;background:#e8e8ed;padding:3px;border-radius:11px}.unit button{border:0;background:transparent;border-radius:8px;padding:7px 10px;font-size:12px;font-weight:850;color:var(--muted);min-height:38px}.unit button.active{background:#fff;color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.10)}
+.bottom{position:fixed;left:50%;bottom:calc(8px + env(safe-area-inset-bottom));transform:translateX(-50%);width:min(600px,calc(100vw - 16px));background:rgba(255,255,255,.92);backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:23px;padding:6px;display:flex;z-index:40}.bottom button{flex:1;border:0;background:transparent;border-radius:17px;min-height:48px;color:var(--muted);font-size:11px;font-weight:800}.bottom button.active{background:#ececf1;color:var(--ink)}
+.week{display:grid;grid-template-columns:repeat(7,88px);gap:7px;overflow:auto}.day{border:1px solid var(--line);border-radius:15px;padding:10px;background:#fff;min-height:95px}.day strong{display:block;margin-top:8px}.day span{font-size:11px;color:var(--muted)}.integrity{float:right;font-size:11px;padding:5px 8px;border-radius:999px;background:#ecfdf3;color:#166534;font-weight:800}.integrity.med{background:#fff7ed;color:#9a3412}
+.overlay{position:fixed;inset:0;z-index:100;background:var(--bg);display:none;overflow:auto}.overlay.open{display:block}.session{max-width:600px;margin:auto;min-height:100svh;padding:calc(8px + env(safe-area-inset-top)) 14px calc(24px + env(safe-area-inset-bottom))}
+.sessionbar{position:sticky;top:0;z-index:15;background:rgba(245,245,247,.94);backdrop-filter:blur(20px);padding:8px 0 9px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:8px}.sessionbar .meta{min-width:0}.sessionbar .title{font-size:17px;font-weight:850;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.sessionbar .progress{font-size:11px;color:var(--muted);margin-top:2px}.circle{width:44px;height:44px;border:0;border-radius:50%;background:#e8e8ed;font-size:21px;font-weight:850;flex:0 0 auto}
+.stage{padding-top:14px}.state-label{font-size:12px;font-weight:850;color:var(--blue);letter-spacing:.08em;text-transform:uppercase}.exercise-title{font-size:31px;line-height:1.03;font-weight:900;letter-spacing:-.045em;margin:6px 0 6px}.specrow{display:flex;gap:6px;flex-wrap:wrap}.spec{background:#ededf0;padding:6px 8px;border-radius:999px;font-size:11px;font-weight:800}.video{display:inline-flex;align-items:center;gap:5px;color:var(--blue);font-size:13px;font-weight:800;text-decoration:none;margin-top:9px;min-height:44px}
+.tempo-box{border-radius:15px;background:#f4f8fd;padding:11px 12px;margin-top:9px}.tempo-box strong{display:block;font-size:13px}.tip{border-left:4px solid var(--blue);background:#f0f7ff;border-radius:14px;padding:12px 13px;margin-top:12px;font-size:13px;line-height:1.42}.guard{border-left-color:var(--amber);background:#fff7ea}.previous{margin-top:12px;padding:10px 12px;border-radius:14px;background:#f7f7f8;font-size:12px;color:var(--muted)}
+.control{background:#fff;border:1px solid var(--line);border-radius:20px;padding:13px;margin-top:12px}.control label{display:block;text-align:center;font-size:11px;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.06em}.stepper{display:grid;grid-template-columns:64px 1fr 64px;gap:8px;align-items:center;margin-top:7px}.stepper button{min-height:54px;border:0;border-radius:15px;background:#e8e8ed;font-size:20px;font-weight:900}.stepper input{width:100%;min-height:54px;border:1px solid #d2d2d7;border-radius:15px;text-align:center;font-size:24px;font-weight:850;background:#fff}.quickstep{display:flex;gap:6px;justify-content:center;margin-top:8px}.quickstep button{border:0;border-radius:999px;background:#f0f0f2;padding:8px 11px;font-size:12px;font-weight:800;min-height:38px}.rir{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}.rir button{min-height:48px;border:1px solid var(--line);background:#fff;border-radius:13px;font-weight:850}.rir button.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.cta{width:100%;min-height:58px;border:0;border-radius:17px;background:var(--blue);color:#fff;font-size:17px;font-weight:900;margin-top:14px}.next-mini{border-top:1px solid var(--line);margin-top:14px;padding-top:12px;font-size:12px;color:var(--muted)}
+.rest{text-align:center}.rest-time{font-size:78px;line-height:1;font-weight:900;letter-spacing:-.06em;margin:12px 0 3px;font-variant-numeric:tabular-nums}.ready{color:var(--green)}.timercontrols{display:flex;justify-content:center;gap:8px;margin:10px 0}.timercontrols button{min-height:46px;border:0;border-radius:999px;background:#e8e8ed;padding:10px 15px;font-weight:850}.timercontrols .skip{background:#1d1d1f;color:#fff}
+.rest-next{text-align:left;background:#fff;border:1px solid var(--line);border-radius:20px;padding:15px;margin-top:15px}.rest-next .big{font-size:24px;font-weight:900;line-height:1.08;margin-top:4px}.superset-badge{display:inline-flex;margin-top:8px;padding:6px 9px;border-radius:999px;background:#e9f3ff;color:#0066cc;font-size:12px;font-weight:850}.rest-last{text-align:left;background:#f7f7f8;border-radius:15px;padding:11px 12px;margin-top:12px;font-size:13px}.startnext{width:100%;min-height:56px;border:0;border-radius:16px;background:var(--blue);color:#fff;font-weight:900;margin-top:14px}
+.transition{text-align:center;padding-top:36px}.transition .symbol{font-size:42px}.transition .big{font-size:32px;font-weight:900;letter-spacing:-.04em;margin-top:8px}.resume{display:none}.resume.show{display:block}.health{font-weight:850}.ok{color:var(--green)}.warn{color:var(--amber)}.historyrow{padding:11px 0;border-bottom:1px solid var(--line)}.historyrow:last-child{border:0}
+@media(max-width:430px){h1{font-size:39px}.exercise-title{font-size:28px}.rest-time{font-size:72px}.card{padding:15px}.stepper{grid-template-columns:60px 1fr 60px}}
+@media(prefers-color-scheme:dark){:root{--bg:#000;--card:#1c1c1e;--ink:#f5f5f7;--muted:#98989d;--line:rgba(255,255,255,.11)}.secondary,.circle,.bottom button.active,.stepper button,.timercontrols button,.unit{background:#2c2c2e}.bottom{background:rgba(28,28,30,.92)}.sessionbar{background:rgba(0,0,0,.92)}.spec,.quickstep button{background:#2c2c2e}.stepper input,.rir button,.rest-next,.control{background:#1c1c1e;color:var(--ink)}.tempo-box,.tip{background:#071828}.guard{background:#2a1c08}.previous,.rest-last{background:#1c1c1e}}
+</style>
+
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="Training OS">
+</head><body>
+<div id="fatalBoot" hidden style="position:fixed;z-index:9999;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));background:#fff1f0;color:#b42318;border:1px solid #f3b4ae;border-radius:14px;padding:12px 14px;font:600 14px -apple-system,BlinkMacSystemFont,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.12)"></div>
+<div class="app">
+<section class="page active" id="today">
+<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><div class="eyebrow">FV × openGym patterns · 4.0.0-rc2</div><h1>Hoy</h1><p class="sub" id="todayDate"></p></div><div class="unit"><button data-unit="kg">kg</button><button data-unit="lb">lb</button></div></div>
+<div class="card resume" id="resumeCard"><div class="eyebrow">Sesión activa</div><h2 id="resumeTitle"></h2><p class="small" id="resumeMeta"></p><button class="btn primary" id="resumeBtn">Reanudar</button></div>
+<div class="card"><div class="eyebrow">Siguiente</div><h2 id="nextWorkout"></h2><p class="sub" id="nextGoal"></p><button class="btn primary" id="startWorkout">Iniciar sesión</button></div>
+<div class="card"><div class="eyebrow">MVP</div><h2>Una decisión a la vez.</h2><p class="small">Set actual → Complete → Rest/Biserie → siguiente set. Sin AI y sin cockpit permanente.</p></div>
+</section>
+<section class="page" id="week"><div class="eyebrow">4 días base</div><h1>Semana</h1><div class="card"><div class="week">
+<div class="day"><b>Lun</b><strong>Pecho</strong><span>+ tríceps</span></div><div class="day"><b>Mar</b><strong>Espalda</strong><span>+ bíceps</span></div><div class="day"><b>Mié</b><strong>Recovery</strong><span>8–12 min</span></div><div class="day"><b>Jue</b><strong>Pierna FV</strong><span>1 día formal</span></div><div class="day"><b>Vie</b><strong>Recovery</strong><span>walk/stretch</span></div><div class="day"><b>Sáb</b><strong>Hombro</strong><span>standalone</span></div><div class="day"><b>Dom</b><strong>Off</strong><span>—</span></div>
+</div></div></section>
+<section class="page" id="program"><div class="eyebrow">Source of truth</div><h1>Programa</h1><p class="sub">La app NO cambia ejercicios. Solo sugiere carga determinísticamente.</p><div id="programCards"></div></section>
+<section class="page" id="progress"><div class="eyebrow">Data</div><h1>Progreso</h1><div class="card"><span class="small">Storage</span><div class="health" id="storageHealth">—</div></div><div class="card"><h2 id="stats">0 sesiones</h2><p class="small" id="statsSub"></p></div><div class="card"><h2>Backup</h2><button class="btn secondary" id="exportBtn">Exportar JSON</button> <label class="btn ghost" style="display:inline-flex;align-items:center;cursor:pointer">Importar<input type="file" id="importFile" accept=".json,application/json" hidden></label></div><div class="card"><h2>Historial</h2><div id="history"></div></div></section>
+</div>
+<nav class="bottom"><button class="active" data-page="today">Hoy</button><button data-page="week">Semana</button><button data-page="program">Programa</button><button data-page="progress">Progreso</button></nav>
+<div class="overlay" id="sessionOverlay"><div class="session"><div class="sessionbar"><button class="circle" id="closeSession">‹</button><div class="meta"><div class="title" id="sessionTitle"></div><div class="progress" id="sessionProgress"></div></div><div class="unit"><button data-unit="kg">kg</button><button data-unit="lb">lb</button></div></div><div id="sessionStage"></div></div></div>
+
+<script>
+window.addEventListener('error',e=>{try{const el=document.getElementById('fatalBoot');if(el){el.hidden=false;el.textContent='Training OS no pudo iniciar: '+(e.message||'error desconocido')}}catch(_){}});window.addEventListener('unhandledrejection',e=>{try{const el=document.getElementById('fatalBoot');if(el){el.hidden=false;el.textContent='Training OS no pudo iniciar: '+(e.reason?.message||e.reason||'promise error')}}catch(_){}});
+(async()=>{try{if('serviceWorker'in navigator){const regs=await navigator.serviceWorker.getRegistrations();await Promise.all(regs.filter(r=>String(r.scope||'').includes('/training-os/')).map(r=>r.unregister()));}if('caches'in window){const keys=await caches.keys();await Promise.all(keys.filter(k=>/training-os|fv-training-os/i.test(k)).map(k=>caches.delete(k)));}document.documentElement.dataset.swCleanup='done';}catch(e){document.documentElement.dataset.swCleanup='warn';}})();
+const WORKOUTS = {
+  "chest": {
+    "name": "Pecho + Tríceps",
+    "short": "Pecho",
+    "goal": "Definición visual + fuerza",
+    "duration": "50–60 min",
+    "sourceConfidence": "alta",
+    "note": "Fuerza de pecho primero; biseries solo después de los presses. La definición visual depende de composición corporal, no de 'reps de definición'.",
+    "exercises": [
+      {
+        "name": "Machine / Lever Chest Press",
+        "sets": 4,
+        "reps": "4–6",
+        "rir": "1–2",
+        "tempo": "2-0-X-0",
+        "rest": 165,
+        "group": "Pecho",
+        "alt": "Smith flat bench · converging chest press",
+        "tip": "SETUP: escápulas atrás/abajo y pies firmes. EJECUCIÓN: baja 2 s, sin pausa pasiva, sube explosivo con control. STOP: termina el ROM antes de que el hombro izquierdo se vaya hacia delante o pinche.",
+        "superset": null,
+        "video": "https://www.youtube.com/results?search_query=Machine+%2F+Lever+Chest+Press+proper+form+tutorial"
+      },
+      {
+        "name": "Smith Flat Bench Press",
+        "sets": 3,
+        "reps": "5–7",
+        "rir": "1–2",
+        "tempo": "2-1-X-0",
+        "rest": 150,
+        "group": "Pecho",
+        "alt": "Chest press guiada · cable bench press",
+        "tip": "Usa safeties y el mismo punto de toque cada rep. Baja 2 s, pausa 1 s con tensión, acelera la subida. No persigas profundidad si cambia la posición del hombro.",
+        "superset": null,
+        "video": "https://www.youtube.com/results?search_query=Smith+Flat+Bench+Press+proper+form+tutorial"
+      },
+      {
+        "name": "Converging Chest Press",
+        "sets": 2,
+        "reps": "8–12",
+        "rir": "2",
+        "tempo": "2-1-1-0",
+        "rest": 90,
+        "group": "Pecho",
+        "alt": "Cable press con agarre neutro",
+        "tip": "Deja el ego fuera: busca aducción del brazo y tensión continua. Pausa 1 s en el estiramiento cómodo y evita el estiramiento extremo del hombro.",
+        "superset": null,
+        "video": "https://www.youtube.com/results?search_query=Converging+Chest+Press+proper+form+tutorial"
+      },
+      {
+        "name": "Rope Pushdown",
+        "sets": 4,
+        "reps": "6–8",
+        "rir": "1–2",
+        "tempo": "2-0-1-1",
+        "rest": 60,
+        "group": "Tríceps",
+        "alt": "Straight-bar pushdown",
+        "tip": "Codos quietos al costado. Extiende sin adelantar hombros y separa la cuerda al final; 1 s de contracción.",
+        "superset": "Cable / Machine Crunch",
+        "video": "https://www.youtube.com/results?search_query=Rope+Pushdown+proper+form+tutorial"
+      },
+      {
+        "name": "Cable / Machine Crunch",
+        "sets": 4,
+        "reps": "10–15",
+        "rir": "2",
+        "tempo": "2-1-1-1",
+        "rest": 60,
+        "group": "Core",
+        "alt": "Dead bug",
+        "tip": "Acerca esternón a pelvis. Cadera casi inmóvil; si sientes más flexor de cadera que abdomen, reduce recorrido.",
+        "superset": "Rope Pushdown",
+        "video": "https://www.youtube.com/results?search_query=Cable+%2F+Machine+Crunch+proper+form+tutorial"
+      },
+      {
+        "name": "Cross-Body Pushdown",
+        "sets": 3,
+        "reps": "10–12/lado",
+        "rir": "1–2",
+        "tempo": "2-0-1-1",
+        "rest": 60,
+        "group": "Tríceps",
+        "alt": "Single-arm cable pushdown",
+        "tip": "Hombro neutro y estable. Cruza ligeramente al final sin convertir la extensión de codo en rotación del hombro.",
+        "superset": null,
+        "video": "https://www.youtube.com/results?search_query=Cross-Body+Pushdown+proper+form+tutorial"
+      }
+    ]
+  },
+  "back": {
+    "name": "Espalda + Bíceps",
+    "short": "Espalda",
+    "goal": "Hipertrofia + fuerza · bíceps hipertrofia → fuerza",
+    "duration": "50–60 min",
+    "sourceConfidence": "alta",
+    "note": "Compounds de espalda primero. Bíceps después con control excéntrico y sin balanceos.",
+    "exercises": [
+      {
+        "name": "Chest-Supported Row",
+        "sets": 4,
+        "reps": "5–8",
+        "rir": "1–2",
+        "tempo": "2-1-1-1",
+        "rest": 150,
+        "group": "Espalda",
+        "alt": "Plate-loaded row · seated cable row",
+        "tip": "Pecho fijo al soporte. Permite alcance escapular controlado y rema con el codo hacia la cadera; pausa 1 s sin encoger hombros.",
+        "superset": null,
+        "video": "https://www.youtube.com/results?search_query=Chest-Supported+Row+proper+form+tutorial"
+      },
+      {
+        "name": "Neutral-Grip Lat Pulldown",
+        "sets": 4,
+        "reps": "6–10",
+        "rir": "1–2",
+        "tempo": "2-1-1-1",
+        "rest": 120,
+        "group": "Espalda",
+        "alt": "Close-neutral pulldown · assisted neutral pull-up si 100% tolerado",
+        "tip": "Costillas abajo y torso estable. Lleva codos hacia las costillas; termina antes de perder depresión escapular o provocar el hombro.",
+        "superset": null,
+        "video": "https://www.youtube.com/watch?v=KgZqDuNx7rI"
+      },
+      {
+        "name": "1-Arm Cable Row",
+        "sets": 3,
+        "reps": "8–12/lado",
+        "rir": "2",
+        "tempo": "2-1-1-1",
+        "rest": 75,
+        "group": "Espalda",
+        "alt": "1-arm machine row",
+        "tip": "Cadera quieta. Deja que la escápula alcance sin girar el torso y rema con el codo hacia atrás/abajo.",
+        "superset": null,
+        "video": "https://www.youtube.com/results?search_query=1-Arm+Cable+Row+proper+form+tutorial"
+      },
+      {
+        "name": "Straight-Arm Cable Pulldown",
+        "sets": 2,
+        "reps": "12–15",
+        "rir": "2",
+        "tempo": "2-1-2-1",
+        "rest": 60,
+        "group": "Espalda",
+        "alt": "Machine pullover",
+        "tip": "Brazos casi rectos, costillas abajo. Lleva axilas hacia bolsillos; no termines arqueando la espalda.",
+        "superset": null,
+        "video": "https://www.youtube.com/results?search_query=Straight-Arm+Cable+Pulldown+proper+form+tutorial"
+      },
+      {
+        "name": "Cable Curl",
+        "sets": 4,
+        "reps": "6–8",
+        "rir": "1–2",
+        "tempo": "3-0-1-1",
+        "rest": 90,
+        "group": "Bíceps",
+        "alt": "EZ-bar cable curl · machine curl",
+        "tip": "Excéntrica REAL de 3 s. Codos quietos; si te inclinas atrás para mover la carga, el set ya se acabó.",
+        "superset": null,
+        "video": "https://www.muscleandstrength.com/exercises/cable-curl.html"
+      },
+      {
+        "name": "Preacher / Supported Curl",
+        "sets": 3,
+        "reps": "8–12",
+        "rir": "1–2",
+        "tempo": "3-1-1-1",
+        "rest": 75,
+        "group": "Bíceps",
+        "alt": "Seated double-pulley curl",
+        "tip": "Brazo completamente apoyado. Baja 3 s, pausa 1 s sin colgarte del codo y sube sin despegar el brazo.",
+        "superset": null,
+        "video": "https://cdn.muscleandstrength.com/exercises/ez-bar-preacher-curl.html"
+      },
+      {
+        "name": "Rope Hammer Curl",
+        "sets": 2,
+        "reps": "10–15",
+        "rir": "1–2",
+        "tempo": "2-1-1-1",
+        "rest": 60,
+        "group": "Bíceps",
+        "alt": "Cross-body DB hammer curl",
+        "tip": "Agarre neutro todo el tiempo. Sube sin adelantar el hombro y separa ligeramente la cuerda arriba.",
+        "superset": null,
+        "video": "https://www.muscleandstrength.com/exercises/rope-cable-curl.html"
+      }
+    ]
+  },
+  "legs": {
+    "name": "Piernas · FV",
+    "short": "Pierna",
+    "goal": "Hipertrofia + fuerza",
+    "duration": "50–60 min",
+    "sourceConfidence": "alta",
+    "note": "Baseline FV: 1 día formal/semana. Sin squat, lunge, leg press, correr, impacto ni hikes. Abducción condicional por rodilla derecha.",
+    "exercises": [
+      {
+        "name": "Reverse Sled Drag",
+        "sets": 5,
+        "reps": "15–20 m",
+        "rir": "3",
+        "tempo": "Continuo",
+        "rest": 60,
+        "group": "Cuádriceps",
+        "alt": "Backward treadmill 40–50 s",
+        "tip": "Torso alto, pasos cortos y continuos. Rodilla sigue la línea del pie. Cero dolor, rebotes o sensación de inestabilidad.",
+        "superset": null,
+        "video": "https://www.youtube.com/results?search_query=Reverse+Sled+Drag+proper+form+tutorial"
+      },
+      {
+        "name": "Leg Extension · unilateral",
+        "sets": 3,
+        "reps": "10–12/lado",
+        "rir": "2",
+        "tempo": "2-1-3-0",
+        "rest": 75,
+        "group": "Cuádriceps",
+        "alt": "Reducir ROM/carga por lado",
+        "tip": "Alinea rodilla con el pivote. Sube 2 s, pausa 1 s, baja 3 s. Cada lado define su propia carga; no fuerces simetría.",
+        "superset": null,
+        "video": "https://www.youtube.com/watch?v=TJQmtXUEzNk"
+      },
+      {
+        "name": "Leg Extension · bilateral",
+        "sets": 3,
+        "reps": "12–15",
+        "rir": "1–2",
+        "tempo": "2-1-3-0",
+        "rest": 90,
+        "group": "Cuádriceps",
+        "alt": "Unilateral alternado",
+        "tip": "Mismo setup siempre. No rebotes en extensión; la fase de 3 s de bajada es parte del estímulo, no decoración.",
+        "superset": null,
+        "video": "https://www.youtube.com/results?search_query=Leg+Extension+%C2%B7+bilateral+proper+form+tutorial"
+      },
+      {
+        "name": "Seated Leg Curl",
+        "sets": 4,
+        "reps": "8–12",
+        "rir": "1–2",
+        "tempo": "2-1-3-0",
+        "rest": 90,
+        "group": "Femoral",
+        "alt": "Lying leg curl",
+        "tip": "Muslos fijados bajo el pad y pelvis contra el respaldo. Flexiona 2 s, aprieta 1 s, vuelve 3 s sin despegar cadera.",
+        "superset": null,
+        "video": "https://www.youtube.com/watch?v=EqCsK_vlnfE"
+      },
+      {
+        "name": "Lying Leg Curl",
+        "sets": 2,
+        "reps": "12–15",
+        "rir": "2",
+        "tempo": "2-1-3-0",
+        "rest": 75,
+        "group": "Femoral",
+        "alt": "Extra seated curl",
+        "tip": "Pelvis pesada contra el pad. No arquees lumbar para terminar la rep; squeeze 1 s y baja en 3 s.",
+        "superset": null,
+        "video": "https://www.youtube.com/results?search_query=Lying+Leg+Curl+proper+form+tutorial"
+      },
+      {
+        "name": "Hip Thrust",
+        "sets": 4,
+        "reps": "8–12",
+        "rir": "1–2",
+        "tempo": "2-1-2-1",
+        "rest": 120,
+        "group": "Glúteo",
+        "alt": "Glute drive machine",
+        "tip": "Mentón ligeramente recogido y costillas abajo. Bloquea con glúteo 1 s; si el final viene de la espalda lumbar, ya pasaste el ROM.",
+        "superset": null,
+        "video": "https://www.youtube.com/watch?v=hCm-70-9_XE"
+      },
+      {
+        "name": "Seated Calf Raise",
+        "sets": 4,
+        "reps": "10–15",
+        "rir": "1–2",
+        "tempo": "2-1-3-1",
+        "rest": 60,
+        "group": "Pantorrilla",
+        "alt": "Standing calf machine",
+        "tip": "Sube 2 s, pausa 1 s arriba; baja 3 s a estiramiento controlado y espera 1 s antes de repetir.",
+        "superset": null,
+        "video": "https://www.youtube.com/results?search_query=Seated+Calf+Raise+proper+form+tutorial"
+      },
+      {
+        "name": "Hip Abduction · CONDICIONAL",
+        "sets": 3,
+        "reps": "15–20",
+        "rir": "3",
+        "tempo": "2-1-2-1",
+        "rest": 60,
+        "group": "Glúteo medio",
+        "alt": "Omitir temporalmente",
+        "tip": "Solo si rodilla derecha ≤2/10, sin inestabilidad y sin reacción posterior. Abre 2 s, pausa 1 s; no rebotes ni fuerces el final.",
+        "superset": null,
+        "video": "https://www.youtube.com/results?search_query=Hip+Abduction+proper+form+tutorial"
+      },
+      {
+        "name": "Hip Adduction",
+        "sets": 3,
+        "reps": "12–20",
+        "rir": "2",
+        "tempo": "2-1-2-1",
+        "rest": 60,
+        "group": "Aductores",
+        "alt": "Cable adduction ligera",
+        "tip": "Pelvis estable y estiramiento inicial cómodo, no máximo. Cierra desde la cadera sin inclinar el tronco.",
+        "superset": null,
+        "video": "https://www.youtube.com/results?search_query=Hip+Adduction+proper+form+tutorial"
+      }
+    ]
+  },
+  "shoulders": {
+    "name": "Hombro · standalone",
+    "short": "Hombro",
+    "goal": "Hipertrofia + fuerza · shoulder-safe",
+    "duration": "35–50 min",
+    "sourceConfidence": "media",
+    "note": "Se mantiene SOLO hombro. No se añaden brazos ni presses nuevos: el inventario histórico exacto no está completamente recuperado, así que esta RC conserva únicamente el bloque shoulder-specific confirmado.",
+    "exercises": [
+      {
+        "name": "Machine Lateral Raise",
+        "sets": 4,
+        "reps": "10–15",
+        "rir": "2",
+        "tempo": "2-1-2-1",
+        "rest": 75,
+        "group": "Hombro",
+        "alt": "Cable lateral raise en plano escapular",
+        "tip": "Hombros lejos de orejas. Eleva en plano escapular solo hasta rango cómodo; 1 s arriba. Dolor >2/10 = recorta ROM.",
+        "superset": null,
+        "video": "https://www.youtube.com/results?search_query=Machine+Lateral+Raise+proper+form+tutorial"
+      },
+      {
+        "name": "Cable Lateral Raise",
+        "sets": 3,
+        "reps": "12–15/lado",
+        "rir": "2",
+        "tempo": "2-1-2-1",
+        "rest": 60,
+        "group": "Hombro",
+        "alt": "Lean-away cable raise",
+        "tip": "Mantén el brazo en plano escapular y el tronco quieto. No ganes altura rotando el hombro con el codo elevado.",
+        "superset": null,
+        "video": "https://www.youtube.com/results?search_query=Cable+Lateral+Raise+proper+form+tutorial"
+      },
+      {
+        "name": "Chest-Supported Rear-Delt Row",
+        "sets": 3,
+        "reps": "10–15",
+        "rir": "2",
+        "tempo": "2-1-2-1",
+        "rest": 75,
+        "group": "Hombro posterior",
+        "alt": "Reverse pec deck solo si 100% cómodo",
+        "tip": "Pecho fijo. Codos algo por debajo de 90°. Lleva brazos fuera/atrás sin entrar en la rotación que reproduce molestia.",
+        "superset": null,
+        "video": "https://www.youtube.com/results?search_query=Chest-Supported+Rear-Delt+Row+proper+form+tutorial"
+      }
+    ]
+  }
+};
+const ORDER = ['chest','back','legs','shoulders'];
+
+const KG_PER_LB = 0.45359237;
+function toKg(value, unit='kg') {
+  const n = Number(value) || 0;
+  return unit === 'lb' ? n * KG_PER_LB : n;
+}
+function fromKg(kg, unit='kg') {
+  const n = Number(kg) || 0;
+  return unit === 'lb' ? n / KG_PER_LB : n;
+}
+function roundDisplay(value, unit='kg') {
+  return unit === 'lb' ? Math.round(value * 2) / 2 : Math.round(value * 4) / 4;
+}
+function parseRepRange(text) {
+  const n = String(text).match(/\d+/g) || [];
+  return { min: +(n[0] || 0), max: +(n[1] || n[0] || 0) };
+}
+function targetRIR(text) {
+  const n = String(text).match(/\d+/g) || [];
+  return +(n[0] || 2);
+}
+function average(values) {
+  return values.length ? values.reduce((a,b)=>a+b,0)/values.length : 0;
+}
+function explainTempo(code) {
+  if (!code || String(code).toLowerCase().startsWith('continuo')) {
+    return 'Continuo: ritmo estable; no hay fases cronometradas.';
+  }
+  const p = String(code).split('-');
+  if (p.length !== 4) return String(code);
+  const phase = (x, label) => String(x).toUpperCase() === 'X'
+    ? `${label}: explosivo con control`
+    : `${label}: ${x}s`;
+  return [
+    phase(p[0], 'Excéntrica / bajada'),
+    phase(p[1], 'Pausa en estiramiento'),
+    phase(p[2], 'Concéntrica / subida'),
+    phase(p[3], 'Pausa en contracción')
+  ].join(' · ');
+}
+function buildSequence(workout) {
+  const seq = [], es = workout.exercises;
+  for (let i=0; i<es.length;) {
+    const partnerName = es[i].superset;
+    if (partnerName && i+1<es.length && es[i+1].superset === es[i].name) {
+      const a=i, b=i+1, rounds=Math.max(es[a].sets, es[b].sets);
+      for(let s=0;s<rounds;s++) {
+        if(s<es[a].sets) seq.push({ei:a,si:s,superset:true,position:'first',partner:b});
+        if(s<es[b].sets) seq.push({ei:b,si:s,superset:true,position:'second',partner:a});
+      }
+      i+=2;
+    } else {
+      for(let s=0;s<es[i].sets;s++) seq.push({ei:i,si:s,superset:false,position:'single',partner:null});
+      i++;
+    }
+  }
+  return seq;
+}
+function nextTransition(sequence, completedIndex, workout) {
+  const current = sequence[completedIndex];
+  const next = sequence[completedIndex+1] || null;
+  if (!next) return {type:'finish', next:null, restSec:0};
+  if (current?.superset && current.position === 'first' &&
+      next.superset && next.position === 'second' && current.si === next.si) {
+    return {type:'superset-switch', next, restSec:0};
+  }
+  const completedExercise = workout.exercises[current.ei];
+  return {type:'rest', next, restSec:Number(completedExercise.rest)||0};
+}
+function remainingSeconds(endsAt, now=Date.now()) {
+  if (!endsAt) return 0;
+  return Math.max(0, Math.ceil((endsAt-now)/1000));
+}
+function progressionDecision(exercise, priorExerciseSets=[]) {
+  const r = parseRepRange(exercise.reps);
+  if (!priorExerciseSets.length) return {factor:1, reason:'Primer baseline'};
+  const valid = priorExerciseSets.filter(s=>s && s.done !== false);
+  if (!valid.length) return {factor:1, reason:'Sin baseline válido'};
+  const repsHitTop = r.max>0 && valid.length>=exercise.sets && valid.slice(0,exercise.sets).every(s=>(+s.reps||0)>=r.max);
+  const rirs = valid.slice(0,exercise.sets).map(s=>Number(s.rir)).filter(Number.isFinite);
+  if (repsHitTop && rirs.length && average(rirs)>=2) {
+    return {factor:1.025, reason:'Techo de reps completado con ≥2 RIR promedio'};
+  }
+  const missed = r.min>0 && valid.some(s=>(+s.reps||0)<r.min || Number(s.rir)<=0);
+  if (missed) return {factor:0.975, reason:'Rep target fallado o RIR 0'};
+  return {factor:1, reason:'Mantener carga; ganar reps/calidad primero'};
+}
+function sessionCompletion(sequence, logs) {
+  const done = Object.values(logs||{}).filter(x=>x.done).length;
+  return {done,total:sequence.length,pct:sequence.length?Math.round(done/sequence.length*100):0};
+}
+
+
+
+const RELEASE='4.0.0-rc2';
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const store={ok:false,test(){try{localStorage.setItem('__fv4test','1');localStorage.removeItem('__fv4test');this.ok=true}catch(e){this.ok=false}return this.ok},get(k,d=null){if(!this.ok)return d;try{const x=localStorage.getItem(k);return x===null?d:JSON.parse(x)}catch(e){return d}},set(k,v){if(!this.ok)return false;try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}},del(k){if(this.ok)try{localStorage.removeItem(k)}catch(e){}}};store.test();
+let unit=store.get('fv4.unit',null)||store.get('tos_v3_display_unit','kg')||'kg',wake=null,ticker=null,lastAlarmAt=0;
+const today=()=>new Intl.DateTimeFormat('es-MX',{weekday:'long',day:'numeric',month:'long'}).format(new Date());
+$('#todayDate').textContent=today();
+
+function legacyMigrate(){
+ if(store.get('fv4.migrated',false)) return;
+ if(!store.get('fv4.history',null)){
+   const old=store.get('tos_v3_history',[]);
+   if(Array.isArray(old)&&old.length){
+     const mapped=old.map(h=>({release:'3.x-migrated',id:h.id,workoutKey:h.workoutKey||h.workout,workoutName:h.workoutName||h.name,startedAt:h.startedAt||h.date,endedAt:h.endedAt||h.date,durationSec:h.durationSec||0,sets:(h.sets||[]).map(s=>({...s,weightKg:+(s.weightKg??s.kg??0)}))}));
+     store.set('fv4.history',mapped);
+   }
+ }
+ if(!store.get('fv4.unit',null)) store.set('fv4.unit',unit);
+ store.set('fv4.migrated',true);
+}
+legacyMigrate();
+
+const history=()=>store.get('fv4.history',[]);
+const active=()=>store.get('fv4.active',null);
+function saveActive(a){if(a){a.updatedAt=new Date().toISOString();store.set('fv4.active',a)}else store.del('fv4.active');renderHome()}
+const fmtWeight=kg=>{if(!kg)return '';return String(roundDisplay(fromKg(+kg,unit),unit))};
+function renderUnits(){$$('[data-unit]').forEach(b=>b.classList.toggle('active',b.dataset.unit===unit))}
+function setUnit(u){unit=u==='lb'?'lb':'kg';store.set('fv4.unit',unit);renderUnits();if($('#sessionOverlay').classList.contains('open'))renderStage()}
+$$('[data-unit]').forEach(b=>b.onclick=()=>setUnit(b.dataset.unit));
+
+function previousWorkout(k){return history().slice().reverse().find(h=>h.workoutKey===k)}
+function previousExerciseSets(k,name){const h=previousWorkout(k);return h?(h.sets||[]).filter(s=>s.exerciseName===name):[]}
+function previousSet(k,name,si){const list=previousExerciseSets(k,name);return list.find(s=>Number(s.setIndex)===Number(si))||list[si]||list[0]||null}
+function nextWorkoutKey(){const h=history();if(!h.length)return ORDER[0];const i=ORDER.indexOf(h[h.length-1].workoutKey);return ORDER[(i+1)%ORDER.length]}
+function makeSession(k){return {schema:4,id:Date.now(),release:RELEASE,workoutKey:k,startedAt:new Date().toISOString(),index:0,state:'set',endsAt:0,restOriginal:0,last:null,drafts:{},logs:{}}}
+function totalSets(k){return buildSequence(WORKOUTS[k]).length}
+function renderHome(){
+ const a=active(),k=nextWorkoutKey(),w=WORKOUTS[k];
+ $('#nextWorkout').textContent=w.name;$('#nextGoal').textContent=w.goal;$('#startWorkout').onclick=()=>a?openSession():startSession(k);
+ $('#startWorkout').textContent=a?'Reanudar sesión':'Iniciar sesión';
+ $('#resumeCard').classList.toggle('show',!!a);
+ if(a){const c=sessionCompletion(buildSequence(WORKOUTS[a.workoutKey]),a.logs);$('#resumeTitle').textContent=WORKOUTS[a.workoutKey].name;$('#resumeMeta').textContent=`${c.done}/${c.total} sets · ${a.state==='rest'?'descanso':a.state==='transition'?'biserie':'set activo'}`;$('#resumeBtn').onclick=openSession}
+ renderUnits()
+}
+$$('.bottom button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
+function showPage(id){$$('.page').forEach(p=>p.classList.toggle('active',p.id===id));$$('.bottom button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));if(id==='program')renderProgram();if(id==='progress')renderProgress();scrollTo(0,0)}
+function renderProgram(){$('#programCards').innerHTML=ORDER.map(k=>{const w=WORKOUTS[k];return `<div class="card"><span class="integrity ${w.sourceConfidence==='alta'?'':'med'}">${w.sourceConfidence} confidence</span><div class="eyebrow">${w.short}</div><h2>${w.name}</h2><p class="small">${w.note}</p>${w.exercises.map(e=>`<span class="pill">${e.name}</span>`).join('')}</div>`}).join('')}
+
+function startSession(k){if(active())return openSession();saveActive(makeSession(k));openSession()}
+async function requestWake(){try{if('wakeLock'in navigator){wake=await navigator.wakeLock.request('screen')}}catch(e){}}
+function releaseWake(){try{wake&&wake.release()}catch(e){}wake=null}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&active())requestWake();tick()});
+function openSession(){if(!active())return;$('#sessionOverlay').classList.add('open');requestWake();renderStage()}
+$('#closeSession').onclick=()=>{$('#sessionOverlay').classList.remove('open');releaseWake();renderHome()}
+
+function current(a){const seq=buildSequence(WORKOUTS[a.workoutKey]);return {seq,item:seq[a.index]||null}}
+function draftFor(a,item){
+ const key=`${item.ei}_${item.si}`;if(a.drafts[key])return a.drafts[key];
+ const e=WORKOUTS[a.workoutKey].exercises[item.ei],p=previousSet(a.workoutKey,e.name,item.si),decision=progressionDecision(e,previousExerciseSets(a.workoutKey,e.name));
+ const r=parseRepRange(e.reps),d={weightKg:p?(+p.weightKg||0)*decision.factor:0,reps:p?(+p.reps||r.min):r.min,rir:p?.rir??targetRIR(e.rir),reason:p?decision.reason:'Primer baseline: encuentra una carga que deje el RIR objetivo.'};
+ a.drafts[key]=d;saveActive(a);return d
+}
+function saveDraft(a,item,d){a.drafts[`${item.ei}_${item.si}`]=d;saveActive(a)}
+function renderStage(){
+ const a=active();if(!a)return;const w=WORKOUTS[a.workoutKey],{seq,item}=current(a),c=sessionCompletion(seq,a.logs);
+ $('#sessionTitle').textContent=w.name;$('#sessionProgress').textContent=`${c.done}/${c.total} sets · ${c.pct}%`;renderUnits();
+ if(a.state==='transition')return renderTransition(a,w,seq);
+ if(a.state==='rest')return renderRest(a,w,seq);
+ if(!item)return renderFinish(a,w);
+ renderSet(a,w,seq,item)
+}
+function renderSet(a,w,seq,item){
+ const e=w.exercises[item.ei],d=draftFor(a,item),prev=previousSet(a.workoutKey,e.name,item.si),nxt=seq[a.index+1];
+ $('#sessionStage').innerHTML=`<div class="stage">
+ <div class="state-label">Set activo · ${item.si+1}/${e.sets}</div><div class="exercise-title">${e.name}</div>
+ <div class="specrow"><span class="spec">${e.reps} reps</span><span class="spec">RIR ${e.rir}</span><span class="spec">${e.rest}s descanso</span></div>
+ <a class="video" href="${e.video}" target="_blank" rel="noopener">▶ Técnica en video ↗</a>
+ <div class="tempo-box"><strong>CPEP / Tempo ${e.tempo}</strong><span class="small">${explainTempo(e.tempo)}<br><b>Orden:</b> excéntrica → pausa estirada → concéntrica → pausa contraída. X = explosivo con control.</span></div>
+ ${prev?`<div class="previous"><b>Anterior:</b> ${fmtWeight(prev.weightKg)} ${unit} × ${prev.reps} @RIR ${prev.rir} · ${d.reason}</div>`:`<div class="previous">${d.reason}</div>`}
+ <div class="control"><label>Peso · ${unit}</label><div class="stepper"><button id="wMinus">−5</button><input id="wInput" inputmode="decimal" value="${fmtWeight(d.weightKg)}" placeholder="—"><button id="wPlus">+5</button></div><div class="quickstep"><button data-w="-10">−10</button><button data-w="10">+10</button></div></div>
+ <div class="control"><label>Repeticiones</label><div class="stepper"><button id="rMinus">−1</button><input id="rInput" inputmode="numeric" value="${d.reps||''}" placeholder="${parseRepRange(e.reps).min||'—'}"><button id="rPlus">+1</button></div></div>
+ <div class="control"><label>RIR real</label><div class="rir">${[0,1,2,3].map(v=>`<button data-rir="${v}" class="${Number(d.rir)===v?'active':''}">${v===3?'3+':v}</button>`).join('')}</div></div>
+ <div class="tip ${a.workoutKey==='legs'||a.workoutKey==='shoulders'?'guard':''}"><strong>Pro tip 1%</strong><br>${e.tip}</div>
+ <button class="cta" id="completeSet">Completar set</button>
+ <div class="next-mini">${nxt?`Después: ${w.exercises[nxt.ei].name} · set ${nxt.si+1}${nxt.superset?' · biserie':''}`:'Último set de la sesión'}</div></div>`;
+ const sync=()=>{d.weightKg=toKg(parseFloat($('#wInput').value)||0,unit);d.reps=parseInt($('#rInput').value)||0;saveDraft(a,item,d)};
+ $('#wInput').oninput=sync;$('#rInput').oninput=sync;
+ const bump=x=>{$('#wInput').value=Math.max(0,(parseFloat($('#wInput').value)||0)+x);sync()};
+ $('#wMinus').onclick=()=>bump(-5);$('#wPlus').onclick=()=>bump(5);$$('[data-w]').forEach(b=>b.onclick=()=>bump(+b.dataset.w));
+ $('#rMinus').onclick=()=>{$('#rInput').value=Math.max(0,(parseInt($('#rInput').value)||0)-1);sync()};$('#rPlus').onclick=()=>{$('#rInput').value=(parseInt($('#rInput').value)||0)+1;sync()};
+ $$('[data-rir]').forEach(b=>b.onclick=()=>{d.rir=+b.dataset.rir;saveDraft(a,item,d);$$('[data-rir]').forEach(x=>x.classList.toggle('active',x===b))});
+ $('#completeSet').onclick=()=>completeSet(a,seq,item,e,d)
+}
+function completeSet(a,seq,item,e,d){
+ if(!d.reps){alert('Captura reps antes de completar.');return}
+ const key=`${item.ei}_${item.si}`;a.logs[key]={exerciseIndex:item.ei,exerciseName:e.name,setIndex:item.si,weightKg:+d.weightKg||0,reps:+d.reps||0,rir:d.rir,tempo:e.tempo,restSec:e.rest,completedAt:new Date().toISOString(),done:true};a.last=a.logs[key];
+ const transition=nextTransition(seq,a.index,WORKOUTS[a.workoutKey]);a.index+=1;
+ if(transition.type==='finish'){a.state='finish';a.endsAt=0}
+ else if(transition.type==='superset-switch'){a.state='transition';a.endsAt=0}
+ else {a.state='rest';a.restOriginal=transition.restSec;a.endsAt=transition.restSec?Date.now()+transition.restSec*1000:0}
+ saveActive(a);renderStage();startTicker()
+}
+function renderTransition(a,w,seq){
+ const next=seq[a.index],e=w.exercises[next.ei];
+ $('#sessionStage').innerHTML=`<div class="stage transition"><div class="state-label">Biserie · sin descanso</div><div class="symbol">↔</div><div class="big">${e.name}</div><p class="sub">Set ${next.si+1}/${e.sets} · ${e.reps} · RIR ${e.rir}</p><div class="tempo-box" style="text-align:left"><strong>Tempo ${e.tempo}</strong><span class="small">${explainTempo(e.tempo)}</span></div><div class="tip" style="text-align:left"><strong>Pro tip 1%</strong><br>${e.tip}</div><a class="video" href="${e.video}" target="_blank" rel="noopener">▶ Video partner ↗</a><button class="cta" id="goPartner">Ir al partner</button></div>`;
+ $('#goPartner').onclick=()=>{a.state='set';saveActive(a);renderStage()}
+}
+function fmtTime(s){return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`}
+function renderRest(a,w,seq){
+ const next=seq[a.index],e=next?w.exercises[next.ei]:null,s=remainingSeconds(a.endsAt),last=a.last;
+ const previousItem=seq[a.index-1],nextIsSame=e&&last&&e.name===last.exerciseName;
+ const afterPair=previousItem?.superset && previousItem.position==='second';
+ $('#sessionStage').innerHTML=`<div class="stage rest"><div class="state-label">${s?'Descanso':'Listo'}</div><div class="rest-time ${s?'':'ready'}" id="restClock">${s?fmtTime(s):'READY'}</div>
+ <div class="timercontrols"><button id="minus15">−15 s</button><button id="plus15">+15 s</button><button class="skip" id="skipRest">Saltar descanso</button></div>
+ <div class="rest-last"><b>Último set:</b> ${last.exerciseName} · ${fmtWeight(last.weightKg)} ${unit} × ${last.reps} @RIR ${last.rir}</div>
+ ${e?`<div class="rest-next"><div class="eyebrow">${afterPair?'Biserie completada · siguiente':nextIsSame?'Mismo ejercicio · siguiente':'Siguiente ejercicio'}</div><div class="big">${e.name} · Set ${next.si+1}/${e.sets}</div>${next.superset?`<span class="superset-badge">Biserie · partner: ${w.exercises[next.partner].name}</span>`:''}<div class="specrow" style="margin-top:9px"><span class="spec">${e.reps}</span><span class="spec">RIR ${e.rir}</span><span class="spec">Tempo ${e.tempo}</span></div><div class="tempo-box"><strong>${e.tempo}</strong><span class="small">${explainTempo(e.tempo)}</span></div><div class="tip"><strong>Pro tip 1%</strong><br>${e.tip}</div><a class="video" href="${e.video}" target="_blank" rel="noopener">▶ Video siguiente ↗</a></div><button class="startnext" id="startNext">Empezar siguiente set</button>`:`<div class="rest-next"><div class="big">Sesión completada</div></div><button class="startnext" id="finishNow">Finalizar sesión</button>`}</div>`;
+ $('#minus15').onclick=()=>{a.endsAt=Math.max(Date.now(),a.endsAt-15000);saveActive(a);tick()};
+ $('#plus15').onclick=()=>{a.endsAt=Math.max(Date.now(),a.endsAt)+15000;saveActive(a);tick()};
+ $('#skipRest').onclick=()=>{a.endsAt=0;saveActive(a);tick()};
+ if(e)$('#startNext').onclick=()=>{a.state='set';a.endsAt=0;saveActive(a);renderStage()};else $('#finishNow').onclick=()=>finishSession(a)
+}
+function startTicker(){if(!ticker)ticker=setInterval(tick,250)}
+function tick(){const a=active();if(!a||a.state!=='rest')return;const c=$('#restClock');if(!c)return;const s=remainingSeconds(a.endsAt);c.textContent=s?fmtTime(s):'READY';c.classList.toggle('ready',!s);if(!s&&a.endsAt&&Date.now()-lastAlarmAt>1000){lastAlarmAt=Date.now();try{navigator.vibrate&&navigator.vibrate([100,70,100])}catch(e){}}}
+function renderFinish(a,w){$('#sessionStage').innerHTML=`<div class="stage"><div class="eyebrow">Completado</div><h1>${w.name}</h1><button class="cta" id="finishSession">Finalizar sesión</button></div>`;$('#finishSession').onclick=()=>finishSession(a)}
+function finishSession(a){const sets=Object.values(a.logs).filter(x=>x.done),ended=new Date().toISOString(),entry={schema:4,release:RELEASE,id:a.id,workoutKey:a.workoutKey,workoutName:WORKOUTS[a.workoutKey].name,startedAt:a.startedAt,endedAt:ended,durationSec:Math.round((new Date(ended)-new Date(a.startedAt))/1000),sets};const h=history();h.push(entry);store.set('fv4.history',h);saveActive(null);$('#sessionOverlay').classList.remove('open');releaseWake();renderProgress();showPage('progress')}
+function renderProgress(){const h=history(),sets=h.flatMap(x=>x.sets||[]),vol=sets.reduce((a,x)=>a+(+x.weightKg||0)*(+x.reps||0),0);$('#storageHealth').textContent=store.ok?'Autosave ON':'Autosave OFF';$('#storageHealth').className='health '+(store.ok?'ok':'warn');$('#stats').textContent=`${h.length} sesiones · ${sets.length} sets`;$('#statsSub').textContent=`${Math.round(vol).toLocaleString('es-MX')} kg·reps normalizados`;$('#history').innerHTML=h.length?h.slice().reverse().slice(0,10).map(x=>`<div class="historyrow"><b>${x.workoutName}</b><br><span class="small">${new Date(x.endedAt).toLocaleDateString('es-MX')} · ${x.sets.length} sets · ${Math.round(x.durationSec/60)} min</span></div>`).join(''):'<span class="small">Aún no hay sesiones.</span>'}
+$('#exportBtn').onclick=()=>{const data={schema:4,release:RELEASE,exportedAt:new Date().toISOString(),history:history(),active:active(),unit};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=`training-os-${RELEASE}-backup.json`;a.click();setTimeout(()=>URL.revokeObjectURL(u),500)};
+$('#importFile').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!Array.isArray(d.history))throw new Error('Backup inválido');if(!confirm(`Importar ${d.history.length} sesiones?`))return;store.set('fv4.history',d.history);if(d.active)store.set('fv4.active',d.active);if(d.unit)setUnit(d.unit);renderHome();renderProgress();alert('Importación completa')}catch(err){alert(err.message)}e.target.value=''};
+renderHome();renderProgress();renderUnits();startTicker();
+window.__FV_QA__={release:RELEASE,storage:store.ok,unit,programs:ORDER.length};
+
+document.documentElement.dataset.release='4.0.0-rc2';document.documentElement.dataset.boot='ok';
+</script>
+</body></html>
