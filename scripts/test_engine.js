@@ -20,6 +20,7 @@ globalThis.__nextTransition = nextTransition;
 globalThis.__remainingSeconds = remainingSeconds;
 globalThis.__progressionDecision = progressionDecision;
 globalThis.__sessionCompletion = sessionCompletion;
+globalThis.__recommendedWorkoutKeyFromHistory = recommendedWorkoutKeyFromHistory;
 `;
 
 const context = { console };
@@ -31,6 +32,7 @@ const toKg=context.__toKg, fromKg=context.__fromKg, explainTempo=context.__expla
 const buildSequence=context.__buildSequence, nextTransition=context.__nextTransition;
 const remainingSeconds=context.__remainingSeconds, progressionDecision=context.__progressionDecision;
 const sessionCompletion=context.__sessionCompletion;
+const recommendedWorkoutKeyFromHistory=context.__recommendedWorkoutKeyFromHistory;
 
 const tests = [];
 function test(name, fn) {
@@ -98,6 +100,24 @@ test('exercise content completeness', () => {
       assert(e.tip && e.tip.length>40,'pro tip');
     }
   }
+});
+
+
+test('recommendation defaults to first untrained workout', () => {
+  assert(recommendedWorkoutKeyFromHistory([])==='chest','default chest');
+});
+test('manual leg override does not force shoulder next', () => {
+  const h=[{workoutKey:'legs',endedAt:'2026-09-06T18:00:00Z'}];
+  assert(recommendedWorkoutKeyFromHistory(h)==='chest','old rigid rotation would choose shoulder');
+});
+test('recommendation selects least recently trained when all have history', () => {
+  const h=[
+    {workoutKey:'chest',endedAt:'2026-09-05T18:00:00Z'},
+    {workoutKey:'back',endedAt:'2026-09-02T18:00:00Z'},
+    {workoutKey:'legs',endedAt:'2026-09-04T18:00:00Z'},
+    {workoutKey:'shoulders',endedAt:'2026-09-03T18:00:00Z'}
+  ];
+  assert(recommendedWorkoutKeyFromHistory(h)==='back','back should be least recent');
 });
 
 for (const [name, ok, detail] of tests) {

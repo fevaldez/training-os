@@ -2,8 +2,8 @@
 <html lang="es"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#f5f5f7"><title>Training OS · FV Hybrid</title>
-<link rel="apple-touch-icon" sizes="180x180" href="./training-os-loop-v1-180.png?v=4.0.0-rc4">
-<link rel="manifest" href="./manifest.webmanifest?v=4.0.0-rc4">
+<link rel="apple-touch-icon" sizes="180x180" href="./training-os-loop-v1-180.png?v=4.0.0-rc5">
+<link rel="manifest" href="./manifest.webmanifest?v=4.0.0-rc5">
 <meta name="application-name" content="Training OS">
 <meta name="apple-mobile-web-app-title" content="Training OS">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -28,6 +28,15 @@
 .cta{width:100%;min-height:58px;border:0;border-radius:17px;background:var(--blue);color:#fff;font-size:17px;font-weight:900;margin-top:14px}.next-mini{border-top:1px solid var(--line);margin-top:14px;padding-top:12px;font-size:12px;color:var(--muted)}
 .rest{text-align:center}.rest-time{font-size:78px;line-height:1;font-weight:900;letter-spacing:-.06em;margin:12px 0 3px;font-variant-numeric:tabular-nums}.ready{color:var(--green)}.timercontrols{display:flex;justify-content:center;gap:8px;margin:10px 0}.timercontrols button{min-height:46px;border:0;border-radius:999px;background:#e8e8ed;padding:10px 15px;font-weight:850}.timercontrols .skip{background:#1d1d1f;color:#fff}
 .rest-next{text-align:left;background:#fff;border:1px solid var(--line);border-radius:20px;padding:15px;margin-top:15px}.rest-next .big{font-size:24px;font-weight:900;line-height:1.08;margin-top:4px}.superset-badge{display:inline-flex;margin-top:8px;padding:6px 9px;border-radius:999px;background:#e9f3ff;color:#0066cc;font-size:12px;font-weight:850}.rest-last{text-align:left;background:#f7f7f8;border-radius:15px;padding:11px 12px;margin-top:12px;font-size:13px}.startnext{width:100%;min-height:56px;border:0;border-radius:16px;background:var(--blue);color:#fff;font-weight:900;margin-top:14px}
+
+.actionrow{display:flex;gap:9px;margin-top:14px}.actionrow .btn{flex:1}.recommend-note{margin-top:8px}
+.picker{position:fixed;inset:0;z-index:130;background:rgba(0,0,0,.32);display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(8px)}.picker.open{display:flex}
+.picker-sheet{width:min(620px,100%);max-height:82svh;overflow:auto;background:var(--card);border-radius:28px 28px 0 0;padding:12px 14px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -18px 60px rgba(0,0,0,.20)}
+.picker-handle{width:38px;height:5px;background:#c7c7cc;border-radius:999px;margin:1px auto 12px}.picker-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 3px 8px}.picker-title{font-size:26px;font-weight:900;letter-spacing:-.04em}
+.workout-option{width:100%;border:1px solid var(--line);background:var(--card);border-radius:18px;padding:14px;margin-top:9px;text-align:left;min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--ink)}
+.workout-option-main{min-width:0}.workout-option-name{font-size:17px;font-weight:850;letter-spacing:-.02em}.workout-option-meta{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.35}.workout-option-side{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:0 0 auto}.rec-badge{font-size:10px;font-weight:850;color:#0066cc;background:#e9f3ff;border-radius:999px;padding:5px 7px}.chev{font-size:20px;color:var(--muted)}
+.program-actions{clear:both;padding-top:12px}.program-actions .btn{width:100%}
+
 .transition{text-align:center;padding-top:36px}.transition .symbol{font-size:42px}.transition .big{font-size:32px;font-weight:900;letter-spacing:-.04em;margin-top:8px}.resume{display:none}.resume.show{display:block}.health{font-weight:850}.ok{color:var(--green)}.warn{color:var(--amber)}.historyrow{padding:11px 0;border-bottom:1px solid var(--line)}.historyrow:last-child{border:0}
 @media(max-width:430px){h1{font-size:39px}.exercise-title{font-size:28px}.rest-time{font-size:72px}.card{padding:15px}.stepper{grid-template-columns:60px 1fr 60px}}
 @media(prefers-color-scheme:dark){:root{--bg:#000;--card:#1c1c1e;--ink:#f5f5f7;--muted:#98989d;--line:rgba(255,255,255,.11)}.secondary,.circle,.bottom button.active,.stepper button,.timercontrols button,.unit{background:#2c2c2e}.bottom{background:rgba(28,28,30,.92)}.sessionbar{background:rgba(0,0,0,.92)}.spec,.quickstep button{background:#2c2c2e}.stepper input,.rir button,.rest-next,.control{background:#1c1c1e;color:var(--ink)}.tempo-box,.tip{background:#071828}.guard{background:#2a1c08}.previous,.rest-last{background:#1c1c1e}}
@@ -38,9 +47,9 @@
 <div id="fatalBoot" hidden style="position:fixed;z-index:9999;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));background:#fff1f0;color:#b42318;border:1px solid #f3b4ae;border-radius:14px;padding:12px 14px;font:600 14px -apple-system,BlinkMacSystemFont,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.12)"></div>
 <div class="app">
 <section class="page active" id="today">
-<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><div class="eyebrow">T·OS · 4.0.0-rc4 · Continuous Loop</div><h1>Hoy</h1><p class="sub" id="todayDate"></p></div><div class="unit"><button data-unit="kg">kg</button><button data-unit="lb">lb</button></div></div>
+<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><div class="eyebrow">T·OS · 4.0.0-rc5 · Continuous Loop</div><h1>Hoy</h1><p class="sub" id="todayDate"></p></div><div class="unit"><button data-unit="kg">kg</button><button data-unit="lb">lb</button></div></div>
 <div class="card resume" id="resumeCard"><div class="eyebrow">Sesión activa</div><h2 id="resumeTitle"></h2><p class="small" id="resumeMeta"></p><button class="btn primary" id="resumeBtn">Reanudar</button></div>
-<div class="card"><div class="eyebrow">Siguiente</div><h2 id="nextWorkout"></h2><p class="sub" id="nextGoal"></p><button class="btn primary" id="startWorkout">Iniciar sesión</button></div>
+<div class="card"><div class="eyebrow">Recomendado</div><h2 id="nextWorkout"></h2><p class="sub" id="nextGoal"></p><p class="micro recommend-note">Rotación sugerida · puedes elegir cualquier sesión.</p><div class="actionrow"><button class="btn primary" id="startWorkout">Iniciar sesión</button><button class="btn secondary" id="chooseWorkout">Elegir rutina</button></div></div>
 <div class="card"><div class="eyebrow">MVP</div><h2>Una decisión a la vez.</h2><p class="small">Set actual → Complete → Rest/Biserie → siguiente set. Sin AI y sin cockpit permanente.</p></div>
 </section>
 <section class="page" id="week"><div class="eyebrow">4 días base</div><h1>Semana</h1><div class="card"><div class="week">
@@ -51,6 +60,7 @@
 </div>
 <nav class="bottom"><button class="active" data-page="today">Hoy</button><button data-page="week">Semana</button><button data-page="program">Programa</button><button data-page="progress">Progreso</button></nav>
 <div class="overlay" id="sessionOverlay"><div class="session"><div class="sessionbar"><button class="circle" id="closeSession">‹</button><div class="meta"><div class="title" id="sessionTitle"></div><div class="progress" id="sessionProgress"></div></div><div class="unit"><button data-unit="kg">kg</button><button data-unit="lb">lb</button></div></div><div id="sessionStage"></div></div></div>
+<div class="picker" id="workoutPicker" aria-hidden="true"><div class="picker-sheet" role="dialog" aria-modal="true" aria-labelledby="pickerTitle"><div class="picker-handle"></div><div class="picker-head"><div><div class="eyebrow">Tú decides</div><div class="picker-title" id="pickerTitle">Elige tu sesión</div></div><button class="circle" id="closePicker" aria-label="Cerrar">×</button></div><p class="small">La recomendación guía la rotación; nunca bloquea otra rutina.</p><div id="workoutOptions"></div></div></div>
 
 <script>
 window.addEventListener('error',e=>{try{const el=document.getElementById('fatalBoot');if(el){el.hidden=false;el.textContent='Training OS no pudo iniciar: '+(e.message||'error desconocido')}}catch(_){}});window.addEventListener('unhandledrejection',e=>{try{const el=document.getElementById('fatalBoot');if(el){el.hidden=false;el.textContent='Training OS no pudo iniciar: '+(e.reason?.message||e.reason||'promise error')}}catch(_){}});
@@ -517,7 +527,22 @@ function sessionCompletion(sequence, logs) {
 
 
 
-const RELEASE='4.0.0-rc4';
+
+function recommendedWorkoutKeyFromHistory(h=[]){
+  const valid=(Array.isArray(h)?h:[]).filter(x=>x&&ORDER.includes(x.workoutKey));
+  const latest=new Map();
+  for(const entry of valid){
+    const raw=entry.endedAt||entry.startedAt||entry.date;
+    const t=raw?new Date(raw).getTime():0;
+    const prev=latest.get(entry.workoutKey);
+    if(!prev||t>prev)latest.set(entry.workoutKey,t);
+  }
+  const never=ORDER.find(k=>!latest.has(k));
+  if(never)return never;
+  return ORDER.slice().sort((a,b)=>(latest.get(a)||0)-(latest.get(b)||0))[0];
+}
+
+const RELEASE='4.0.0-rc5';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const store={ok:false,test(){try{localStorage.setItem('__fv4test','1');localStorage.removeItem('__fv4test');this.ok=true}catch(e){this.ok=false}return this.ok},get(k,d=null){if(!this.ok)return d;try{const x=localStorage.getItem(k);return x===null?d:JSON.parse(x)}catch(e){return d}},set(k,v){if(!this.ok)return false;try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}},del(k){if(this.ok)try{localStorage.removeItem(k)}catch(e){}}};store.test();
 let unit=store.get('fv4.unit',null)||store.get('tos_v3_display_unit','kg')||'kg',wake=null,ticker=null,lastAlarmAt=0;
@@ -549,20 +574,43 @@ $$('[data-unit]').forEach(b=>b.onclick=()=>setUnit(b.dataset.unit));
 function previousWorkout(k){return history().slice().reverse().find(h=>h.workoutKey===k)}
 function previousExerciseSets(k,name){const h=previousWorkout(k);return h?(h.sets||[]).filter(s=>s.exerciseName===name):[]}
 function previousSet(k,name,si){const list=previousExerciseSets(k,name);return list.find(s=>Number(s.setIndex)===Number(si))||list[si]||list[0]||null}
-function nextWorkoutKey(){const h=history();if(!h.length)return ORDER[0];const i=ORDER.indexOf(h[h.length-1].workoutKey);return ORDER[(i+1)%ORDER.length]}
+function nextWorkoutKey(){return recommendedWorkoutKeyFromHistory(history())}
 function makeSession(k){return {schema:4,id:Date.now(),release:RELEASE,workoutKey:k,startedAt:new Date().toISOString(),index:0,state:'set',endsAt:0,restOriginal:0,last:null,drafts:{},logs:{}}}
 function totalSets(k){return buildSequence(WORKOUTS[k]).length}
 function renderHome(){
  const a=active(),k=nextWorkoutKey(),w=WORKOUTS[k];
  $('#nextWorkout').textContent=w.name;$('#nextGoal').textContent=w.goal;$('#startWorkout').onclick=()=>a?openSession():startSession(k);
  $('#startWorkout').textContent=a?'Reanudar sesión':'Iniciar sesión';
+ $('#chooseWorkout').hidden=!!a;$('#chooseWorkout').onclick=openWorkoutPicker;
  $('#resumeCard').classList.toggle('show',!!a);
  if(a){const c=sessionCompletion(buildSequence(WORKOUTS[a.workoutKey]),a.logs);$('#resumeTitle').textContent=WORKOUTS[a.workoutKey].name;$('#resumeMeta').textContent=`${c.done}/${c.total} sets · ${a.state==='rest'?'descanso':a.state==='transition'?'biserie':'set activo'}`;$('#resumeBtn').onclick=openSession}
  renderUnits()
 }
 $$('.bottom button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
 function showPage(id){$$('.page').forEach(p=>p.classList.toggle('active',p.id===id));$$('.bottom button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));if(id==='program')renderProgram();if(id==='progress')renderProgress();scrollTo(0,0)}
-function renderProgram(){$('#programCards').innerHTML=ORDER.map(k=>{const w=WORKOUTS[k];return `<div class="card"><span class="integrity ${w.sourceConfidence==='alta'?'':'med'}">${w.sourceConfidence} confidence</span><div class="eyebrow">${w.short}</div><h2>${w.name}</h2><p class="small">${w.note}</p>${w.exercises.map(e=>`<span class="pill">${e.name}</span>`).join('')}</div>`}).join('')}
+function renderProgram(){
+ const a=active();
+ $('#programCards').innerHTML=ORDER.map(k=>{const w=WORKOUTS[k],same=a?.workoutKey===k;return `<div class="card"><span class="integrity ${w.sourceConfidence==='alta'?'':'med'}">${w.sourceConfidence} confidence</span><div class="eyebrow">${w.short}</div><h2>${w.name}</h2><p class="small">${w.note}</p>${w.exercises.map(e=>`<span class="pill">${e.name}</span>`).join('')}<div class="program-actions"><button class="btn ${same?'primary':'secondary'}" data-program-start="${k}" ${a&&!same?'disabled':''}>${same?'Reanudar':a?'Sesión activa':'Iniciar '+w.short}</button></div></div>`}).join('');
+ $$('[data-program-start]').forEach(b=>b.onclick=()=>{const k=b.dataset.programStart;if(active()){if(active().workoutKey===k)openSession();return}startSession(k)});
+}
+
+
+function lastTrainedLabel(k){
+ const h=previousWorkout(k);if(!h)return 'Sin registro';
+ const raw=h.endedAt||h.startedAt||h.date;if(!raw)return 'Registro previo';
+ const days=Math.max(0,Math.floor((Date.now()-new Date(raw).getTime())/86400000));
+ return days===0?'Hoy':days===1?'Ayer':`Hace ${days} días`;
+}
+function closeWorkoutPicker(){$('#workoutPicker').classList.remove('open');$('#workoutPicker').setAttribute('aria-hidden','true')}
+function openWorkoutPicker(){
+ if(active())return openSession();
+ const rec=nextWorkoutKey();
+ $('#workoutOptions').innerHTML=ORDER.map(k=>{const w=WORKOUTS[k];return `<button class="workout-option" data-pick-workout="${k}"><span class="workout-option-main"><span class="workout-option-name">${w.name}</span><span class="workout-option-meta">${w.duration} · ${w.goal}<br>${lastTrainedLabel(k)}</span></span><span class="workout-option-side">${k===rec?'<span class="rec-badge">Recomendada</span>':''}<span class="chev">›</span></span></button>`}).join('');
+ $$('[data-pick-workout]').forEach(b=>b.onclick=()=>{const k=b.dataset.pickWorkout;closeWorkoutPicker();startSession(k)});
+ $('#workoutPicker').classList.add('open');$('#workoutPicker').setAttribute('aria-hidden','false');
+}
+$('#closePicker').onclick=closeWorkoutPicker;
+$('#workoutPicker').onclick=e=>{if(e.target===$('#workoutPicker'))closeWorkoutPicker()};
 
 function startSession(k){if(active())return openSession();saveActive(makeSession(k));openSession()}
 async function requestWake(){try{if('wakeLock'in navigator){wake=await navigator.wakeLock.request('screen')}}catch(e){}}
@@ -647,6 +695,6 @@ $('#importFile').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try
 renderHome();renderProgress();renderUnits();startTicker();
 window.__FV_QA__={release:RELEASE,storage:store.ok,unit,programs:ORDER.length};
 
-document.documentElement.dataset.release='4.0.0-rc4';document.documentElement.dataset.boot='ok';
+document.documentElement.dataset.release='4.0.0-rc5';document.documentElement.dataset.boot='ok';
 </script>
 </body></html>

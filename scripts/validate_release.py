@@ -27,6 +27,10 @@ check("standalone shoulder present", "Hombro · standalone" in html)
 check("kg/lb control present", 'data-unit="kg"' in html and 'data-unit="lb"' in html)
 check("rest skip present", "Saltar descanso" in html)
 check("active set flow present", "Set activo" in html)
+check("workout chooser present", 'id="chooseWorkout"' in html and "Elegir rutina" in html)
+check("workout picker present", 'id="workoutPicker"' in html and 'data-pick-workout' in html)
+check("recommendation is explicitly optional", "puedes elegir cualquier sesión" in html)
+check("least-recently-trained recommendation helper present", "recommendedWorkoutKeyFromHistory" in html)
 
 for size in (180,192,512,1024):
     p = root / f"training-os-loop-v1-{size}.png"
