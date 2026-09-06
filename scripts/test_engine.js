@@ -120,6 +120,18 @@ test('recommendation selects least recently trained when all have history', () =
   assert(recommendedWorkoutKeyFromHistory(h)==='back','back should be least recent');
 });
 
+
+test('skipped set counts as resolved session progress', () => {
+  const seq=buildSequence(WORKOUTS.shoulders);
+  const c=sessionCompletion(seq,{a:{done:true},b:{done:false,skipped:true}});
+  assert(c.done===2 && c.total===10,'skip should resolve progress');
+});
+test('skipped set cannot trigger progression increase', () => {
+  const e={...WORKOUTS.back.exercises[0],sets:2,reps:'5–8'};
+  const d=progressionDecision(e,[{reps:8,rir:3,done:true},{reps:0,rir:null,done:false,skipped:true}]);
+  assert(d.factor===1,'skip must be ignored, not treated as successful set');
+});
+
 for (const [name, ok, detail] of tests) {
   console.log(`${ok?'PASS':'FAIL'} | ${name}${detail?' | '+detail:''}`);
 }

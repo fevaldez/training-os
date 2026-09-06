@@ -31,6 +31,10 @@ check("workout chooser present", 'id="chooseWorkout"' in html and "Elegir rutina
 check("workout picker present", 'id="workoutPicker"' in html and 'data-pick-workout' in html)
 check("recommendation is explicitly optional", "puedes elegir cualquier sesión" in html)
 check("least-recently-trained recommendation helper present", "recommendedWorkoutKeyFromHistory" in html)
+check("skip set control present", 'id="skipSet"' in html and "Omitir set" in html)
+check("finish early control present", 'id="finishEarlyBtn"' in html and "Finalizar y guardar" in html)
+check("discard session control present", 'id="discardSessionBtn"' in html and "Descartar sesión" in html)
+check("skipped status persisted", "status:'skipped'" in html)
 
 for size in (180,192,512,1024):
     p = root / f"training-os-loop-v1-{size}.png"
