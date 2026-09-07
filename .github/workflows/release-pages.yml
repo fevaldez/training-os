@@ -40,6 +40,9 @@ jobs:
       - name: Test training engine
         run: node scripts/test_engine.js
 
+      - name: Test UI static integrity
+        run: node scripts/test_ui_static.js
+
       - name: Build deploy artifact
         run: |
           rm -rf _site
