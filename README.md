@@ -1,2 +1,2 @@
 # training-os
-Weightlifting Training OS
+Multi-disciplinary Training OS
