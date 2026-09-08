@@ -10,6 +10,9 @@ on:
       - "manifest.webmanifest"
       - "training-os-loop-v1-*.png"
       - "scripts/validate_release.py"
+      - "scripts/test_engine.js"
+      - "scripts/test_ui_static.js"
+      - "scripts/release.sh"
       - ".github/workflows/release-pages.yml"
 
 permissions:
@@ -54,10 +57,10 @@ jobs:
           cp training-os-loop-v1-1024.png _site/
 
       - name: Configure Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
@@ -70,4 +73,4 @@ jobs:
     steps:
       - name: Deploy GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

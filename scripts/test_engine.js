@@ -25,6 +25,17 @@ globalThis.__prefillFromMemory = prefillFromMemory;
 globalThis.__remainingExerciseIndices = remainingExerciseIndices;
 globalThis.__sessionCompletion = sessionCompletion;
 globalThis.__recommendedWorkoutKeyFromHistory = recommendedWorkoutKeyFromHistory;
+globalThis.__CORE_ORDER = CORE_ORDER;
+globalThis.__FLEX_ORDER = FLEX_ORDER;
+globalThis.__estimatePlanMinutes = estimatePlanMinutes;
+globalThis.__plannerPresetIndices = plannerPresetIndices;
+globalThis.__makePlanSnapshot = makePlanSnapshot;
+globalThis.__weeklyStateFromHistory = weeklyStateFromHistory;
+globalThis.__armCoverageFromHistory = armCoverageFromHistory;
+globalThis.__armCatchUpNeedsFromHistory = armCatchUpNeedsFromHistory;
+globalThis.__catchUpArmsIndicesFromNeeds = catchUpArmsIndicesFromNeeds;
+globalThis.__recommendedCoreWorkoutFromHistory = recommendedCoreWorkoutFromHistory;
+globalThis.__sessionSequence = sessionSequence;
 `;
 
 const context = { console };
@@ -38,6 +49,10 @@ const remainingSeconds=context.__remainingSeconds, progressionDecision=context._
 const tempoView=context.__tempoView, prefillFromMemory=context.__prefillFromMemory, remainingExerciseIndices=context.__remainingExerciseIndices;
 const sessionCompletion=context.__sessionCompletion;
 const recommendedWorkoutKeyFromHistory=context.__recommendedWorkoutKeyFromHistory;
+const CORE_ORDER=context.__CORE_ORDER, FLEX_ORDER=context.__FLEX_ORDER;
+const estimatePlanMinutes=context.__estimatePlanMinutes, plannerPresetIndices=context.__plannerPresetIndices, makePlanSnapshot=context.__makePlanSnapshot;
+const weeklyStateFromHistory=context.__weeklyStateFromHistory, armCoverageFromHistory=context.__armCoverageFromHistory, armCatchUpNeedsFromHistory=context.__armCatchUpNeedsFromHistory;
+const catchUpArmsIndicesFromNeeds=context.__catchUpArmsIndicesFromNeeds, recommendedCoreWorkoutFromHistory=context.__recommendedCoreWorkoutFromHistory, sessionSequence=context.__sessionSequence;
 
 const tests = [];
 function test(name, fn) {
@@ -187,6 +202,95 @@ test('skip-exercise index selection preserves superset partner sets', () => {
   assert(idxs.length===WORKOUTS.chest.exercises[ropeEi].sets,'all rope sets');
   assert(idxs.every(i=>seq[i].ei===ropeEi),'no partner index');
   assert(idxs.every(i=>seq[i].ei!==crunchEi),'crunch preserved');
+});
+
+
+test('core order remains four base sessions and arms is flex only', () => {
+  assert(JSON.stringify(CORE_ORDER)===JSON.stringify(['chest','back','legs','shoulders']),'core order changed');
+  assert(FLEX_ORDER.length===1 && FLEX_ORDER[0]==='arms','arms must be flex');
+});
+test('standalone arms source of truth has biceps triceps forearm and 25 planned sets', () => {
+  const w=WORKOUTS.arms,groups=new Set(w.exercises.map(e=>e.group));
+  assert(groups.has('Bíceps')&&groups.has('Tríceps')&&groups.has('Antebrazo'),'missing arm groups');
+  assert(buildSequence(w).length===25,'unexpected arms full set count');
+});
+test('standalone arms heavy opening blocks are not supersetted', () => {
+  const w=WORKOUTS.arms,s=buildSequence(w);
+  const firstCurl=s.find(x=>x.ei===0),firstPress=s.find(x=>x.ei===1);
+  assert(firstCurl && !firstCurl.superset && firstPress && !firstPress.superset,'heavy blocks must stay standalone');
+});
+test('arms volume pair alternates lying curl and rope pushdown', () => {
+  const w=WORKOUTS.arms,s=buildSequence(w),i=s.findIndex(x=>x.ei===2);
+  assert(i>=0 && s[i].position==='first' && s[i+1].ei===3 && s[i+1].position==='second','arms B pair');
+});
+test('planner full snapshot preserves full workout set count', () => {
+  for(const k of [...CORE_ORDER,...FLEX_ORDER]){
+    const p=makePlanSnapshot(k,'full');
+    assert(p.confirmedSets===buildSequence(WORKOUTS[k]).length,`full mismatch ${k}`);
+    assert(p.excludedExerciseIndices.length===0,`full excluded ${k}`);
+  }
+});
+test('30 minute planner is deterministic and keeps tier-1 blocks', () => {
+  for(const k of ['chest','back','legs','arms']){
+    const idx=plannerPresetIndices(k,'30');
+    assert(idx.includes(0) && idx.includes(1),`tier1 missing ${k}`);
+    assert(buildSequence(WORKOUTS[k],idx).length<buildSequence(WORKOUTS[k]).length,`30min failed to shorten ${k}`);
+    assert(estimatePlanMinutes(k,idx)<=35,`30min estimate too high ${k}: ${estimatePlanMinutes(k,idx)}`);
+  }
+});
+test('45 minute planner is never smaller than 30 minute planner', () => {
+  for(const k of [...CORE_ORDER,...FLEX_ORDER]){
+    const a=buildSequence(WORKOUTS[k],plannerPresetIndices(k,'30')).length,b=buildSequence(WORKOUTS[k],plannerPresetIndices(k,'45')).length;
+    assert(b>=a,`45 smaller than 30 ${k}`);
+  }
+});
+test('plan-aware sequence preserves superset only when both partners are included', () => {
+  const both=buildSequence(WORKOUTS.chest,[3,4]),solo=buildSequence(WORKOUTS.chest,[3]);
+  assert(both[0].superset===true && both[1].superset===true,'pair should remain superset');
+  assert(solo.every(x=>!x.superset),'single partner must become standalone');
+});
+test('short confirmed plan counts as done when fully executed', () => {
+  const plan=makePlanSnapshot('chest','30'),sets=Array.from({length:plan.confirmedSets},(_,i)=>({done:true,setIndex:i,reps:6,rir:2}));
+  const h=[{workoutKey:'chest',endedAt:'2026-09-07T12:00:00Z',plan,sets}];
+  assert(weeklyStateFromHistory(h,'chest',new Date('2026-09-07T18:00:00Z')).state==='done','short plan should count as completed core');
+});
+test('legacy partial session is classified partial not done', () => {
+  const sets=Array.from({length:6},(_,i)=>({done:true,setIndex:i,reps:6,rir:2}));
+  const h=[{workoutKey:'chest',endedAt:'2026-09-07T12:00:00Z',sets}];
+  assert(weeklyStateFromHistory(h,'chest',new Date('2026-09-07T18:00:00Z')).state==='partial','legacy 6/20 should be partial');
+});
+test('arms catch-up is not suggested before corresponding core attempt', () => {
+  const n=armCatchUpNeedsFromHistory([],new Date('2026-09-07T18:00:00Z'));
+  assert(!n.biceps&&!n.triceps,'catchup should not invent debt');
+});
+test('arms catch-up detects undercovered triceps after chest attempt', () => {
+  const sets=[{done:true,exerciseName:'Machine / Lever Chest Press'},{done:true,exerciseName:'Rope Pushdown'}];
+  const h=[{workoutKey:'chest',endedAt:'2026-09-07T12:00:00Z',sets}];
+  const n=armCatchUpNeedsFromHistory(h,new Date('2026-09-07T18:00:00Z'));
+  assert(n.triceps===true,'triceps undercoverage not detected');
+  assert(n.biceps===false,'biceps should not be inferred without back attempt');
+});
+test('catch-up arms defaults exclude forearm and avoid one-to-one debt recovery', () => {
+  const needs={biceps:true,triceps:true,coverage:{biceps:2,bicepsTarget:9,triceps:2,tricepsTarget:7}};
+  const idx=catchUpArmsIndicesFromNeeds(needs);
+  assert(idx.every(i=>![6,7].includes(i)),'forearm should be optional in catchup');
+  assert(idx.length===4,'catchup should use conservative two movements per undercovered group');
+});
+test('core recommendation never returns flex arms', () => {
+  const h=[{workoutKey:'arms',endedAt:'2026-09-07T12:00:00Z'}];
+  const k=recommendedCoreWorkoutFromHistory(h,new Date('2026-09-07T18:00:00Z'));
+  assert(CORE_ORDER.includes(k)&&k!=='arms','flex arms entered core recommendation');
+});
+test('core recommendation prioritizes a pending core over completed core', () => {
+  const p=makePlanSnapshot('chest','30'),sets=Array.from({length:p.confirmedSets},()=>({done:true,reps:6,rir:2}));
+  const h=[{workoutKey:'chest',endedAt:'2026-09-07T12:00:00Z',plan:p,sets}];
+  const k=recommendedCoreWorkoutFromHistory(h,new Date('2026-09-07T18:00:00Z'));
+  assert(k!=='chest'&&CORE_ORDER.includes(k),'completed chest should not be immediate recommendation');
+});
+test('session sequence honors confirmed planner exercise list', () => {
+  const plan=makePlanSnapshot('back','30'),a={plan},seq=sessionSequence(a,WORKOUTS.back);
+  assert(seq.length===plan.confirmedSets,'session sequence count');
+  assert(seq.every(x=>plan.includedExerciseIndices.includes(x.ei)),'excluded exercise leaked into session');
 });
 
 for (const [name, ok, detail] of tests) {
