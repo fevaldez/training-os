@@ -2,8 +2,8 @@
 <html lang="es"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#f5f5f7"><title>Training OS · FV Hybrid</title>
-<link rel="apple-touch-icon" sizes="180x180" href="./training-os-loop-v1-180.png?v=4.0.0-rc6">
-<link rel="manifest" href="./manifest.webmanifest?v=4.0.0-rc6">
+<link rel="apple-touch-icon" sizes="180x180" href="./training-os-loop-v1-180.png?v=4.0.0-rc6.1">
+<link rel="manifest" href="./manifest.webmanifest?v=4.0.0-rc6.1">
 <meta name="application-name" content="Training OS">
 <meta name="apple-mobile-web-app-title" content="Training OS">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -72,6 +72,7 @@ button:disabled{opacity:.45}
 .week-head{display:flex;align-items:flex-end;justify-content:space-between;gap:8px}.week-score{font-size:28px;font-weight:900;letter-spacing:-.04em}.week-list{margin-top:10px}.week-row{display:grid;grid-template-columns:28px 1fr auto;gap:9px;align-items:center;padding:10px 0;border-bottom:1px solid var(--separator)}.week-row:last-child{border-bottom:0}.week-icon{font-size:18px;font-weight:900;text-align:center}.week-name{font-size:16px;font-weight:850}.week-detail{font-size:13px;color:var(--secondaryLabel);margin-top:2px}.week-state{font-size:12px;font-weight:900;letter-spacing:.03em;text-transform:uppercase;color:var(--secondaryLabel)}.week-state.done{color:var(--green)}.week-state.partial{color:var(--amber)}.week-state.active{color:var(--blue)}
 .program-section-title{font-size:14px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--secondaryLabel);margin:22px 3px 4px}.program-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}.program-card-head h2{margin-top:5px}.program-card-note{font-size:14px;color:var(--secondaryLabel);line-height:1.45;margin-top:8px}.status-chip.partial{background:#fff7ed;color:#9a3412}.status-chip.flex{background:#f2f2f7;color:#6e6e73}.status-chip.catchup{background:#f5e9ff;color:#7a2bbd}.program-coverage{font-size:13px;color:var(--secondaryLabel);margin-top:8px}
 .planner-sheet{max-height:94svh}.planner-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}.planner-stat{background:var(--surface2);border-radius:14px;padding:10px;text-align:center}.planner-stat b{display:block;font-size:20px}.planner-stat span{display:block;font-size:12px;color:var(--secondaryLabel);margin-top:2px}.planner-exercise{display:grid;grid-template-columns:44px 1fr;gap:10px;align-items:center;border-top:1px solid var(--separator);padding:11px 1px}.plan-toggle{width:42px;height:42px;border-radius:13px;border:1px solid var(--separator);background:var(--surface);color:var(--secondaryLabel);font-size:20px;font-weight:900}.plan-toggle.active{background:var(--blue);color:#fff;border-color:var(--blue)}.planner-exercise-name{font-size:16px;font-weight:850}.planner-exercise-meta{font-size:13px;color:var(--secondaryLabel);margin-top:3px;line-height:1.35}.planner-note{font-size:13px;color:var(--secondaryLabel);line-height:1.4;margin:12px 2px}.catchup-note{border-left:4px solid #bf5af2;background:#f8f1ff;border-radius:13px;padding:10px 12px;margin-top:10px;font-size:14px;line-height:1.4}.next-priority{font-size:14px;color:var(--secondaryLabel);margin-top:9px}
+.today-reasons{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.reason-chip{font-size:13px;font-weight:750;background:var(--surface2);color:var(--secondaryLabel);padding:6px 9px;border-radius:999px}.today-alts{margin-top:14px;border-top:1px solid var(--separator);padding-top:12px}.today-alt{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--separator)}.today-alt b{display:block;font-size:15px}.today-alt span{display:block;font-size:13px;color:var(--secondaryLabel);margin-top:3px}.mini-plan{border:0;border-radius:12px;background:var(--surface2);color:var(--blue);font-weight:800;padding:9px 11px}.today-choice-footer{display:flex;gap:8px;margin-top:12px;align-items:center}.today-choice-footer .btn{flex:1}.availability-reset{border:0;background:transparent;color:var(--blue);font-size:13px;font-weight:800;padding:8px}.actionrow .secondary{min-width:140px}
 .next-mini{position:relative}.rest-next{position:relative}
 @media(prefers-color-scheme:dark){.status-chip.flex{background:var(--surface2);color:var(--secondaryLabel)}.status-chip.catchup{background:#271330;color:#d7a4ff}.catchup-note{background:#211128;color:#d7a4ff}.plan-toggle{background:var(--surface);color:var(--secondaryLabel)}}
 
@@ -97,7 +98,7 @@ button:disabled{opacity:.45}
 <div id="fatalBoot" hidden style="position:fixed;z-index:9999;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));background:#fff1f0;color:#b42318;border:1px solid #f3b4ae;border-radius:14px;padding:12px 14px;font:600 14px -apple-system,BlinkMacSystemFont,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.12)"></div>
 <div class="app">
 <section class="page active" id="today">
-<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><div class="eyebrow">T·OS · 4.0.0-rc6 · Continuous Loop</div><h1>Hoy</h1><p class="sub" id="todayDate"></p></div><div class="unit"><button data-unit="kg">kg</button><button data-unit="lb">lb</button></div></div>
+<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><div class="eyebrow">T·OS · 4.0.0-rc6.1 · Continuous Loop</div><h1>Hoy</h1><p class="sub" id="todayDate"></p></div><div class="unit"><button data-unit="kg">kg</button><button data-unit="lb">lb</button></div></div>
 <div class="card resume" id="resumeCard"><div class="eyebrow">Sesión activa</div><h2 id="resumeTitle"></h2><p class="small" id="resumeMeta"></p><button class="btn primary" id="resumeBtn">Reanudar</button><div class="actionrow"><button class="btn secondary" id="finishEarlyBtn">Finalizar y guardar</button><button class="btn danger" id="discardSessionBtn">Descartar sesión</button></div></div>
 <div class="card" id="todayDecisionCard"><div id="todayDecision"></div></div>
 <div class="card" id="weekSnapshotCard"><div id="weekSnapshot"></div></div>
@@ -435,13 +436,39 @@ const WORKOUTS = {
     "name": "Hombro · standalone",
     "short": "Hombro",
     "goal": "Hipertrofia + fuerza · shoulder-safe",
-    "duration": "35–50 min",
-    "sourceConfidence": "media",
-    "note": "Se mantiene SOLO hombro. No se añaden brazos ni presses nuevos: el inventario histórico exacto no está completamente recuperado, así que esta RC conserva únicamente el bloque shoulder-specific confirmado.",
+    "duration": "45–60 min",
+    "sourceConfidence": "alta",
+    "note": "Rutina standalone restaurada: press con mancuernas + landmine para fuerza, laterales/rear-delt para hipertrofia y cierre de estabilidad. Presses reinstalados tras confirmación actual de tolerancia; dolor/pinzamiento >2/10 = recorta ROM o cambia variante.",
     "exercises": [
       {
-        "name": "Machine Lateral Raise",
+        "name": "DB Shoulder Press",
         "sets": 4,
+        "reps": "6–8",
+        "rir": "2",
+        "tempo": "3-1-X-1",
+        "rest": 150,
+        "group": "Hombro",
+        "alt": "Machine shoulder press neutral-grip · solo en ROM cómodo",
+        "tip": "SETUP: agarre neutro/semi-neutro, escápulas estables y costillas abajo. EJECUCIÓN: sube sin encoger hombros; baja 3 s. STOP: pinzamiento, pérdida de control o dolor >2/10.",
+        "superset": null,
+        "video": "https://www.youtube.com/results?search_query=dumbbell+shoulder+press+proper+form+tutorial"
+      },
+      {
+        "name": "Unilateral Landmine Press",
+        "sets": 4,
+        "reps": "8/lado",
+        "rir": "2",
+        "tempo": "2-1-X-1",
+        "rest": 90,
+        "group": "Hombro",
+        "alt": "Single-arm cable press en plano escapular",
+        "tip": "Plano escapular y tronco firme. Empuja arriba/adelante sin compensar con extensión lumbar. Mantén la trayectoria que hoy toleras; dolor >2/10 = recorta ROM.",
+        "superset": null,
+        "video": "https://www.youtube.com/results?search_query=unilateral+landmine+press+proper+form+tutorial"
+      },
+      {
+        "name": "Machine Lateral Raise",
+        "sets": 3,
         "reps": "10–15",
         "rir": "2",
         "tempo": "2-1-2-1",
@@ -462,7 +489,7 @@ const WORKOUTS = {
         "group": "Hombro",
         "alt": "Lean-away cable raise",
         "tip": "Mantén el brazo en plano escapular y el tronco quieto. No ganes altura rotando el hombro con el codo elevado.",
-        "superset": null,
+        "superset": "Chest-Supported Rear-Delt Row",
         "video": "https://www.youtube.com/results?search_query=Cable+Lateral+Raise+proper+form+tutorial"
       },
       {
@@ -475,8 +502,34 @@ const WORKOUTS = {
         "group": "Hombro posterior",
         "alt": "Reverse pec deck solo si 100% cómodo",
         "tip": "Pecho fijo. Codos algo por debajo de 90°. Lleva brazos fuera/atrás sin entrar en la rotación que reproduce molestia.",
-        "superset": null,
+        "superset": "Cable Lateral Raise",
         "video": "https://www.youtube.com/results?search_query=Chest-Supported+Rear-Delt+Row+proper+form+tutorial"
+      },
+      {
+        "name": "Partial Lateral Raise",
+        "sets": 2,
+        "reps": "15–20",
+        "rir": "1–2",
+        "tempo": "2-0-2-0",
+        "rest": 45,
+        "group": "Hombro",
+        "alt": "Cable lateral partials",
+        "tip": "Parciales controladas en el rango medio cómodo; cero impulso. Busca tensión continua, no altura máxima. Si el hombro protesta, elimina este bloque.",
+        "superset": "Face Pull + External Rotation",
+        "video": "https://www.youtube.com/results?search_query=partial+lateral+raise+proper+form"
+      },
+      {
+        "name": "Face Pull + External Rotation",
+        "sets": 2,
+        "reps": "12–15",
+        "rir": "3",
+        "tempo": "2-1-2-1",
+        "rest": 60,
+        "group": "Hombro posterior",
+        "alt": "Cable external rotation ligera",
+        "tip": "Carga ligera. Termina con manos a los lados de la cara sin forzar rotación. Este bloque es calidad/estabilidad, no un ejercicio para perseguir carga.",
+        "superset": "Partial Lateral Raise",
+        "video": "https://www.youtube.com/results?search_query=face+pull+external+rotation+proper+form"
       }
     ]
   },
@@ -639,7 +692,7 @@ const CONCENTRIC_START_EXERCISES = new Set([
   'Machine / Lever Chest Press','Converging Chest Press','Rope Pushdown','Cable / Machine Crunch','Cross-Body Pushdown',
   'Chest-Supported Row','Neutral-Grip Lat Pulldown','1-Arm Cable Row','Straight-Arm Cable Pulldown','Cable Curl','Preacher / Supported Curl','Rope Hammer Curl',
   'Leg Extension · unilateral','Leg Extension · bilateral','Seated Leg Curl','Lying Leg Curl','Hip Thrust','Seated Calf Raise','Hip Abduction · CONDICIONAL','Hip Adduction',
-  'Machine Lateral Raise','Cable Lateral Raise','Chest-Supported Rear-Delt Row',
+  'DB Shoulder Press','Unilateral Landmine Press','Machine Lateral Raise','Cable Lateral Raise','Chest-Supported Rear-Delt Row','Partial Lateral Raise','Face Pull + External Rotation',
   'Cable Curl · barra/EZ','Pressdown · barra/V','Lying Cable Curl','Rope Pushdown · volumen','Cable Preacher Curl','Cable Triceps Kickback · neutral',
   'Behind-the-Back Cable Wrist Curl','Cable Reverse Wrist Curl','Myo-Rep Finisher · OPTIONAL'
 ]);
@@ -762,7 +815,7 @@ const PLAN_BLOCKS={
   chest:[{i:[0],t:1},{i:[1],t:1},{i:[2],t:2},{i:[3,4],t:2},{i:[5],t:3}],
   back:[{i:[0],t:1},{i:[1],t:1},{i:[2],t:2},{i:[4],t:2},{i:[3],t:3},{i:[5],t:3},{i:[6],t:3}],
   legs:[{i:[0],t:1},{i:[3],t:1},{i:[1],t:2},{i:[6],t:2},{i:[2],t:2},{i:[5],t:2},{i:[4],t:3},{i:[8],t:3},{i:[7],t:3}],
-  shoulders:[{i:[0],t:1},{i:[2],t:1},{i:[1],t:2}],
+  shoulders:[{i:[0],t:1},{i:[1],t:1},{i:[2],t:2},{i:[3,4],t:2},{i:[5,6],t:3}],
   arms:[{i:[0],t:1},{i:[1],t:1},{i:[2,3],t:2},{i:[6,7],t:2},{i:[4,5],t:3},{i:[8],t:4}]
 };
 function allExerciseIndices(k){return WORKOUTS[k].exercises.map((_,i)=>i)}
@@ -848,11 +901,48 @@ function catchUpArmsIndicesFromNeeds(needs){
   if(needs?.triceps){out.push(1);if((c.triceps||0)<(c.tricepsTarget||1)*.5)out.push(3)}
   return [...new Set(out)].sort((a,b)=>a-b);
 }
-function recommendedCoreWorkoutFromHistory(h,now=new Date(),excludeKey=null){
-  const candidates=CORE_ORDER.filter(k=>k!==excludeKey),pending=candidates.filter(k=>weeklyStateFromHistory(h,k,now).state!=='done');
-  const pool=pending.length?pending:candidates;
-  const lastMap=new Map();for(const k of pool){const x=(h||[]).filter(s=>s?.workoutKey===k).slice(-1)[0],raw=x?.endedAt||x?.startedAt||null;lastMap.set(k,raw?new Date(raw).getTime():0)}
-  return pool.slice().sort((a,b)=>(lastMap.get(a)||0)-(lastMap.get(b)||0)||CORE_ORDER.indexOf(a)-CORE_ORDER.indexOf(b))[0]||CORE_ORDER[0];
+const CORE_OVERLAP_PENALTY={
+  chest:{shoulders:12},
+  shoulders:{chest:12}
+};
+function latestCoreWorkoutKeyFromHistory(h=[]){
+  const x=(h||[]).filter(s=>s&&CORE_ORDER.includes(s.workoutKey)).slice(-1)[0];
+  return x?.workoutKey||null;
+}
+function lastCoreTimestampFromHistory(h=[],k){
+  const x=(h||[]).filter(s=>s?.workoutKey===k).slice(-1)[0],raw=x?.endedAt||x?.startedAt||x?.date||null;
+  return raw?new Date(raw).getTime():0;
+}
+function recommendationSignalsFromHistory(h,k,now=new Date(),preset='full',avoidKeys=[]){
+  const ws=weeklyStateFromHistory(h,k,now),lastTs=lastCoreTimestampFromHistory(h,k),days=lastTs?Math.max(0,Math.floor((now.getTime()-lastTs)/86400000)):null;
+  const included=plannerPresetIndices(k,preset),minutes=estimatePlanMinutes(k,included),target=preset==='30'?30:preset==='45'?45:null,lastKey=latestCoreWorkoutKeyFromHistory(h);
+  let score=0;const reasons=[];
+  if(ws.state==='due'){score+=40;reasons.push('0/1 esta semana')}else if(ws.state==='partial'){score+=28;reasons.push('parcial esta semana')}else{score-=18;reasons.push('ya cubierto esta semana')}
+  if(days===null){score+=10;reasons.push('sin baseline')}else if(days>=7){score+=20;reasons.push(`hace ${days} días`)}else if(days>=4){score+=14;reasons.push(`hace ${days} días`)}else if(days>=2){score+=6;reasons.push(`hace ${days} días`)}else if(days===1){score-=12;reasons.push('entrenado ayer')}else{score-=28;reasons.push('entrenado hoy')}
+  if(target){if(minutes<=target+3){score+=10;reasons.push(`cabe en ${target} min`)}else{score-=Math.min(18,minutes-target);reasons.push(`~${minutes}m > ${target}m`)}}
+  const overlap=lastKey&&CORE_OVERLAP_PENALTY[lastKey]?.[k]||0;if(overlap){score-=overlap;reasons.push(`solapa recuperación con ${WORKOUTS[lastKey].short}`)}
+  if((avoidKeys||[]).includes(k)){score-=100;reasons.push('equipo ocupado hoy')}
+  return {key:k,score,reasons,weeklyState:ws.state,days,minutes,lastKey,avoided:(avoidKeys||[]).includes(k)};
+}
+function rankCoreWorkoutsFromHistory(h=[],now=new Date(),preset='full',avoidKeys=[],excludeKey=null){
+  return CORE_ORDER.filter(k=>k!==excludeKey).map(k=>recommendationSignalsFromHistory(h,k,now,preset,avoidKeys)).sort((a,b)=>b.score-a.score||(b.days??999)-(a.days??999)||a.key.localeCompare(b.key));
+}
+function recommendationStrength(ranked=[]){
+  if(!ranked.length)return {clear:false,delta:0};
+  if(ranked.length===1)return {clear:true,delta:999};
+  const delta=ranked[0].score-ranked[1].score;return {clear:delta>=8,delta};
+}
+function recommendedCoreWorkoutFromHistory(h,now=new Date(),excludeKey=null,preset='full',avoidKeys=[]){
+  return rankCoreWorkoutsFromHistory(h,now,preset,avoidKeys,excludeKey)[0]?.key||CORE_ORDER[0];
+}
+function distinctPlannerPresets(k){
+  const raw=['30','45','full'].map(p=>({preset:p,indices:plannerPresetIndices(k,p),estimatedMin:estimatePlanMinutes(k,plannerPresetIndices(k,p))}));
+  const groups=[];
+  for(const item of raw){const sig=item.indices.join(',');let g=groups.find(x=>x.sig===sig);if(!g){g={sig,items:[]};groups.push(g)}g.items.push(item)}
+  return groups.map(g=>g.items.find(x=>x.preset==='full')||g.items[0]);
+}
+function resolveDistinctPreset(k,preset){
+  const desired=plannerPresetIndices(k,preset).join(','),opts=distinctPlannerPresets(k),same=opts.find(x=>x.indices.join(',')===desired);return same?.preset||opts.at(-1)?.preset||'full';
 }
 function sessionSequence(a,w){return buildSequence(w,a?.plan?.includedExerciseIndices??null)}
 
@@ -870,7 +960,7 @@ function recommendedWorkoutKeyFromHistory(h=[]){
   return CORE_ORDER.slice().sort((a,b)=>(latest.get(a)||0)-(latest.get(b)||0))[0];
 }
 
-const RELEASE='4.0.0-rc6';
+const RELEASE='4.0.0-rc6.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const store={ok:false,test(){try{localStorage.setItem('__fv4test','1');localStorage.removeItem('__fv4test');this.ok=true}catch(e){this.ok=false}return this.ok},get(k,d=null){if(!this.ok)return d;try{const x=localStorage.getItem(k);return x===null?d:JSON.parse(x)}catch(e){return d}},set(k,v){if(!this.ok)return false;try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}},del(k){if(this.ok)try{localStorage.removeItem(k)}catch(e){}}};store.test();
 let unit=store.get('fv4.unit',null)||store.get('tos_v3_display_unit','kg')||'kg',wake=null,ticker=null,lastAlarmAt=0,skipContext=null;
@@ -987,9 +1077,13 @@ function diagnostics(action,data={}){
   const log=store.get('tos.diag',[]);log.push(entry);while(log.length>40)log.shift();store.set('tos.diag',log);store.set('tos.lastAction',entry);
 }
 
+function localDateKey(d=new Date()){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+function todayAvoidedWorkouts(){const x=store.get('fv4.todayAvoid',null),key=localDateKey();return x?.date===key&&Array.isArray(x.keys)?x.keys:[]}
+function markWorkoutBusyToday(k){const key=localDateKey(),keys=[...new Set([...todayAvoidedWorkouts(),k])];store.set('fv4.todayAvoid',{date:key,keys});diagnostics('today:equipment-busy',{workout:k});renderHome()}
+function clearTodayAvoided(){store.del('fv4.todayAvoid');diagnostics('today:availability-reset');renderHome()}
 window.addEventListener('error',e=>{try{diagnostics('window:error',{message:String(e.message||'error'),file:e.filename||'',line:e.lineno||0})}catch(_){}});
 window.addEventListener('unhandledrejection',e=>{try{diagnostics('window:rejection',{message:String(e.reason?.message||e.reason||'rejection')})}catch(_){}});
-function nextWorkoutKey(excludeKey=null){return recommendedCoreWorkoutFromHistory(history(),new Date(),excludeKey)}
+function nextWorkoutKey(excludeKey=null){return recommendedCoreWorkoutFromHistory(history(),new Date(),excludeKey,todayPreset,todayAvoidedWorkouts())}
 function makeSession(k,plan=null){return {schema:5,id:Date.now(),release:RELEASE,workoutKey:k,startedAt:new Date().toISOString(),index:0,state:'set',endsAt:0,restOriginal:0,last:null,drafts:{},logs:{},plan:plan||makePlanSnapshot(k,'full')}}
 function totalSets(k){return buildSequence(WORKOUTS[k]).length}
 let todayPreset=store.get('fv4.todayPreset','full')||'full';
@@ -1003,17 +1097,22 @@ function weeklySnapshotMarkup(a=null){
  const catchup=needs.biceps||needs.triceps?`<div class="catchup-note"><b>Brazos · catch-up disponible</b><br>Cobertura directa: bíceps ${needs.coverage.biceps}/${needs.coverage.bicepsTarget} · tríceps ${needs.coverage.triceps}/${needs.coverage.tricepsTarget}. No implica recuperar sets 1:1.</div>`:'';
  return `<div class="week-head"><div><div class="eyebrow">Esta semana</div><h2 style="margin-top:5px">Core 4 días</h2></div><div class="week-score">${cov.done}/4</div></div>${rows}${catchup}`;
 }
+function recommendationReasonsMarkup(rec){return `<div class="today-reasons">${rec.reasons.slice(0,3).map(x=>`<span class="reason-chip">${x}</span>`).join('')}</div>`}
 function renderTodayDecision(a=null){
- const card=$('#todayDecisionCard'),el=$('#todayDecision');
+ const card=$('#todayDecisionCard'),el=$('#todayDecision'),avoid=todayAvoidedWorkouts();
  if(a){
-   const k=nextWorkoutKey(a.workoutKey),w=WORKOUTS[k],status=workoutStatus(k);card.hidden=false;
-   el.innerHTML=`<div class="today-status"><div><div class="eyebrow">Después de esta sesión</div><div class="today-title">${w.name}</div></div><span class="status-chip ${status.cls}">${status.label}</span></div><div class="today-meta">${formatLast(k)} · ${w.duration} · Anchor ${anchorProgress(k)}</div><div class="next-priority">Prioridad probable; se recalcula al guardar tu sesión actual.</div>`;
+   const ranked=rankCoreWorkoutsFromHistory(history(),new Date(),todayPreset,avoid,a.workoutKey),rec=ranked[0],w=WORKOUTS[rec.key],status=workoutStatus(rec.key);card.hidden=false;
+   el.innerHTML=`<div class="today-status"><div><div class="eyebrow">Después de esta sesión</div><div class="today-title">${w.name}</div></div><span class="status-chip ${status.cls}">${status.label}</span></div>${recommendationReasonsMarkup(rec)}<div class="today-meta">Prioridad probable; se recalcula al guardar tu sesión actual.</div>`;
    return;
  }
- const k=nextWorkoutKey(),w=WORKOUTS[k],status=workoutStatus(k),shortIdx=plannerPresetIndices(k,'30'),fullMin=estimatePlanMinutes(k,allExerciseIndices(k)),shortMin=estimatePlanMinutes(k,shortIdx),needs=armCatchUpNeeds();
- el.innerHTML=`<div class="today-status"><div><div class="eyebrow">Mejor fit ahora</div><div class="today-title">${w.name}</div></div><span class="status-chip ${status.cls}">${status.label}</span></div><div class="today-meta">${formatLast(k)} · ${weeklyWorkoutState(k).state==='partial'?'sesión parcial esta semana':'core pendiente'} · Short ~${shortMin}m · Full ~${fullMin}m · Anchor ${anchorProgress(k)}</div><div class="time-choice" id="todayTimeChoice"><button data-today-preset="30" class="${todayPreset==='30'?'active':''}">30 min</button><button data-today-preset="45" class="${todayPreset==='45'?'active':''}">45 min</button><button data-today-preset="full" class="${todayPreset==='full'?'active':''}">Full</button></div>${needs.biceps||needs.triceps?`<div class="catchup-note"><b>Catch-up Arms disponible</b> · ${needs.biceps?'bíceps ':''}${needs.triceps?'tríceps':''}</div>`:''}<div class="actionrow"><button class="btn primary" id="planRecommended">Planear sesión</button><button class="btn secondary" id="chooseWorkout">Elegir otra</button></div>`;
+ const ranked=rankCoreWorkoutsFromHistory(history(),new Date(),todayPreset,avoid),strength=recommendationStrength(ranked),rec=ranked[0],k=rec.key,w=WORKOUTS[k],status=workoutStatus(k),needs=armCatchUpNeeds(),opts=distinctPlannerPresets(k),resolved=resolveDistinctPreset(k,todayPreset);
+ if(resolved!==todayPreset){todayPreset=resolved;store.set('fv4.todayPreset',todayPreset)}
+ const alts=ranked.slice(1,3).map(r=>`<div class="today-alt"><div><b>${WORKOUTS[r.key].name}</b><span>${r.reasons.slice(0,2).join(' · ')}</span></div><button class="mini-plan" data-alt-plan="${r.key}">Planear</button></div>`).join('');
+ const avail=avoid.length?`<button class="availability-reset" id="resetAvailability">Restablecer disponibilidad</button>`:'';
+ el.innerHTML=`<div class="today-status"><div><div class="eyebrow">${strength.clear?'Mejor fit ahora':'Opciones casi equivalentes'}</div><div class="today-title">${w.name}</div></div><span class="status-chip ${status.cls}">${status.label}</span></div>${recommendationReasonsMarkup(rec)}<div class="today-meta">Short ~${estimatePlanMinutes(k,plannerPresetIndices(k,'30'))}m · Full ~${estimatePlanMinutes(k,allExerciseIndices(k))}m · Anchor ${anchorProgress(k)}</div><div class="time-choice" id="todayTimeChoice">${opts.map(o=>`<button data-today-preset="${o.preset}" class="${todayPreset===o.preset?'active':''}">${o.preset==='full'?`Full · ~${o.estimatedMin}m`:`${o.preset} min`}</button>`).join('')}</div>${needs.biceps||needs.triceps?`<div class="catchup-note"><b>Catch-up Arms disponible</b> · ${needs.biceps?'bíceps ':''}${needs.triceps?'tríceps':''}</div>`:''}<div class="actionrow"><button class="btn primary" id="planRecommended">Planear sesión</button><button class="btn secondary" id="busyRecommended">Equipo ocupado</button></div><div class="today-alts"><div class="eyebrow">Alternativas</div>${alts}</div><div class="today-choice-footer"><button class="btn ghost" id="chooseWorkout">Ver todas</button>${avail}</div>`;
  $$('[data-today-preset]').forEach(b=>b.onclick=()=>{todayPreset=b.dataset.todayPreset;store.set('fv4.todayPreset',todayPreset);renderTodayDecision(null)});
- $('#planRecommended').onclick=()=>openPlanner(k,todayPreset);$('#chooseWorkout').onclick=openWorkoutPicker;
+ $('#planRecommended').onclick=()=>openPlanner(k,todayPreset);$('#busyRecommended').onclick=()=>markWorkoutBusyToday(k);$('#chooseWorkout').onclick=openWorkoutPicker;$('#resetAvailability')?.addEventListener('click',clearTodayAvoided);
+ $$('[data-alt-plan]').forEach(b=>b.onclick=()=>openPlanner(b.dataset.altPlan,resolveDistinctPreset(b.dataset.altPlan,todayPreset)));
 }
 function renderHome(){
  const a=active();$('#resumeCard').classList.toggle('show',!!a);
@@ -1071,14 +1170,14 @@ function plannerPresetLabel(p){return p==='full'?'Full':p==='45'?'45 min':p==='3
 function closePlanner(){plannerState=null;$('#plannerSheet').classList.remove('open');$('#plannerSheet').setAttribute('aria-hidden','true')}
 function openPlanner(k,preset='full'){
  if(active())return openSession();
- const needs=armCatchUpNeeds(),effective=preset==='catchup'&&k==='arms'&&(needs.biceps||needs.triceps)?'catchup':preset;
+ const needs=armCatchUpNeeds(),requested=preset==='catchup'&&k==='arms'&&(needs.biceps||needs.triceps)?'catchup':preset,effective=requested==='catchup'?'catchup':resolveDistinctPreset(k,requested);
  plannerState={k,preset:effective,included:plannerPresetIndicesRuntime(k,effective),custom:false};renderPlanner();$('#plannerSheet').classList.add('open');$('#plannerSheet').setAttribute('aria-hidden','false');diagnostics('planner:open',{workout:k,preset:effective})
 }
 function renderPlanner(){
  if(!plannerState)return;const {k}=plannerState,w=WORKOUTS[k],needs=armCatchUpNeeds(),catchAvailable=k==='arms'&&(needs.biceps||needs.triceps);
  const plan=makePlanSnapshot(k,plannerState.custom?'custom':plannerState.preset,plannerState.included),full=buildSequence(w).length;
  $('#plannerTitle').textContent=w.name;$('#plannerSubtitle').textContent=`${w.goal} · confirma la sesión real antes de empezar.`;
- const presets=[['30','30 min'],['45','45 min'],['full','Full']];if(catchAvailable)presets.unshift(['catchup','Catch-up']);
+ const presets=distinctPlannerPresets(k).map(o=>[o.preset,o.preset==='full'?`Full · ~${o.estimatedMin}m`:`${o.preset} min`]);if(catchAvailable)presets.unshift(['catchup','Catch-up']);if(!plannerState.custom&&plannerState.preset!=='catchup')plannerState.preset=resolveDistinctPreset(k,plannerState.preset);
  $('#plannerPresets').innerHTML=presets.map(([v,label])=>`<button data-plan-preset="${v}" class="${!plannerState.custom&&plannerState.preset===v?'active':''}">${label}</button>`).join('');
  $('#plannerSummary').innerHTML=`<div class="planner-stat"><b>${plan.confirmedSets}</b><span>sets hoy</span></div><div class="planner-stat"><b>~${plan.estimatedMin}m</b><span>estimado</span></div><div class="planner-stat"><b>${full}</b><span>programa full</span></div>`;
  $('#plannerExercises').innerHTML=w.exercises.map((e,i)=>{const on=plannerState.included.includes(i);return `<div class="planner-exercise"><button class="plan-toggle ${on?'active':''}" data-plan-toggle="${i}" aria-pressed="${on}">${on?'✓':'+'}</button><div><div class="planner-exercise-name">${e.name}</div><div class="planner-exercise-meta">${e.group} · ${e.sets} sets · ${e.reps} reps · RIR ${e.rir}</div></div></div>`}).join('');
@@ -1247,6 +1346,6 @@ $('#importFile').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try
 renderHome();renderProgress();renderUnits();startTicker();
 window.__FV_QA__={release:RELEASE,storage:store.ok,unit,programs:ORDER.length};
 
-document.documentElement.dataset.release='4.0.0-rc6';document.documentElement.dataset.boot='ok';
+document.documentElement.dataset.release='4.0.0-rc6.1';document.documentElement.dataset.boot='ok';
 </script>
 </body></html>

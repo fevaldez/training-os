@@ -28,6 +28,9 @@ check('rest skip present', 'Saltar descanso' in html)
 check('active set flow present', 'Set activo' in html)
 check('no stale Hombro + Brazos label', 'Hombro + Brazos' not in html)
 check('standalone shoulder present', 'Hombro · standalone' in html)
+check('shoulder standalone restored with press strength blocks', 'DB Shoulder Press' in html and 'Unilateral Landmine Press' in html)
+check('shoulder standalone retains lateral rear-delt stability blocks', all(x in html for x in ('Machine Lateral Raise','Cable Lateral Raise','Chest-Supported Rear-Delt Row','Partial Lateral Raise','Face Pull + External Rotation')))
+check('shoulder routine no longer carries incomplete-inventory note', 'inventario histórico exacto no está completamente recuperado' not in html)
 
 # RC6 information architecture
 check('Week tab removed', 'data-page="week"' not in html)
@@ -35,10 +38,14 @@ check('Week page removed', '<h1>Semana</h1>' not in html)
 check('permanent MVP explainer removed', 'Una decisión a la vez.' not in html)
 check('three-tab navigation present', html.count('data-page=') == 3 and all(f'data-page="{x}"' in html for x in ('today','program','progress')))
 check('Today decision stack present', 'Mejor fit ahora' in html and 'id="todayDecision"' in html)
+check('Today recommendation can express uncertainty instead of fake precision', 'Opciones casi equivalentes' in html and 'recommendationStrength' in html)
+check('Today recommendation explains its signals', 'recommendationReasonsMarkup' in html and 'today-reasons' in html)
+check('Today supports equipment-occupied reranking', 'Equipo ocupado' in html and 'markWorkoutBusyToday' in html and 'todayAvoidedWorkouts' in html)
+check('recommendation uses weekly recency time and overlap signals', all(x in html for x in ('recommendationSignalsFromHistory','weeklyStateFromHistory','cabe en','solapa recuperación')))
 check('active Today avoids duplicate recommendation with next-priority state', 'Después de esta sesión' in html)
 check('weekly snapshot absorbed into Today', 'id="weekSnapshot"' in html and 'Esta semana' in html and 'Core 4 días' in html)
 check('weekly rows expose done partial active pending semantics', all(x in html for x in ('DONE','PARCIAL','EN CURSO','PENDIENTE')))
-check('Today time-fit controls present', 'data-today-preset="30"' in html and 'data-today-preset="45"' in html and 'data-today-preset="full"' in html)
+check('Today time-fit controls are planner-derived and deduplicated', 'id="todayTimeChoice"' in html and 'distinctPlannerPresets' in html and 'data-today-preset' in html)
 
 # Program Decision Cards + Arms
 check('Program Decision Cards present', 'Decision cards' in html and 'renderProgramCard' in html)
@@ -55,7 +62,7 @@ check('catch-up coverage avoids debt framing', 'No implica recuperar sets 1:1' i
 
 # Planner
 check('pre-workout planner surface present', 'id="plannerSheet"' in html and 'Plan de hoy' in html)
-check('planner Full 45 30 presets present', "['30','30 min'],['45','45 min'],['full','Full']" in html)
+check('planner time presets are deduplicated by actual plan', 'distinctPlannerPresets' in html and 'resolveDistinctPreset' in html and 'data-plan-preset' in html)
 check('planner per-exercise include exclude present', 'data-plan-toggle' in html and 'plan-toggle' in html)
 check('planner changes are session scoped', 'Los cambios aplican solo a hoy; tu Programa base no se modifica.' in html)
 check('planner estimates time', 'estimatePlanMinutes' in html and 'estimatedMin' in html)

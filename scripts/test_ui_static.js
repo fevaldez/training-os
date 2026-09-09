@@ -47,9 +47,9 @@ test('Program uses Decision Cards and includes standalone Arms flex session',()=
   assert(html.includes('Flex / catch-up'),'arms flex label missing');
   assert(html.includes('Cobertura directa'),'coverage metric missing');
 });
-test('Pre-workout planner exposes Full 45 30 and per-exercise toggles',()=>{
+test('Pre-workout planner deduplicates equivalent presets and keeps per-exercise toggles',()=>{
   assert(html.includes('id="plannerSheet"'),'planner missing');
-  assert(html.includes("['30','30 min'],['45','45 min'],['full','Full']"),'presets missing');
+  assert(html.includes('distinctPlannerPresets')&&html.includes('resolveDistinctPreset'),'dedupe planner missing');
   assert(html.includes('data-plan-toggle'),'planner exercise toggle missing');
   assert(html.includes('Los cambios aplican solo a hoy'),'session scoped note missing');
 });
@@ -73,5 +73,19 @@ test('Node 24 compatible Pages action majors are selected',()=>{
   assert(wf.includes('actions/upload-pages-artifact@v5'),'upload-pages-artifact not v5');
   assert(wf.includes('actions/deploy-pages@v5'),'deploy-pages not v5');
 });
+
+test('shoulder standalone is fully restored',()=>{
+  for(const x of ['DB Shoulder Press','Unilateral Landmine Press','Machine Lateral Raise','Cable Lateral Raise','Chest-Supported Rear-Delt Row','Partial Lateral Raise','Face Pull + External Rotation']) assert(html.includes(x),x);
+});
+test('Today exposes explainable flexible recommendations',()=>{
+  assert(html.includes('Opciones casi equivalentes'),'uncertainty state missing');
+  assert(html.includes('Equipo ocupado'),'equipment modifier missing');
+  assert(html.includes('recommendationReasonsMarkup'),'reason renderer missing');
+});
+test('time presets are not rendered as redundant hard-coded options',()=>{
+  assert(html.includes('distinctPlannerPresets'),'distinct preset helper missing');
+  assert(!html.includes("const presets=[['30','30 min'],['45','45 min'],['full','Full']]"),'legacy hard-coded presets remain');
+});
+
 for(const [n,ok,d] of tests)console.log(`${ok?'PASS':'FAIL'} | ${n}${d?' | '+d:''}`);
 const p=tests.filter(x=>x[1]).length;console.log(`TOTAL ${p}/${tests.length} PASS`);process.exit(p===tests.length?0:1);

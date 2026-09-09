@@ -36,6 +36,11 @@ globalThis.__armCatchUpNeedsFromHistory = armCatchUpNeedsFromHistory;
 globalThis.__catchUpArmsIndicesFromNeeds = catchUpArmsIndicesFromNeeds;
 globalThis.__recommendedCoreWorkoutFromHistory = recommendedCoreWorkoutFromHistory;
 globalThis.__sessionSequence = sessionSequence;
+globalThis.__rankCoreWorkoutsFromHistory = rankCoreWorkoutsFromHistory;
+globalThis.__recommendationStrength = recommendationStrength;
+globalThis.__recommendationSignalsFromHistory = recommendationSignalsFromHistory;
+globalThis.__distinctPlannerPresets = distinctPlannerPresets;
+globalThis.__resolveDistinctPreset = resolveDistinctPreset;
 `;
 
 const context = { console };
@@ -53,6 +58,7 @@ const CORE_ORDER=context.__CORE_ORDER, FLEX_ORDER=context.__FLEX_ORDER;
 const estimatePlanMinutes=context.__estimatePlanMinutes, plannerPresetIndices=context.__plannerPresetIndices, makePlanSnapshot=context.__makePlanSnapshot;
 const weeklyStateFromHistory=context.__weeklyStateFromHistory, armCoverageFromHistory=context.__armCoverageFromHistory, armCatchUpNeedsFromHistory=context.__armCatchUpNeedsFromHistory;
 const catchUpArmsIndicesFromNeeds=context.__catchUpArmsIndicesFromNeeds, recommendedCoreWorkoutFromHistory=context.__recommendedCoreWorkoutFromHistory, sessionSequence=context.__sessionSequence;
+const rankCoreWorkoutsFromHistory=context.__rankCoreWorkoutsFromHistory, recommendationStrength=context.__recommendationStrength, recommendationSignalsFromHistory=context.__recommendationSignalsFromHistory, distinctPlannerPresets=context.__distinctPlannerPresets, resolveDistinctPreset=context.__resolveDistinctPreset;
 
 const tests = [];
 function test(name, fn) {
@@ -84,7 +90,7 @@ test('continuous tempo has no false phase timing', () => {
   assert(x.continuous===true && x.canonical==='Continuo','continuous handling');
 });
 test('standalone shoulder sequence count', () => {
-  assert(buildSequence(WORKOUTS.shoulders).length===10,'shoulder count');
+  assert(buildSequence(WORKOUTS.shoulders).length===21,'shoulder count');
 });
 test('chest superset alternates A/B', () => {
   const s=buildSequence(WORKOUTS.chest);
@@ -134,7 +140,7 @@ test('progression holds when target is not yet at ceiling', () => {
 test('session completion accounting', () => {
   const seq=buildSequence(WORKOUTS.shoulders);
   const c=sessionCompletion(seq,{a:{done:true},b:{done:true}});
-  assert(c.done===2 && c.total===10,'completion math');
+  assert(c.done===2 && c.total===21,'completion math');
 });
 test('exercise content completeness', () => {
   for (const w of Object.values(WORKOUTS)) {
@@ -168,7 +174,7 @@ test('recommendation selects least recently trained when all have history', () =
 test('skipped set counts as resolved session progress', () => {
   const seq=buildSequence(WORKOUTS.shoulders);
   const c=sessionCompletion(seq,{a:{done:true},b:{done:false,skipped:true}});
-  assert(c.done===2 && c.total===10,'skip should resolve progress');
+  assert(c.done===2 && c.total===21,'skip should resolve progress');
 });
 test('skipped set cannot satisfy two-exposure progression gate', () => {
   const e={...WORKOUTS.back.exercises[0],sets:2,reps:'5–8'};
@@ -291,6 +297,64 @@ test('session sequence honors confirmed planner exercise list', () => {
   const plan=makePlanSnapshot('back','30'),a={plan},seq=sessionSequence(a,WORKOUTS.back);
   assert(seq.length===plan.confirmedSets,'session sequence count');
   assert(seq.every(x=>plan.includedExerciseIndices.includes(x.ei)),'excluded exercise leaked into session');
+});
+
+
+test('restored shoulder program contains both confirmed press patterns', () => {
+  const names=WORKOUTS.shoulders.exercises.map(e=>e.name);
+  assert(names.includes('DB Shoulder Press') && names.includes('Unilateral Landmine Press'),'presses missing');
+  assert(buildSequence(WORKOUTS.shoulders).length===21,'expected 21 shoulder sets');
+});
+test('restored shoulder program retains lateral and rear-delt hypertrophy blocks', () => {
+  const names=WORKOUTS.shoulders.exercises.map(e=>e.name);
+  for(const x of ['Machine Lateral Raise','Cable Lateral Raise','Chest-Supported Rear-Delt Row','Partial Lateral Raise','Face Pull + External Rotation']) assert(names.includes(x),x);
+});
+test('shoulder press tempos execute from concentric start', () => {
+  assert(tempoView(WORKOUTS.shoulders.exercises[0]).execution.startsWith('Concéntrica'),'DB press chronological tempo');
+  assert(tempoView(WORKOUTS.shoulders.exercises[1]).execution.startsWith('Concéntrica'),'landmine chronological tempo');
+});
+test('planner suppresses duplicate time presets', () => {
+  for(const k of CORE_ORDER){
+    const opts=distinctPlannerPresets(k),sigs=opts.map(o=>o.indices.join(','));
+    assert(new Set(sigs).size===sigs.length,`${k} duplicate presets`);
+  }
+});
+test('shoulder planner now has meaningful short/full separation', () => {
+  const opts=distinctPlannerPresets('shoulders');
+  assert(opts.length>=2,'shoulder planner should expose >=2 distinct choices');
+  assert(plannerPresetIndices('shoulders','30').join(',')!==plannerPresetIndices('shoulders','full').join(','),'30 and full must differ');
+});
+test('45/full duplicate on chest is deduplicated when equivalent', () => {
+  const opts=distinctPlannerPresets('chest'),sigs=opts.map(o=>o.indices.join(','));
+  assert(new Set(sigs).size===sigs.length,'duplicate chest plans shown');
+});
+test('recommendation ranking prioritizes due over already-covered core work', () => {
+  const now=new Date('2026-09-08T18:00:00Z');
+  const h=[{workoutKey:'legs',endedAt:'2026-09-08T16:00:00Z',sets:[]}];
+  const r=rankCoreWorkoutsFromHistory(h,now,'full',[]);
+  assert(r[0].key!=='legs','completed/recent legs should not lead');
+});
+test('recommendation penalizes recent chest-to-shoulder overlap', () => {
+  const now=new Date('2026-09-08T18:00:00Z');
+  const h=[{workoutKey:'chest',endedAt:'2026-09-08T16:00:00Z',sets:[]}];
+  const s=recommendationSignalsFromHistory(h,'shoulders',now,'full',[]);
+  assert(s.reasons.some(x=>x.includes('solapa recuperación')),'overlap reason missing');
+});
+test('time-fit contributes to recommendation when user selects 30 min', () => {
+  const now=new Date('2026-09-08T18:00:00Z');
+  const s=recommendationSignalsFromHistory([],'shoulders',now,'30',[]);
+  assert(s.reasons.some(x=>x.includes('cabe en 30 min')||x.includes('> 30m')),'time fit reason missing');
+});
+test('equipment-busy modifier demotes a workout without changing the program', () => {
+  const now=new Date('2026-09-08T18:00:00Z');
+  const normal=rankCoreWorkoutsFromHistory([],now,'full',[]);
+  const first=normal[0].key,reranked=rankCoreWorkoutsFromHistory([],now,'full',[first]);
+  assert(reranked[0].key!==first,'busy workout should rerank');
+  assert(WORKOUTS[first].exercises.length>0,'program must remain intact');
+});
+test('near-tied recommendation is explicitly classified as not clear', () => {
+  const r=rankCoreWorkoutsFromHistory([],new Date('2026-09-08T18:00:00Z'),'full',[]);
+  assert(recommendationStrength(r).clear===false,'empty-history tie must not pretend certainty');
 });
 
 for (const [name, ok, detail] of tests) {
