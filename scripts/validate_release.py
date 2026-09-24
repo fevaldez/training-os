@@ -7,6 +7,7 @@ version = json.loads((root/'version.json').read_text(encoding='utf-8'))
 release = version['release']
 html = (root/'index.html').read_text(encoding='utf-8')
 workflow = (root/'.github/workflows/release-pages.yml').read_text(encoding='utf-8')
+manifest = (root/'manifest.webmanifest').read_text(encoding='utf-8')
 
 checks=[]
 def check(name, ok):
@@ -93,13 +94,13 @@ check('discard session destructive control present', 'class="btn danger" id="dis
 check('legacy CPEP label removed', 'CPEP' not in html)
 check('canonical E-PE-C-PC tempo helper present', 'E–PE–C–PC' in html and 'tempoView' in html)
 check('single tempo markup helper used across execution states', html.count('tempoMarkup(e,false)') >= 3)
-check('chronological execution label present', 'Ejecución desde el inicio' in html)
+check('chronological execution label present', 'Hazlo así:' in html)
 check('concentric-start exercise map present', 'CONCENTRIC_START_EXERCISES' in html)
 
 # Memory + progression
 check('intra-session load memory present', 'currentSessionPreviousSet' in html)
 check('cross-session load memory present', 'previousSet(a.workoutKey,e.name,item.si)' in html)
-check('memory prefill does not copy old reps/RIR', 'prefillFromMemory' in html)
+check('memory prefill copies trusted reps but keeps target RIR', 'prefillFromMemory' in html and 'source.reps' in html)
 check('two-exposure progression gate present', 'progressionDecisionFromExposures' in html and '2/2 exposiciones' in html)
 check('progression is suggestion not silent auto-load', 'weightKg:source?(+source.weightKg||0):0' in html)
 check('load memory context present', 'loadMemoryInsight' in html and 'Memoria de carga' in html)
@@ -114,6 +115,24 @@ check('discard button uses semantic danger style', '.danger{' in html and '--dan
 # Diagnostics
 check('navigation diagnostics present', "diagnostics('nav:start'" in html and "diagnostics('nav:done'" in html and "diagnostics('nav:error'" in html)
 check('scroll diagnostics present', "session:scroll-top" in html)
+
+# RC6.2 program fidelity / execution UX
+check('canonical back program id', 'back-biceps-2026-08-08-v2' in html)
+check('canonical back D superset present', '"superset": "Reverse Pec Deck"' in html and '"superset": "Machine Preacher Curl"' in html)
+check('canonical back E superset present', '"superset": "Straight-Arm Cable Pulldown"' in html and '"superset": "Rope Hammer Curl"' in html)
+check('canonical back unilateral tempo restored', 'Single-Arm Supported Cable Row' in html and '"tempo": "3-1-1-1"' in html)
+check('warmup first-class data present', '"warmup": [' in html and 'Warm-up MVP' in html)
+check('cooldown first-class data present', '"cooldown": [' in html and 'Stretch / cooldown MVP' in html)
+check('reps memory provenance present', 'Prefill confiable' in html and 'source.reps' in html)
+check('ambiguous prior-set fallback removed', '||list[si]||list[0]' not in html)
+check('planner visualizes supersets before workout', 'superset-plan' in html and 'A ↔ B → descanso' in html)
+check('alternatives exposed in planner and workout', 'Alternativas:' in html and 'Si está ocupado / no puedes hacerlo' in html)
+check('rest no-scroll dock present', 'rest-dock' in html and 'dockStart' in html)
+check('routine review checkpoint present', 'routineReviewInsight' in html and 'Checkpoint, no cambio automático' in html)
+check('manifest explicit app identity', '"id": "/training-os/"' in manifest and '"scope": "/training-os/"' in manifest and '"start_url": "/training-os/"' in manifest)
+check('no insecure http URL', 'http://' not in html and 'http://' not in manifest)
+check('leg tempo corrected for E-first canonical', '"tempo": "3-0-2-1"' in html and '"tempo": "3-1-2-1"' in html)
+check('video integrity helper labels search URLs unverified', 'videoLinkMarkup' in html and 'Video específico pendiente de validar' in html)
 
 # CI / Node 24 maintenance
 check('configure-pages Node24 major', 'actions/configure-pages@v6' in workflow)

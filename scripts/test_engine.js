@@ -78,7 +78,7 @@ test('tempo four phase canonical mapping is E-PE-C-PC', () => {
   assert(x.map.includes('E 3s')&&x.map.includes('C X'),'phase mapping');
 });
 test('concentric-start exercise renders chronological execution from concentric', () => {
-  const x=tempoView({name:'Cable Curl',tempo:'3-0-1-1'});
+  const x=tempoView({name:'Cable Curl · barra/EZ',tempo:'3-0-1-1'});
   assert(x.execution.startsWith('Concéntrica 1s'),'concentric chronological start');
 });
 test('eccentric-start exercise renders chronological execution from eccentric', () => {
@@ -187,12 +187,12 @@ test('skipped set cannot satisfy two-exposure progression gate', () => {
 test('current-session weight memory overrides historical weight', () => {
   const current={weightKg:70,reps:6,rir:2,done:true},history={weightKg:65,reps:7,rir:2,done:true};
   const d=prefillFromMemory(current,history,5,1);
-  assert(d.weightKg===70 && d.reps===5 && d.rir===1 && d.source==='current','current session priority');
+  assert(d.weightKg===70 && d.reps===6 && d.rir===1 && d.source==='current','current session priority + reps memory');
 });
-test('historical weight memory pre-fills next workout but not old reps/RIR', () => {
+test('historical weight and reps memory pre-fill exact same set but RIR stays target', () => {
   const history={weightKg:65,reps:8,rir:3,done:true};
   const d=prefillFromMemory(null,history,5,1);
-  assert(d.weightKg===65 && d.reps===5 && d.rir===1 && d.source==='history','history prefill');
+  assert(d.weightKg===65 && d.reps===8 && d.rir===1 && d.source==='history','history prefill');
 });
 test('baseline remains empty when no load memory exists', () => {
   const d=prefillFromMemory(null,null,10,2);
@@ -355,6 +355,31 @@ test('equipment-busy modifier demotes a workout without changing the program', (
 test('near-tied recommendation is explicitly classified as not clear', () => {
   const r=rankCoreWorkoutsFromHistory([],new Date('2026-09-08T18:00:00Z'),'full',[]);
   assert(recommendationStrength(r).clear===false,'empty-history tie must not pretend certainty');
+});
+
+
+test('canonical back program fidelity', () => {
+ const b=WORKOUTS.back;
+ assert(b.programId==='back-biceps-2026-08-08-v2','program id');
+ assert(b.exercises[0].name==='Chest-Supported Neutral Row' && b.exercises[0].sets===4 && b.exercises[0].reps==='5–7','A row drift');
+ assert(b.exercises[1].sets===3 && b.exercises[1].reps==='6–8','B pulldown drift');
+ assert(b.exercises[2].sets===2 && b.exercises[2].tempo==='3-1-1-1','C row drift');
+});
+test('back supersets alternate D and E blocks', () => {
+ const b=WORKOUTS.back,seq=buildSequence(b);
+ const d=seq.filter(x=>x.ei===3||x.ei===4).slice(0,6).map(x=>x.ei).join(',');
+ const e=seq.filter(x=>x.ei===5||x.ei===6).slice(0,4).map(x=>x.ei).join(',');
+ assert(d==='3,4,3,4,3,4','D must alternate');assert(e==='5,6,5,6','E must alternate');
+});
+test('all core routines have warmup and cooldown', () => {
+ for(const k of [...CORE_ORDER,...FLEX_ORDER]){assert(WORKOUTS[k].warmup?.length>=2,k+' warmup');assert(WORKOUTS[k].cooldown?.length>=2,k+' cooldown')}
+});
+test('legacy leg C-first tempo data is corrected to E-first canonical', () => {
+ const l=WORKOUTS.legs;assert(l.exercises[1].tempo==='3-0-2-1','unilateral extension');assert(l.exercises[3].tempo==='3-0-2-1','seated curl');assert(l.exercises[6].tempo==='3-1-2-1','calf');
+});
+test('memory prefills reps from trusted source', () => {
+ const x=prefillFromMemory({weightKg:20,reps:11,done:true},null,8,2);assert(x.weightKg===20&&x.reps===11&&x.source==='current','current memory');
+ const y=prefillFromMemory(null,{weightKg:18,reps:10,done:true},8,2);assert(y.weightKg===18&&y.reps===10&&y.source==='history','history memory');
 });
 
 for (const [name, ok, detail] of tests) {

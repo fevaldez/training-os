@@ -2,8 +2,8 @@
   "name": "Training OS",
   "short_name": "Training OS",
   "description": "Workout execution, rest timing, progression and training history.",
-  "start_url": "./",
-  "scope": "./",
+  "start_url": "/training-os/",
+  "scope": "/training-os/",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#0b1220",
@@ -24,5 +24,6 @@
       "sizes": "1024x1024",
       "type": "image/png"
     }
-  ]
+  ],
+  "id": "/training-os/"
 }

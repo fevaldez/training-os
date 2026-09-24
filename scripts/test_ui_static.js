@@ -87,5 +87,29 @@ test('time presets are not rendered as redundant hard-coded options',()=>{
   assert(!html.includes("const presets=[['30','30 min'],['45','45 min'],['full','Full']]"),'legacy hard-coded presets remain');
 });
 
+
+test('warmup and cooldown are first-class session states',()=>{
+  assert(html.includes('renderWarmup')&&html.includes('renderCooldown'),'prep stages missing');
+  assert(html.includes('Warm-up MVP')&&html.includes('Stretch / cooldown MVP'),'prep labels missing');
+});
+test('rest has no-scroll bottom action',()=>{
+  assert(html.includes('rest-dock')&&html.includes('dockStart'),'rest dock missing');
+});
+test('planner exposes supersets before training',()=>{
+  assert(html.includes('superset-plan')&&html.includes('A ↔ B → descanso'),'superset planner missing');
+});
+test('alternatives are visible in planner and live workout',()=>{
+  assert(html.includes('Alternativas:')&&html.includes('Si está ocupado / no puedes hacerlo'),'alternatives not exposed');
+});
+test('tempo UI prioritizes chronological execution over acronym decoding',()=>{
+  assert(html.includes('Hazlo así:')&&html.includes('Referencia interna: E–PE–C–PC'),'tempo presentation missing');
+});
+test('external technique links are HTTPS-gated and instrumented',()=>{
+  assert(html.includes('videoLinkMarkup')&&html.includes("diagnostics('external:video'")&&html.includes('T·OS bloqueó un enlace no HTTPS'),'external video guard missing');
+});
+test('program card includes routine-review checkpoint',()=>{
+  assert(html.includes('routineReviewInsight')&&html.includes('Checkpoint, no cambio automático'),'routine review missing');
+});
+
 for(const [n,ok,d] of tests)console.log(`${ok?'PASS':'FAIL'} | ${n}${d?' | '+d:''}`);
 const p=tests.filter(x=>x[1]).length;console.log(`TOTAL ${p}/${tests.length} PASS`);process.exit(p===tests.length?0:1);
