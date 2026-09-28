@@ -46,6 +46,9 @@ jobs:
       - name: Test UI static integrity
         run: node scripts/test_ui_static.js
 
+      - name: Reliability regression gate
+        run: python3 scripts/test_reliability_rc621.py
+
       - name: Build deploy artifact
         run: |
           rm -rf _site

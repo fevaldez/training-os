@@ -104,8 +104,17 @@ test('alternatives are visible in planner and live workout',()=>{
 test('tempo UI prioritizes chronological execution over acronym decoding',()=>{
   assert(html.includes('Hazlo así:')&&html.includes('Referencia interna: E–PE–C–PC'),'tempo presentation missing');
 });
-test('external technique links are HTTPS-gated and instrumented',()=>{
-  assert(html.includes('videoLinkMarkup')&&html.includes("diagnostics('external:video'")&&html.includes('T·OS bloqueó un enlace no HTTPS'),'external video guard missing');
+test('external technique links are contained and instrumented',()=>{
+  assert(
+    html.includes('videoLinkMarkup') &&
+    html.includes('shareExternalUrl') &&
+    html.includes("diagnostics('external:share'") &&
+    html.includes("diagnostics('external:block'") &&
+    html.includes('data-video-url=') &&
+    !html.includes('target="_blank"') &&
+    !html.includes("target='_blank'"),
+    'safe external video guard missing'
+  );
 });
 test('program card includes routine-review checkpoint',()=>{
   assert(html.includes('routineReviewInsight')&&html.includes('Checkpoint, no cambio automático'),'routine review missing');

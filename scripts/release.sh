@@ -37,13 +37,14 @@ python scripts/bump_version.py "$VERSION"
 python scripts/validate_release.py
 node scripts/test_engine.js
 node scripts/test_ui_static.js
+python3 scripts/test_reliability_rc621.py
 
 if [[ -z "$MESSAGE" ]]; then
   MESSAGE="release: Training OS $VERSION"
 fi
 
 git add index.html version.json manifest.webmanifest training-os-loop-v1-*.png \
-  scripts/bump_version.py scripts/validate_release.py scripts/test_engine.js scripts/test_ui_static.js scripts/release.sh \
+  scripts/bump_version.py scripts/validate_release.py scripts/test_engine.js scripts/test_ui_static.js scripts/release.sh scripts/test_reliability_rc621.py \
   .github/workflows/release-pages.yml
 
 git commit -m "$MESSAGE"
