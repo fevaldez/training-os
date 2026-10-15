@@ -1,0 +1,49 @@
+name: Validate Training OS PR
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+# Unspecified token permissions are disabled. Never use pull_request_target here.
+permissions:
+  contents: read
+
+concurrency:
+  group: training-os-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate current suites
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout PR merge revision
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      # Match release-pages.yml: Python 3.12 and runner-provided Node.
+      # The existing suites require no package installation.
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Record runtime versions
+        run: |
+          python --version
+          node --version
+
+      - name: Validate release and static contract
+        run: python scripts/validate_release.py
+
+      - name: Test training engine
+        run: node scripts/test_engine.js
+
+      - name: Test UI static integrity
+        run: node scripts/test_ui_static.js
+
+      - name: Reliability regression gate
+        run: python3 scripts/test_reliability_rc621.py
