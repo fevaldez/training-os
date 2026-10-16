@@ -1,5 +1,7 @@
 # PR-S1 data durability evidence and recovery review
 
+**Current status:** G2 identified F1–F6 in the original implementation below. The authorized G3 remediation, corrected protocol, evidence, limitations and independent re-review handoff are documented in [G3_REVIEW.md](G3_REVIEW.md). Original logs and claims below describe reviewed HEAD `84d3819`; they are not current acceptance evidence. PR #2 remains Draft; production is NO-GO.
+
 Base: `b82218dbc05662124821d1d6c27369ae717dd767` (merged PR-00). Scope: PR-S1 only. All storage/browser fixtures are synthetic. No owner browser profile, localStorage, cache, or personal training records were opened.
 
 ## Reproduction and gates

@@ -3,7 +3,7 @@
   "brand": "T·OS",
   "release": "4.0.0-rc6.2.1",
   "icon": "training-os-loop-v1",
-  "index_sha256": "aa5772d0626bbef1cb0d3edc5258e01d09fc4667a2b3fbf2c27b6026f6874ff8",
+  "index_sha256": "a2003f23744a7a0b79e48073febda933f1f2e9553167cfaee8c5861e98008141",
   "deploy_mode": "github-actions-pages",
   "updated_at": "2026-09-28"
 }
