@@ -1,0 +1,469 @@
+{
+  "sourceCommit": "54e25199e33b8cc725d86881b950bb68b4cf0cd4",
+  "indexSHA256": "cc3284cb5eaf41778e0f8fcda86352cf85ab1d41b816d57f7e9e0ad7efbad5b3",
+  "sourceUnmodified": true,
+  "method": "Exact candidate engine, durability core, draft/renderSet/completeSet, persistence UI, Today rendering and showPage functions executed in Node vm; only synthetic in-memory storage and instrumented DOM adapters. No server/browser/iPhone, real profile or deployed asset accessed.",
+  "limitations": [
+    "DOM adapters are not a layout/paint engine.",
+    "No iPhone flicker or frame timing reproduced.",
+    "Auxiliary recommendation/formatting, stage transition render/scroll/ticker, and optional DOM nodes are stubbed.",
+    "Navigation was invoked while Today was already current; no visual outcome inferred."
+  ],
+  "m501": [
+    {
+      "name": "empty",
+      "visibleInput": "",
+      "indexBefore": 0,
+      "indexAfter": 1,
+      "stateAfter": "rest",
+      "saved": true,
+      "done": true,
+      "weightKg": 0,
+      "weightType": "number",
+      "reps": 8,
+      "alertCount": 0
+    },
+    {
+      "name": "cleared-positive",
+      "visibleInput": "",
+      "indexBefore": 0,
+      "indexAfter": 1,
+      "stateAfter": "rest",
+      "saved": true,
+      "done": true,
+      "weightKg": 0,
+      "weightType": "number",
+      "reps": 8,
+      "alertCount": 0
+    },
+    {
+      "name": "explicit-zero-control",
+      "visibleInput": "0",
+      "indexBefore": 0,
+      "indexAfter": 1,
+      "stateAfter": "rest",
+      "saved": true,
+      "done": true,
+      "weightKg": 0,
+      "weightType": "number",
+      "reps": 8,
+      "alertCount": 0
+    },
+    {
+      "name": "positive-control",
+      "visibleInput": "20",
+      "indexBefore": 0,
+      "indexAfter": 1,
+      "stateAfter": "rest",
+      "saved": true,
+      "done": true,
+      "weightKg": 20,
+      "weightType": "number",
+      "reps": 8,
+      "alertCount": 0
+    }
+  ],
+  "m502": {
+    "saveDrivenDOMChurn": [
+      {
+        "action": "weight-plus",
+        "overlayOpen": true,
+        "pending": {
+          "ui": {
+            "message": "No se pudo verificar el guardado. Conservamos la sesión; reintenta o exporta un respaldo. (pending · fv4.active) Cambios solo en memoria: no sobrevivirán a recargar o cerrar hasta guardar o exportar.",
+            "activeFailure": "pending",
+            "storeOK": false
+          },
+          "panels": [
+            {
+              "key": "#storageRecovery",
+              "hidden": false,
+              "children": 3
+            },
+            {
+              "key": "#completionRecovery",
+              "hidden": false,
+              "children": 3
+            }
+          ],
+          "events": [
+            {
+              "op": "replaceChildren",
+              "key": "#storageRecovery"
+            },
+            {
+              "op": "hidden",
+              "key": "#storageRecovery",
+              "value": false
+            },
+            {
+              "op": "replaceChildren",
+              "key": "#completionRecovery"
+            },
+            {
+              "op": "hidden",
+              "key": "#completionRecovery",
+              "value": false
+            },
+            {
+              "op": "hidden",
+              "key": "#todayDecisionCard",
+              "value": false
+            },
+            {
+              "op": "innerHTML",
+              "key": "#todayDecision"
+            },
+            {
+              "op": "innerHTML",
+              "key": "#weekSnapshot"
+            }
+          ]
+        },
+        "resolved": {
+          "ui": {
+            "message": "",
+            "activeFailure": null,
+            "storeOK": true
+          },
+          "panels": [
+            {
+              "key": "#storageRecovery",
+              "hidden": true,
+              "children": 0
+            },
+            {
+              "key": "#completionRecovery",
+              "hidden": true,
+              "children": 0
+            }
+          ],
+          "events": [
+            {
+              "op": "replaceChildren",
+              "key": "#storageRecovery"
+            },
+            {
+              "op": "hidden",
+              "key": "#storageRecovery",
+              "value": false
+            },
+            {
+              "op": "replaceChildren",
+              "key": "#completionRecovery"
+            },
+            {
+              "op": "hidden",
+              "key": "#completionRecovery",
+              "value": false
+            },
+            {
+              "op": "hidden",
+              "key": "#todayDecisionCard",
+              "value": false
+            },
+            {
+              "op": "innerHTML",
+              "key": "#todayDecision"
+            },
+            {
+              "op": "innerHTML",
+              "key": "#weekSnapshot"
+            },
+            {
+              "op": "replaceChildren",
+              "key": "#storageRecovery"
+            },
+            {
+              "op": "hidden",
+              "key": "#storageRecovery",
+              "value": true
+            },
+            {
+              "op": "replaceChildren",
+              "key": "#completionRecovery"
+            },
+            {
+              "op": "hidden",
+              "key": "#completionRecovery",
+              "value": true
+            }
+          ]
+        },
+        "saveOK": true
+      },
+      {
+        "action": "reps-plus",
+        "overlayOpen": true,
+        "pending": {
+          "ui": {
+            "message": "No se pudo verificar el guardado. Conservamos la sesión; reintenta o exporta un respaldo. (pending · fv4.active) Cambios solo en memoria: no sobrevivirán a recargar o cerrar hasta guardar o exportar.",
+            "activeFailure": "pending",
+            "storeOK": false
+          },
+          "panels": [
+            {
+              "key": "#storageRecovery",
+              "hidden": false,
+              "children": 3
+            },
+            {
+              "key": "#completionRecovery",
+              "hidden": false,
+              "children": 3
+            }
+          ],
+          "events": [
+            {
+              "op": "replaceChildren",
+              "key": "#storageRecovery"
+            },
+            {
+              "op": "hidden",
+              "key": "#storageRecovery",
+              "value": false
+            },
+            {
+              "op": "replaceChildren",
+              "key": "#completionRecovery"
+            },
+            {
+              "op": "hidden",
+              "key": "#completionRecovery",
+              "value": false
+            },
+            {
+              "op": "hidden",
+              "key": "#todayDecisionCard",
+              "value": false
+            },
+            {
+              "op": "innerHTML",
+              "key": "#todayDecision"
+            },
+            {
+              "op": "innerHTML",
+              "key": "#weekSnapshot"
+            }
+          ]
+        },
+        "resolved": {
+          "ui": {
+            "message": "",
+            "activeFailure": null,
+            "storeOK": true
+          },
+          "panels": [
+            {
+              "key": "#storageRecovery",
+              "hidden": true,
+              "children": 0
+            },
+            {
+              "key": "#completionRecovery",
+              "hidden": true,
+              "children": 0
+            }
+          ],
+          "events": [
+            {
+              "op": "replaceChildren",
+              "key": "#storageRecovery"
+            },
+            {
+              "op": "hidden",
+              "key": "#storageRecovery",
+              "value": false
+            },
+            {
+              "op": "replaceChildren",
+              "key": "#completionRecovery"
+            },
+            {
+              "op": "hidden",
+              "key": "#completionRecovery",
+              "value": false
+            },
+            {
+              "op": "hidden",
+              "key": "#todayDecisionCard",
+              "value": false
+            },
+            {
+              "op": "innerHTML",
+              "key": "#todayDecision"
+            },
+            {
+              "op": "innerHTML",
+              "key": "#weekSnapshot"
+            },
+            {
+              "op": "replaceChildren",
+              "key": "#storageRecovery"
+            },
+            {
+              "op": "hidden",
+              "key": "#storageRecovery",
+              "value": true
+            },
+            {
+              "op": "replaceChildren",
+              "key": "#completionRecovery"
+            },
+            {
+              "op": "hidden",
+              "key": "#completionRecovery",
+              "value": true
+            }
+          ]
+        },
+        "saveOK": true
+      },
+      {
+        "action": "RIR-2",
+        "overlayOpen": true,
+        "pending": {
+          "ui": {
+            "message": "No se pudo verificar el guardado. Conservamos la sesión; reintenta o exporta un respaldo. (pending · fv4.active) Cambios solo en memoria: no sobrevivirán a recargar o cerrar hasta guardar o exportar.",
+            "activeFailure": "pending",
+            "storeOK": false
+          },
+          "panels": [
+            {
+              "key": "#storageRecovery",
+              "hidden": false,
+              "children": 3
+            },
+            {
+              "key": "#completionRecovery",
+              "hidden": false,
+              "children": 3
+            }
+          ],
+          "events": [
+            {
+              "op": "replaceChildren",
+              "key": "#storageRecovery"
+            },
+            {
+              "op": "hidden",
+              "key": "#storageRecovery",
+              "value": false
+            },
+            {
+              "op": "replaceChildren",
+              "key": "#completionRecovery"
+            },
+            {
+              "op": "hidden",
+              "key": "#completionRecovery",
+              "value": false
+            },
+            {
+              "op": "hidden",
+              "key": "#todayDecisionCard",
+              "value": false
+            },
+            {
+              "op": "innerHTML",
+              "key": "#todayDecision"
+            },
+            {
+              "op": "innerHTML",
+              "key": "#weekSnapshot"
+            }
+          ]
+        },
+        "resolved": {
+          "ui": {
+            "message": "",
+            "activeFailure": null,
+            "storeOK": true
+          },
+          "panels": [
+            {
+              "key": "#storageRecovery",
+              "hidden": true,
+              "children": 0
+            },
+            {
+              "key": "#completionRecovery",
+              "hidden": true,
+              "children": 0
+            }
+          ],
+          "events": [
+            {
+              "op": "replaceChildren",
+              "key": "#storageRecovery"
+            },
+            {
+              "op": "hidden",
+              "key": "#storageRecovery",
+              "value": false
+            },
+            {
+              "op": "replaceChildren",
+              "key": "#completionRecovery"
+            },
+            {
+              "op": "hidden",
+              "key": "#completionRecovery",
+              "value": false
+            },
+            {
+              "op": "hidden",
+              "key": "#todayDecisionCard",
+              "value": false
+            },
+            {
+              "op": "innerHTML",
+              "key": "#todayDecision"
+            },
+            {
+              "op": "innerHTML",
+              "key": "#weekSnapshot"
+            },
+            {
+              "op": "replaceChildren",
+              "key": "#storageRecovery"
+            },
+            {
+              "op": "hidden",
+              "key": "#storageRecovery",
+              "value": true
+            },
+            {
+              "op": "replaceChildren",
+              "key": "#completionRecovery"
+            },
+            {
+              "op": "hidden",
+              "key": "#completionRecovery",
+              "value": true
+            }
+          ]
+        },
+        "saveOK": true
+      }
+    ],
+    "samePageNavigationControl": {
+      "events": [
+        {
+          "op": "window.scrollTo",
+          "options": {
+            "top": 0,
+            "left": 0,
+            "behavior": "auto"
+          }
+        }
+      ],
+      "ui": {
+        "message": "",
+        "activeFailure": null,
+        "storeOK": true
+      }
+    },
+    "physicalRootCause": "UNKNOWN"
+  }
+}
