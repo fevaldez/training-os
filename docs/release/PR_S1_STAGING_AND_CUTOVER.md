@@ -1,6 +1,6 @@
 # PR-S1 isolated preview and cutover preparation
 
-Status: **local preparation only; publication BLOCKED pending owner authorization, host/account and exposure decision.** No host/provider has been selected or authenticated. No staging URL, deployment receipt or physical acceptance is claimed.
+Status: **M4 DONE — one owner-authorized isolated Vercel QA deployment is READY and verified.** [Immutable preview](https://training-os-pr-s1-nphf0td5s-valcan.vercel.app/training-os/); [deployment receipt and exact-hash results](PR_S1_M4_EVIDENCE.md). Physical iPhone and independent code acceptance remain pending; production is NO-GO.
 
 Source is pinned to `54e25199e33b8cc725d86881b950bb68b4cf0cd4` (C), not main `b82218dbc05662124821d1d6c27369ae717dd767` (B). Keep [PR #2](https://github.com/fevaldez/training-os/pull/2) Draft. This branch changes only release documents and local preparation tools.
 
@@ -47,7 +47,7 @@ Build ID: `pr-s1-54e25199e33b8cc725d86881b950bb68b4cf0cd4`. Candidate HTML SHA-2
 
 Production is `https://fevaldez.github.io/training-os/`, with origin **`https://fevaldez.github.io`**. A different `/preview/` or another repository path there fails isolation. A different host name can qualify only after its effective HTTPS origin and redirects are verified. Use a dedicated preview domain/project without unrelated applications, user profiles or shared production authentication/storage. Source cleanup code may affect matching workers/caches on its own origin, which makes a dedicated origin necessary.
 
-Do not select a provider based on a hypothetical domain or presumed authentication. First obtain the owner's host/account/project, exposure choice and publication authorization. Then read the chosen provider's actual deployment mechanics and inspect existing authorization once. If unavailable, report BLOCKED with the required sign-in/project access action; do not retry logins. No provider has passed this step here.
+Do not select a provider based on a hypothetical domain or presumed authentication. First obtain the owner's host/account/project, exposure choice and publication authorization. Then read the chosen provider's actual deployment mechanics and inspect existing authorization once. If unavailable, report BLOCKED with the required sign-in/project access action; do not retry logins. M4 has now verified Vercel authentication, Owner permission on the existing Valcan Pro team, static-upload mechanics and public access; see the receipt.
 
 | Required hosting property | Configuration/verification required before publishing |
 |---|---|
@@ -60,31 +60,33 @@ Do not select a provider based on a hypothetical domain or presumed authenticati
 | Access on device | Physical iPhone can reach the URL; private access must preserve origin and Home Screen launch capability; credentials must not enter source or artifacts |
 | Production separation | No binding to production Pages, production workflows, secrets, domain, storage, repository deployment credentials or main push/merge; no auto-publish integration |
 
-Static host selection is deliberately pending. The contract is provider neutral; it is not a deploy configuration or claim that hosting is ready. New private-access architecture is outside this task.
+The owner selected Vercel for M4. Project `training-os-pr-s1-qa` has no Git connection, environment variables, access protection or toolbar injection. It uses basic fixed build resources on the existing plan. The contract above was checked against the actual single deployment; new private-access architecture remains outside this task.
 
-## Authorized future publication and evidence
+## M4 authorization and publication record
 
-**Stop before any publish command, site/project creation with a public endpoint, workflow dispatch or provider upload.** Owner authorization must identify the host/project, approved exposure/template, dedicated origin and the exact C bundle to publish. Creating this Draft PR does not provide that authorization.
+The owner subsequently explicitly authorized **one** public, non-sensitive publication of C on a new isolated Vercel project named `training-os-pr-s1-qa`. That authorization was exercised once, using the existing eight-file bundle. **Stop before any additional deployment or production action.** No workflow dispatch or Git publishing integration was used.
 
-After that separate authorization, the release engineer must:
+The M4 execution followed these boundaries (M5 device checks remain pending):
 
 1. Re-read main/#2 refs and verify C is still the accepted candidate. If #2 changed, stop and obtain a new candidate pin; do not silently follow it.
-2. Rebuild/verify the local directory above and confirm owner static-content approval; only synthetic device fixtures are transferred outside the package for QA.
+2. Reuse the already verified local directory with owner-approved static content; compare its file set and hashes immediately before the upload. No rebuild, preparation-test rerun or audit replay is needed. Transfer synthetic device fixtures separately for M5.
 3. Verify actual provider account permissions, immutable-upload mechanics, route mapping, MIME/cache headers and distinct-origin behavior. Fill the selected-provider record below before upload.
 4. Publish only the verified directory through that approved isolated mechanism. Do not use the repository's Pages workflow or merge #2.
 5. Fetch the final URL/redirect chain and every file. Reject HTML fallback, modified bytes, mixed origin or any mismatching hash; compare with the locally verified manifest and Git C. Verify `/training-os/`, manifest and icons in the target iPhone context too.
 6. Attach a provider deployment receipt with deployment ID, account/project, UTC timestamp, source C/build ID, artifact hashes and immutable HTTPS URL. Confirm final browser `location.origin` differs from production. Report live only after these checks succeed.
 7. Freeze that deployment and hand the evidence plus [QA checklist](PR_S1_QA_MATRIX.md) to the device/independent reviewer. Any content replacement invalidates the associated acceptance.
 
-| Deployment record (must remain UNKNOWN until observed) | Value |
+| Observed M4 deployment record | Value |
 |---|---|
-| Owner authorization + approved template/exposure | PENDING |
-| Provider/account/project + verified upload mechanism | UNKNOWN |
-| Actual immutable HTTPS URL + final origin + redirect chain | UNKNOWN |
-| Source commit / build ID | C / `pr-s1-54e25199e33b8cc725d86881b950bb68b4cf0cd4` planned only |
-| Hosted per-file hash comparison + MIME/cache/404 evidence | UNKNOWN |
-| Deployment ID / receipt / timestamp / operator | UNKNOWN |
-| iPhone access and Home Screen launch URL | UNKNOWN |
+| Owner authorization + approved template/exposure | Explicit in this conversation: one public, non-sensitive immutable C preview |
+| Provider/account/project + verified upload mechanism | Vercel / existing Valcan Pro team, Owner access / `training-os-pr-s1-qa` (`prj_M0HJcEQBmyGGbkzVBEeMdNhwQpjd`); one direct REST static file upload, no Git link |
+| Actual immutable HTTPS URL + final origin + redirect chain | [https://training-os-pr-s1-nphf0td5s-valcan.vercel.app/training-os/](https://training-os-pr-s1-nphf0td5s-valcan.vercel.app/training-os/); final origin `https://training-os-pr-s1-nphf0td5s-valcan.vercel.app`; no redirects on the required route or eight files |
+| Source commit / build ID | C / `pr-s1-54e25199e33b8cc725d86881b950bb68b4cf0cd4`, verified by metadata and exact served hashes |
+| Hosted per-file hash comparison + MIME/cache/404 evidence | 8/8 SHA-256 and MIME PASS, required route 200, missing script/worker 404; `Cache-Control: public, max-age=0, must-revalidate`; unauthenticated/no-cookie reads; [raw results](evidence/m4/verification.json) |
+| Deployment ID / receipt / timestamp / operator | `dpl_2HkzDYDSVFvmeoJq1upj7eB8NDU4` / [Vercel receipt](https://vercel.com/valcan/training-os-pr-s1-qa/2HkzDYDSVFvmeoJq1upj7eB8NDU4) / READY 2026-10-16 18:52:19.336 UTC / Codex under explicit owner authorization |
+| iPhone access and Home Screen launch URL | UNKNOWN — physical M5 is next. Desktop in-app-browser launch succeeded with `data-boot=ok`; this is not device evidence |
+
+Vercel returned `target: production` for this QA project's first deployment even though the request omitted `target`; default QA aliases were assigned. This is recorded explicitly, not reported as a production release of Training OS. No existing project, production Pages/domain/workflow or PR #2 changed, and no corrective second deployment was attempted. Use the unique deployment URL above, never a mutable project alias, for acceptance. See [M4 evidence](PR_S1_M4_EVIDENCE.md).
 
 ## Cutover and repository governance
 
@@ -113,4 +115,4 @@ Before a separately authorized release, require a reviewable release-impact prop
 3. Owner separately authorizes redeployment of the verified previous artifact or a corrective release. Rehearse on the isolated origin first, including read compatibility with candidate-written data. HTML rollback alone does not prove data/client rollback. PR #2 remains unmerged until the release boundary is approved.
 4. Verify effective URL, delivered hashes, app identity, history/active state and installed-client behavior after rollback; retain both before/after synthetic evidence. RC6.2.1 cleanup makes blindly rolling back a future offline-worker release unsafe; that future mechanism belongs to separately approved PR-A work.
 
-Exact next owner action: provide an existing authorized static-host account/project and dedicated HTTPS origin, choose public versus approved private exposure, approve the non-identifying candidate static content, and explicitly authorize **one immutable isolated preview publish of C**. Release engineer then verifies host mechanics/access and hashes before any upload. Without that authorization, the completed local bundle and this Draft PR are the stopping point.
+Exact next action: device QA opens [https://training-os-pr-s1-nphf0td5s-valcan.vercel.app/training-os/](https://training-os-pr-s1-nphf0td5s-valcan.vercel.app/training-os/) in physical iPhone Safari, records model, exact iOS/build and Safari version, confirms that dedicated origin, imports only the pinned synthetic fixture, and executes D01–D10 in [the existing checklist](PR_S1_QA_MATRIX.md), then repeats in Home Screen context. Physical results remain UNKNOWN until human evidence is supplied. No additional deployment or release is authorized.

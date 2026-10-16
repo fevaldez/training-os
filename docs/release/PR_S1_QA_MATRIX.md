@@ -1,10 +1,12 @@
 # PR-S1 focused acceptance and physical-iPhone checklist
 
-Status: **procedure prepared; Track B not executed.** All new independent/device outcomes are UNKNOWN. Implementation-author G4.1 logs and passing CI are prior evidence, not independent acceptance or physical-iPhone results. This checklist grants no publication or production access.
+Status: **M4 preview verified and available; Track B acceptance not executed.** All independent/device outcomes remain UNKNOWN. Implementation-author G4.1 logs and passing CI are prior evidence, not independent acceptance or physical-iPhone results. This checklist grants no publication or production access.
 
 Candidate C: `54e25199e33b8cc725d86881b950bb68b4cf0cd4`. Main B: `b82218dbc05662124821d1d6c27369ae717dd767`. Build: `pr-s1-54e25199e33b8cc725d86881b950bb68b4cf0cd4`. Release label alone is insufficient. Never repeat Gate 0/G2/G3, the 199-check baseline audit or the entire G3 browser suite for independent acceptance.
 
 ## Entry checks and evidence sheet
+
+M4 entry URL: [https://training-os-pr-s1-nphf0td5s-valcan.vercel.app/training-os/](https://training-os-pr-s1-nphf0td5s-valcan.vercel.app/training-os/). Deployment `dpl_2HkzDYDSVFvmeoJq1upj7eB8NDU4` is READY, source C; [eight-file hash/origin/route receipt](PR_S1_M4_EVIDENCE.md). Use this unique deployment URL rather than its mutable QA aliases. Desktop browser smoke showed `data-boot=ok`; it does not complete any physical-device row.
 
 - [ ] Independent reviewer named; for physical tests, an actual iPhone and owner/device QA operator are available. Desktop emulation is not physical evidence.
 - [ ] Read-only verify #2 OPEN/DRAFT at C and [CI run 38922832795](https://github.com/fevaldez/training-os/actions/runs/38922832795) completed/success at C. Any changed head invalidates this pin; do not update #2.
