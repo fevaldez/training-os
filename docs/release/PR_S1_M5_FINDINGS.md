@@ -4,6 +4,12 @@ Status: **historical triage at C retained; M5-01 automated fix PASS at F, physic
 
 At the original investigation checkpoint, the owner supplied `TRAINING_OS_M5_IPHONE_FEEDBACK_2026-10-16.md` and authorized registration plus bounded read-only source investigation, not implementation of the document's suggested experiments. During that original investigation, no Gate 0/G2/G3/G4, broad audit, runtime edit, real workout history access, browser-storage/cache clearing, worker operation, new deployment or PR #2 edit occurred.
 
+## M6 owner feedback update
+
+Subsequent owner report (2026-10-16) on the latest existing M5.5/F Preview: **M5-01 brief physical OK reported; general flicker not observed; intermittent upward scroll OPEN across multiple scenarios; complete physical acceptance UNKNOWN.** This supplements, rather than rewrites, the original C observations below. No exact device/iOS, context, scenario trace or recording was supplied; do not claim the scroll cause or complete physical acceptance is confirmed.
+
+Later Track A engineering HEAD `f54ae0d6d0a0c3e93dba93bcd9338f7d1d92f42b`, CI SUCCESS ( [run 38981666499](https://github.com/fevaldez/training-os/actions/runs/38981666499) ), is registered in the [M6 ledger](PR_S1_MILESTONES.md). Its targeted scroll suite improved 3/9→9/9 in Chromium; exact-head hosted baseline/durability/load checks passed. The documented inherited background-document anchoring movement during some transitions remains causally unlinked to the owner’s report. Keyboard/visual-viewport/momentum/Home Screen behavior is physically UNKNOWN. Its implementation/automated results do not resolve an unperformed physical check. M4/C and M5.5/F are immutable historical hosts and do not serve that later candidate. Final release source R remains UNASSIGNED; the [single M6 decision table](PR_S1_STAGING_AND_CUTOVER.md#m6-controlled-release-decision-table) preserves the unknown/blocked physical and release gates. No application diagnosis, audit or correction was performed by this documentation task.
+
 ## Observed facts and provenance
 
 - Physical iPhone, **self-reported**: preview renders/loads. This is limited launch evidence, not full D01–D10 PASS.
