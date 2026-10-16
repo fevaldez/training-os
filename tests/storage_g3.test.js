@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 const assert=require('node:assert/strict');
-const {H,A,U,M,E,J,B,O,fixture,copy,source,Storage,Locks,seed,production,historical,realV3}=require('./storage_g3_support.cjs');
+const {H,A,U,M,E,J,B,O,fixture,copy,source,Storage,Locks,seed,production,historical,realV3,realRC4}=require('./storage_g3_support.cjs');
 async function run({reviewed=false}={}){
  const html=source(reviewed),tests=[];
  async function test(name,fn){try{await fn();tests.push([name,true]);console.log('PASS | G3 '+name)}catch(e){tests.push([name,false]);console.error('FAIL | G3 '+name+' | '+e.message)}}
@@ -40,7 +40,34 @@ async function run({reviewed=false}={}){
  }
  console.log(`G3_TOTAL ${tests.filter(x=>x[1]).length}/${tests.length} PASS${reviewed?' | REVIEWED HEAD RED EXPECTED':''}`);
  if(tests.some(x=>!x[1]))process.exitCode=1;
+ if(!reviewed)await runG41();
  return tests;
 }
-module.exports={run};
-if(require.main===module)run({reviewed:process.argv.includes('--reviewed')}).catch(e=>{console.error(e);process.exitCode=1});
+module.exports={run,runG41};
+if(require.main===module)(process.argv.includes('--g41-reviewed')?runG41({previous:true}):run({reviewed:process.argv.includes('--reviewed')})).catch(e=>{console.error(e);process.exitCode=1});
+
+async function runG41({previous=false}={}){
+ const {execFileSync}=require('node:child_process');
+ const html=previous?execFileSync('git',['show','c97255dc9ab83c7b241abf5a4e36e95fe09a4c5a:index.html'],{encoding:'utf8'}):source(),tests=[];
+ const make=(storage=new Storage(seed()),locks=new Locks(),opts={})=>production(html,storage,locks,opts);
+ async function test(name,fn){try{await fn();tests.push([name,true]);console.log('PASS | G4.1 '+name)}catch(e){tests.push([name,false]);console.error('FAIL | G4.1 '+name+' | '+e.message)}}
+ await test('N1 stale RAM journal cannot recreate artifacts, block B 15→16, or poison a fresh third tab',async()=>{
+  const storage=new Storage(seed()),locks=new Locks(),a=make(storage,locks,{stage:n=>{if(n===U)throw Error('synthetic interruption')}}),b=make(storage,locks),local=copy(fixture.active);
+  assert(!(await a.d.importData({...copy(fixture),history:[],active:null},undefined,a.d.snapshot().values)).ok);
+  assert((await b.d.recover()).ok);const fresh=copy(local);fresh.drafts['0_1'].reps=15;assert((await b.d.saveActive(fresh)).ok);
+  const before=storage.mutations().length,retry=await a.d.recover(),recoveryWrites=storage.mutations().length-before;
+  fresh.drafts['0_1'].reps=16;const save16=await b.d.saveActive(fresh),third=make(storage,locks).ui();third.state.memory=undefined;third.state.ready=false;await third.bootPersistence();
+  const raw=JSON.parse(a.d.exportRaw(local).text);
+  console.log('N1_COUNTEREXAMPLE '+JSON.stringify({retry,recoveryWrites,save16:{ok:save16.ok,status:save16.status},thirdReady:third.state.ready,persistedReps:JSON.parse(storage.values.get(A)).drafts['0_1'].reps,localReps:raw.memoryActive.drafts['0_1'].reps,artifacts:[J,B,O].map(k=>[k,storage.values.has(k)])}));
+  assert.equal(recoveryWrites,0);assert(save16.ok);assert(third.state.ready);assert.equal(JSON.parse(storage.values.get(A)).drafts['0_1'].reps,16);assert.equal(raw.memoryActive.drafts['0_1'].reps,9);assert.equal(JSON.parse(raw.values[A]).drafts['0_1'].reps,16);for(const k of [J,B,O])assert(!storage.values.has(k));assert(!(await a.d.saveActive(local)).ok);
+ });
+ for(const rir of ['2','',2])await test('N2 actual RC4 constructor/draft/complete/finish preserves RIR '+JSON.stringify(rir),async()=>{const r=realRC4(rir),p=make(new Storage({}));r.unknownRC4={keep:['original',1]};r.sets[0].unknownSet={keep:true};assert.equal(r.schema,4);assert.equal(r.release,'4.0.0-rc4');assert.equal(r.sets[0].rir,rir);const x={schema:4,history:[r],active:null,unit:'kg'};const result=await p.d.importData(x,undefined,p.d.snapshot().values);console.log('N2_PRODUCER '+JSON.stringify({schema:r.schema,release:r.release,rir:r.sets[0].rir,import:result}));assert(result.ok);const exported=await p.d.exportData();assert(exported.ok);assert.deepEqual(JSON.parse(exported.text).history,[r]);assert.equal(JSON.parse(p.storage.values.get(H))[0].sets[0].rir,rir)});
+ if(!previous){
+  await test('N1 persisted orphan journal conflicts are checked before any backup write',async()=>{const p=make(undefined,undefined,{stage:n=>{if(n===U)throw Error('interruption')}});await p.d.importData({...copy(fixture),history:[],active:null},undefined,p.d.snapshot().values);const j=p.storage.values.get(J);assert((await make(p.storage).d.recover()).ok);const changed=copy(fixture.active);changed.drafts['0_1'].reps=15;p.storage.values.set(A,JSON.stringify(changed));p.storage.values.set(J,j);const before=p.storage.mutations().length,r=await make(p.storage).d.recover();assert.equal(r.status,'recovery-conflict');assert.equal(p.storage.mutations().length,before);assert(!p.storage.values.has(B))});
+  await test('N1 persisted legacy journal still restores with verified backup after freshness checks',async()=>{const p=make(undefined,undefined,{stage:n=>{if(n===U)throw Error('interruption')}}),initial=seed();await p.d.importData({...copy(fixture),history:[],active:null},undefined,p.d.snapshot().values);p.storage.values.delete(B);p.storage.values.delete(O);assert((await make(p.storage).d.recover()).ok);for(const k of [H,A,U,M,E])assert.equal(p.storage.values.get(k)??null,initial[k]??null)});
+  for(const rir of ['<img src=x onerror=alert(1)>','2junk','2e0','Infinity','NaN','11','-1',' 2','2 ',Infinity,NaN,11,-1])await test('N2 invalid RC4 RIR '+String(rir)+' remains rejected with zero writes',async()=>{const p=make(),r=realRC4('2');r.sets[0].rir=rir;const result=await p.d.importData({schema:4,history:[r],active:null,unit:'kg'},undefined,p.d.snapshot().values);assert.equal(result.ok,false);assert.equal(p.storage.mutations().length,0)});
+  for(const rir of ['2',''])await test('N2 current active logs and drafts remain strict for '+JSON.stringify(rir),async()=>{const p=make(),a=copy(fixture.active);a.logs['0_0'].rir=rir;assert(!p.d.validActive(a));a.logs['0_0'].rir=2;a.drafts['0_1'].rir=rir;assert(!p.d.validActive(a))});
+  await test('N2 mixed RC4/current/v3 history round-trips unknown fields and original value types',async()=>{const rows=['2','',2].map((rir,i)=>({...realRC4(rir),id:'rc4-'+i,unknownRC4:{raw:rir}})),history=[...rows,...copy(fixture.history)],p=make(new Storage({})),x={schema:6,history,active:copy(fixture.active),unit:'lb'};assert((await p.d.importData(x,undefined,p.d.snapshot().values)).ok);const exported=await p.d.exportData();assert(exported.ok);const q=make(new Storage({}));assert((await q.d.importData(JSON.parse(exported.text),undefined,q.d.snapshot().values)).ok);for(const k of [H,A,U])assert.equal(q.storage.values.get(k),p.storage.values.get(k));assert.deepEqual(JSON.parse(exported.text).history,history)});
+ }
+ console.log(`G41_TOTAL ${tests.filter(x=>x[1]).length}/${tests.length} PASS${previous?' | PREVIOUS HEAD RED EXPECTED':''}`);if(tests.some(x=>!x[1]))process.exitCode=1;return tests;
+}

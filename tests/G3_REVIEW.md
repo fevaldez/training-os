@@ -1,5 +1,7 @@
 # G3 PR-S1 remediation evidence
 
+**G4.1 update:** targeted N1 (stale journal resurrection) and N2 (RC4 RIR compatibility) corrections and current evidence are in [G41_REVIEW.md](G41_REVIEW.md). Earlier acceptance claims below are historical; final targeted independent acceptance remains pending.
+
 Owner authorization: `TRAINING_OS_G3_AUTHORIZED_EXECUTION_2026-10-15.md`, beginning authorization block, explicitly invoked in the implementation chat. F1–F6 remediation and retention of F7 are authorized. Embedded G2 approval-pending notices are historical evidence; no release boundary is superseded. No Gate 0 or independent G2 audit was repeated.
 
 Reviewed before HEAD: `84d381915f601dd189dc6fb3f96117352eb8bef3`. Pinned main: `b82218dbc05662124821d1d6c27369ae717dd767`. Existing branch `codex/pr-s1-data-durability`; existing Draft PR [#2](https://github.com/fevaldez/training-os/pull/2). The final checkpoint and PR description bind the new exact HEAD and its CI run after commit. Independent re-review is PENDING. Production is NO-GO.

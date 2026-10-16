@@ -1,0 +1,58 @@
+PASS | kg/lb round trip
+PASS | tempo four phase canonical mapping is E-PE-C-PC
+PASS | concentric-start exercise renders chronological execution from concentric
+PASS | eccentric-start exercise renders chronological execution from eccentric
+PASS | continuous tempo has no false phase timing
+PASS | standalone shoulder sequence count
+PASS | chest superset alternates A/B
+PASS | first superset movement has zero-rest partner transition
+PASS | second superset movement starts rest
+PASS | timestamp timer survives elapsed background time mathematically
+PASS | one qualifying exposure does not increase load
+PASS | two consecutive qualifying exposures unlock conservative +2.5%
+PASS | repeated miss triggers review, never automatic load increase
+PASS | progression holds when target is not yet at ceiling
+PASS | session completion accounting
+PASS | exercise content completeness
+PASS | recommendation defaults to first untrained workout
+PASS | manual leg override does not force shoulder next
+PASS | recommendation selects least recently trained when all have history
+PASS | skipped set counts as resolved session progress
+PASS | skipped set cannot satisfy two-exposure progression gate
+PASS | current-session weight memory overrides historical weight
+PASS | historical weight and reps memory pre-fill exact same set but RIR stays target
+PASS | baseline remains empty when no load memory exists
+PASS | skip-exercise index selection preserves superset partner sets
+PASS | core order remains four base sessions and arms is flex only
+PASS | standalone arms source of truth has biceps triceps forearm and 25 planned sets
+PASS | standalone arms heavy opening blocks are not supersetted
+PASS | arms volume pair alternates lying curl and rope pushdown
+PASS | planner full snapshot preserves full workout set count
+PASS | 30 minute planner is deterministic and keeps tier-1 blocks
+PASS | 45 minute planner is never smaller than 30 minute planner
+PASS | plan-aware sequence preserves superset only when both partners are included
+PASS | short confirmed plan counts as done when fully executed
+PASS | legacy partial session is classified partial not done
+PASS | arms catch-up is not suggested before corresponding core attempt
+PASS | arms catch-up detects undercovered triceps after chest attempt
+PASS | catch-up arms defaults exclude forearm and avoid one-to-one debt recovery
+PASS | core recommendation never returns flex arms
+PASS | core recommendation prioritizes a pending core over completed core
+PASS | session sequence honors confirmed planner exercise list
+PASS | restored shoulder program contains both confirmed press patterns
+PASS | restored shoulder program retains lateral and rear-delt hypertrophy blocks
+PASS | shoulder press tempos execute from concentric start
+PASS | planner suppresses duplicate time presets
+PASS | shoulder planner now has meaningful short/full separation
+PASS | 45/full duplicate on chest is deduplicated when equivalent
+PASS | recommendation ranking prioritizes due over already-covered core work
+PASS | recommendation penalizes recent chest-to-shoulder overlap
+PASS | time-fit contributes to recommendation when user selects 30 min
+PASS | equipment-busy modifier demotes a workout without changing the program
+PASS | near-tied recommendation is explicitly classified as not clear
+PASS | canonical back program fidelity
+PASS | back supersets alternate D and E blocks
+PASS | all core routines have warmup and cooldown
+PASS | legacy leg C-first tempo data is corrected to E-first canonical
+PASS | memory prefills reps from trusted source
+TOTAL 57/57 PASS

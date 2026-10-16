@@ -1197,7 +1197,7 @@ function createDurability(storage, locks, workouts, options={}){
   return !(s.done&&s.skipped);
  }
  function record(r){
-  const historical=r?.schema!==5||r?.release!==RELEASE,legacyRir=r?.schema===3||r?.schemaVersion===3||r?.release==='3.x-migrated';
+  const historical=r?.schema!==5||r?.release!==RELEASE,legacyRir=r?.schema===3||r?.schema===4||r?.schemaVersion===3||r?.release==='3.x-migrated';
   return obj(r)&&validId(r.id)&&own(workouts,r.workoutKey)&&(!own(r,'schema')||[3,4,5].includes(r.schema))&&typeof r.workoutName==='string'&&date(r.startedAt)&&date(r.endedAt)&&Date.parse(r.endedAt)>=Date.parse(r.startedAt)&&number(r.durationSec)&&Array.isArray(r.sets)&&r.sets.every(s=>set(s,r.workoutKey,historical,legacyRir))&&(!own(r,'plan')||plan(r.plan,r.workoutKey,historical));
  }
  function validHistory(h){return Array.isArray(h)&&h.every(record)&&new Set(h.map(r=>String(r.id))).size===h.length}
@@ -1280,19 +1280,18 @@ function createDurability(storage, locks, workouts, options={}){
   let j=read(J,journalValid),b=read(B);if(!j.ok){blocked=true;return j}if(!b.ok){blocked=true;return b}
   const o=read(O);if(!o.ok){blocked=true;return o}
   if(b.status!=='absent'&&await digest(b.value.journal)!==b.value.digest){blocked=true;return fail('recovery-conflict',B)}
-  if(j.status==='absent'&&b.status==='absent'&&!memoryJournal){blocked=false;return {ok:true,status:'verified'}}
+  // Retired RAM journals are diagnostic only; absence of shared evidence never authorizes resurrection.
+  if(j.status==='absent'&&b.status==='absent'){blocked=false;return {ok:true,status:'verified'}}
   if(j.status==='absent'&&b.status!=='absent'&&o.status!=='absent'&&o.value.id===b.value.id&&o.value.digest===b.value.digest){memoryJournal=null;blocked=false;return {ok:true,status:'committed'}}
   if(b.status!=='absent'){
    if(j.status!=='absent'&&canonical(j.value)!==canonical(b.value.journal))return fail('recovery-conflict',J);
    j={ok:true,value:b.value.journal,status:'verified'};
-  }else{
-   const journal=j.status==='absent'?memoryJournal:j.value;
-   b=await backupFor(journal);const retained=write(B,b);if(!retained.ok){blocked=true;return retained}
-   j={ok:true,value:journal,status:'verified'};
   }
   memoryJournal=j.value;blocked=true;
   // No durable commit outcome: restore the exact before-image, never a RAM-only promise.
   for(const k of keys){const r=raw(k);if(!r.ok)return r;if(r.raw!==j.value.before[k]&&r.raw!==j.value.after[k])return fail('recovery-conflict',k)}
+  // Check persisted evidence and every conflict under the lock BEFORE creating a recovery backup.
+  if(b.status==='absent'){const retained=write(B,await backupFor(j.value));if(!retained.ok)return retained}
   for(const k of keys){const r=writeRaw(k,j.value.before[k],()=>true,true);if(!r.ok)return r;await stage('rollback:'+k)}
   for(const k of keys){const r=raw(k);if(!r.ok||r.raw!==j.value.before[k])return fail('read-back-failed',k)}
   const r=writeRaw(J,null);if(!r.ok){write(J,j.value);return r}

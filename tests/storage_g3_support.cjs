@@ -37,4 +37,13 @@ function realV3(){
  const start=old.indexOf('function newSession('),finish=old.indexOf('function finishWorkout(');vm.runInContext(old.slice(start,old.indexOf('function startOrOpen(',start))+old.slice(finish,old.indexOf('function readinessAdvice(',finish))+';globalThis.make=newSession;globalThis.finish=finishWorkout;',v);
  active=v.make('chest');Object.assign(active.sets['0_0'],{done:true,reps:8,weightKg:20});v.finish();return copy(history);
 }
-module.exports={REVIEWED,H,A,U,M,E,J,B,O,fixture,copy,source,Storage,Locks,seed,production,historical,realV3};
+// Actual RC4 producer: inherited input -> draft -> completed log -> schema-4 history.
+function realRC4(rir='2'){
+ const old=execFileSync('git',['show','3edb8b9:index.html'],{encoding:'utf8'});let saved,rows=[];
+ class Clock extends Date{constructor(...args){super(...(args.length?args:['2026-01-02T00:00:00.000Z']))}static now(){return 1767312000000}}
+ const c={Date:Clock,seedPrevious:name=>{rows=[{workoutKey:'chest',sets:[{exerciseName:name,setIndex:0,weightKg:20,reps:8,rir}]}]},saveActive:a=>saved=a,renderStage(){},startTicker(){},history:()=>rows,store:{set:(k,v)=>{rows=v;return true}},$:()=>({classList:{remove(){}}}),releaseWake(){},renderProgress(){},showPage(){},alert:message=>{throw Error(message)}};vm.createContext(c);
+ const part=(name,next)=>old.slice(old.indexOf('function '+name+'('),old.indexOf('function '+next+'('));
+ vm.runInContext(old.slice(old.indexOf('const WORKOUTS ='),old.indexOf("const RELEASE='"))+"const RELEASE='4.0.0-rc4';"+part('previousWorkout','nextWorkoutKey')+part('makeSession','totalSets')+part('current','saveDraft')+part('completeSet','renderTransition')+part('finishSession','renderProgress')+';seedPrevious(WORKOUTS.chest.exercises[0].name);const a=makeSession("chest"),{seq,item}=current(a),draft=draftFor(a,item);completeSet(a,seq,item,WORKOUTS.chest.exercises[item.ei],draft);finishSession(a);',c);
+ return copy(rows.at(-1));
+}
+module.exports={REVIEWED,H,A,U,M,E,J,B,O,fixture,copy,source,Storage,Locks,seed,production,historical,realV3,realRC4};
