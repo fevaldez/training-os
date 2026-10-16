@@ -1,0 +1,18 @@
+N1_COUNTEREXAMPLE {"retry":{"ok":false,"status":"recovery-conflict","key":"fv4.active"},"recoveryWrites":1,"save16":{"ok":false,"status":"recovery-required"},"thirdReady":false,"persistedReps":15,"localReps":9,"artifacts":[["fv4.recovery.v1",false],["fv4.recovery.backup.v1",true],["fv4.recovery.outcome.v1",false]]}
+FAIL | G4.1 N1 stale RAM journal cannot recreate artifacts, block B 15→16, or poison a fresh third tab | Expected values to be strictly equal:
+
+1 !== 0
+
+N2_PRODUCER {"schema":4,"release":"4.0.0-rc4","rir":"2","import":{"ok":false,"status":"invalid-import"}}
+FAIL | G4.1 N2 actual RC4 constructor/draft/complete/finish preserves RIR "2" | The expression evaluated to a falsy value:
+
+  assert(result.ok)
+
+N2_PRODUCER {"schema":4,"release":"4.0.0-rc4","rir":"","import":{"ok":false,"status":"invalid-import"}}
+FAIL | G4.1 N2 actual RC4 constructor/draft/complete/finish preserves RIR "" | The expression evaluated to a falsy value:
+
+  assert(result.ok)
+
+N2_PRODUCER {"schema":4,"release":"4.0.0-rc4","rir":2,"import":{"ok":true,"status":"verified"}}
+PASS | G4.1 N2 actual RC4 constructor/draft/complete/finish preserves RIR 2
+G41_TOTAL 1/4 PASS | PREVIOUS HEAD RED EXPECTED

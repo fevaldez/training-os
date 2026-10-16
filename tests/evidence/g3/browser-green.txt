@@ -1,0 +1,10 @@
+G3_BROWSER 145.0.7632.6 | CURRENT
+PASS | G3_BROWSER F3/B1 unit write retains dirty active warning, Retry/Export and exact revision retry
+PASS | G3_BROWSER F3/B1 force-close limitation is honest; unsaved RAM requires Retry or external backup
+PASS | G3_BROWSER F1/B2 cooperating tabs cannot overwrite newer draft after recovery; export retains both copies
+PASS | G3_BROWSER F2/R1 reload loses RAM but retains durable original after journal cleanup/readback/reinsertion faults
+PASS | G3_BROWSER F4/R3 historical eight-case mixed collection is visible and exportable
+PASS | G3_BROWSER F4 corrupt history is unavailable rather than an empty-history claim
+PASS | G3_BROWSER F6 explicit-active collision announces invalid import with zero replacement
+PASS | G3_BROWSER unsupported Web Locks refuses normal writes while raw export stays available
+G3_BROWSER_TOTAL 8/8 PASS

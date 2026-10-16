@@ -1,0 +1,20 @@
+[
+  {
+    "id": "v3-1",
+    "workout": "chest",
+    "name": "Synthetic legacy",
+    "date": "2026-01-01T00:00:00.000Z",
+    "durationSec": 0,
+    "sets": [
+      {
+        "exerciseName": "Synthetic",
+        "kg": 10,
+        "reps": 5,
+        "done": true
+      }
+    ],
+    "unknownLegacy": {
+      "keep": "exact"
+    }
+  }
+]

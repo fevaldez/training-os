@@ -1,0 +1,62 @@
+FAIL | G3 F1/R5 recover cannot give stale memory a new write token | The expression evaluated to a falsy value:
+
+  assert(!r.ok)
+
+FAIL | G3 F2/R1 fresh instance restores before-image when journal removal/read-back/reinsertion fail | Expected values to be strictly equal:
++ actual - expected
+
++ '[]'
+- '[{"schema":3,"release":"synthetic","id":101,"workoutKey":"chest","workoutName":"Synthetic <img src=x onerror=alert(1)>","startedAt":"2026-01-01T00:00:00.000Z","endedAt":"2026-01-01T01:00:00.000Z","durationSec":3600,"plan":{"preset":"full","includedExerciseIndices":[0,1,2,3,4,5],"excludedExerciseIndices":[],"fullSets":20,"confirmedSets":20,"estimatedMin":45},"sets":[{"exerciseIndex":0,"exerciseName":"Synthetic","setIndex":0,"weightKg":22.5,"reps":8,"rir":2,"done":true,"unknownSet":{"preserve":["yes",1]}}],"unknownRecord":{"nested":{"untouched":true}}},{"schema":4,"release":"synthetic","id":"legacy-102","workoutKey":"chest","workoutName":"Synthetic <img src=x onerror=alert(1)>","startedAt":"2026-01-01T00:00:00.000Z","endedAt":"2026-01-01T01:00:00.000Z","durationSec":3600,"plan":{"preset":"full","includedExerciseIndices":[0,1,2,3,4,5],"excludedExerciseIndices":[],"fullSets":20,"confirmedSets":20,"estimatedMin":45},"sets":[{"exerciseIndex":0,"exerciseName":"Synthetic","setIndex":0,"weightKg":22.5,"reps":8,"rir":2,"done":true,"unknownSet":{"preserve":["yes",1]}}],"unknownRecord":{"nested":{"untouched":true}}},{"schema":5,"release":"synthetic","id":103,"workoutKey":"chest","workoutName":"Synthetic <img src=x onerror=alert(1)>","startedAt":"2026-01-01T00:00:00.000Z","endedAt":"2026-01-01T01:00:00.000Z","durationSec":3600,"plan":{"preset":"full","includedExerciseIndices":[0,1,2,3,4,5],"excludedExerciseIndices":[],"fullSets":20,"confirmedSets":20,"estimatedMin":45},"sets":[{"exerciseIndex":0,"exerciseName":"Synthetic","setIndex":0,"weightKg":22.5,"reps":8,"rir":2,"done":true,"unknownSet":{"preserve":["yes",1]}}],"unknownRecord":{"nested":{"untouched":true}}}]'
+
+FAIL | G3 F3/B1 unit success cannot clear failed dirty active revision | The expression evaluated to a falsy value:
+
+  assert(ui.state.message)
+
+FAIL | G3 F4/R3 c871672 historical back index 1 round-trips without current prescription bounds | The expression evaluated to a falsy value:
+
+  assert(p.d.validHistory(x.history))
+
+FAIL | G3 F4/R3 c871672 historical back index 2 round-trips without current prescription bounds | The expression evaluated to a falsy value:
+
+  assert(p.d.validHistory(x.history))
+
+FAIL | G3 F4/R3 c871672 historical back index 4 round-trips without current prescription bounds | The expression evaluated to a falsy value:
+
+  assert(p.d.validHistory(x.history))
+
+FAIL | G3 F4/R3 c871672 historical back index 5 round-trips without current prescription bounds | The expression evaluated to a falsy value:
+
+  assert(p.d.validHistory(x.history))
+
+FAIL | G3 F4/R3 0494bc8 historical back index 1 round-trips without current prescription bounds | The expression evaluated to a falsy value:
+
+  assert(p.d.validHistory(x.history))
+
+FAIL | G3 F4/R3 0494bc8 historical back index 2 round-trips without current prescription bounds | The expression evaluated to a falsy value:
+
+  assert(p.d.validHistory(x.history))
+
+FAIL | G3 F4/R3 0494bc8 historical back index 4 round-trips without current prescription bounds | The expression evaluated to a falsy value:
+
+  assert(p.d.validHistory(x.history))
+
+FAIL | G3 F4/R3 0494bc8 historical back index 5 round-trips without current prescription bounds | The expression evaluated to a falsy value:
+
+  assert(p.d.validHistory(x.history))
+
+FAIL | G3 F5/R2 real v3 RIR "" migrates and round-trips without normalization | The expression evaluated to a falsy value:
+
+  assert((await p.d.migrate()).ok)
+
+FAIL | G3 F5/R2 real v3 RIR "2" migrates and round-trips without normalization | The expression evaluated to a falsy value:
+
+  assert((await p.d.migrate()).ok)
+
+PASS | G3 F5/R2 real v3 RIR 2 migrates and round-trips without normalization
+FAIL | G3 F6/R4 explicit-active ID conflict rejects with zero writes | Expected values to be strictly equal:
++ actual - expected
+
++ 'verified'
+- 'invalid-import'
+
+G3_TOTAL 1/15 PASS | REVIEWED HEAD RED EXPECTED

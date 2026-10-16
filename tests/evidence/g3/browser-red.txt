@@ -1,0 +1,39 @@
+G3_BROWSER 145.0.7632.6 | REVIEWED HEAD RED EXPECTED
+FAIL | G3_BROWSER F3/B1 unit write retains dirty active warning, Retry/Export and exact revision retry | The expression evaluated to a falsy value:
+
+  assert(state.message)
+
+FAIL | G3_BROWSER F3/B1 force-close limitation is honest; unsaved RAM requires Retry or external backup | The expression evaluated to a falsy value:
+
+  assert(/no sobrevivirán/i.test(await p.evaluate(()=>persistence.message)))
+
+FAIL | G3_BROWSER F1/B2 cooperating tabs cannot overwrite newer draft after recovery; export retains both copies | Expected values to be strictly equal:
+
+9 !== 15
+
+FAIL | G3_BROWSER F2/R1 reload loses RAM but retains durable original after journal cleanup/readback/reinsertion faults | Expected values to be strictly deep-equal:
++ actual - expected
+
+  {
++   a: null,
++   h: '[]'
+-   a: '{"schema":6,"release":"synthetic","id":303,"workoutKey":"chest","startedAt":"2026-01-02T00:00:00.000Z","updatedAt":"2026-01-02T00:05:00.000Z","index":1,"state":"rest","endsAt":1767312360000,"restOriginal":120,"last":{"exerciseIndex":0,"exerciseName":"Synthetic","setIndex":0,"weightKg":22.5,"reps":8,"rir":2,"done":true,"unknownSet":{"preserve":["yes",1]}},"plan":{"preset":"full","includedExerciseIndices":[0,1,2,3,4,5],"excludedExerciseIndices":[],"fullSets":20,"confirmedSets":20,"estimatedMin":45},"logs":{"0_0":{"exerciseIndex":0,"exerciseName":"Synthetic","setIndex":0,"weightKg":22.5,"reps":8,"rir":2,"done":true,"unknownSet":{"preserve":["yes",1]}}},"drafts":{"0_1":{"weightKg":21.5,"reps":9,"rir":3,"reason":"<svg onload=alert(1)>","futureField":{"keep":1}}},"futureActive":{"keep":[1,2,3]}}',
+-   h: '[{"schema":3,"release":"synthetic","id":101,"workoutKey":"chest","workoutName":"Synthetic <img src=x onerror=alert(1)>","startedAt":"2026-01-01T00:00:00.000Z","endedAt":"2026-01-01T01:00:00.000Z","durationSec":3600,"plan":{"preset":"full","includedExerciseIndices":[0,1,2,3,4,5],"excludedExerciseIndices":[],"fullSets":20,"confirmedSets":20,"estimatedMin":45},"sets":[{"exerciseIndex":0,"exerciseName":"Synthetic","setIndex":0,"weightKg":22.5,"reps":8,"rir":2,"done":true,"unknownSet":{"preserve":["yes",1]}}],"unknownRecord":{"nested":{"untouched":true}}},{"schema":4,"release":"synthetic","id":"legacy-102","workoutKey":"chest","workoutName":"Synthetic <img src=x onerror=alert(1)>","startedAt":"2026-01-01T00:00:00.000Z","endedAt":"2026-01-01T01:00:00.000Z","durationSec":3600,"plan":{"preset":"full","includedExerciseIndices":[0,1,2,3,4,5],"excludedExerciseIndices":[],"fullSets":20,"confirmedSets":20,"estimatedMin":45},"sets":[{"exerciseIndex":0,"exerciseName":"Synthetic","setIndex":0,"weightKg":22.5,"reps":8,"rir":2,"done":true,"unknownSet":{"preserve":["yes",1]}}],"unknownRecord":{"nested":{"untouched":true}}},{"schema":5,"release":"synthetic","id":103,"workoutKey":"chest","workoutName":"Synthetic <img src=x onerror=alert(1)>","startedAt":"2026-01-01T00:00:00.000Z","endedAt":"2026-01-01T01:00:00.000Z","durationSec":3600,"plan":{"preset":"full","includedExerciseIndices":[0,1,2,3,4,5],"excludedExerciseIndices":[],"fullSets":20,"confirmedSets":20,"estimatedMin":45},"sets":[{"exerciseIndex":0,"exerciseName":"Synthetic","setIndex":0,"weightKg":22.5,"reps":8,"rir":2,"done":true,"unknownSet":{"preserve":["yes",1]}}],"unknownRecord":{"nested":{"untouched":true}}}]'
+  }
+
+FAIL | G3_BROWSER F4/R3 historical eight-case mixed collection is visible and exportable | The expression evaluated to a falsy value:
+
+  assert(await p.evaluate(()=>persistence.ready))
+
+FAIL | G3_BROWSER F4 corrupt history is unavailable rather than an empty-history claim | The expression evaluated to a falsy value:
+
+  assert((await p.locator('#stats').innerText()).includes('no disponible'))
+
+FAIL | G3_BROWSER F6 explicit-active collision announces invalid import with zero replacement | Expected values to be strictly equal:
++ actual - expected
+
++ '[{"schema":3,"release":"synthetic","id":101,"workoutKey":"chest","workoutName":"Synthetic <img src=x onerror=alert(1)>","startedAt":"2026-01-01T00:00:00.000Z","endedAt":"2026-01-01T01:00:00.000Z","durationSec":3600,"plan":{"preset":"full","includedExerciseIndices":[0,1,2,3,4,5],"excludedExerciseIndices":[],"fullSets":20,"confirmedSets":20,"estimatedMin":45},"sets":[{"exerciseIndex":0,"exerciseName":"Synthetic","setIndex":0,"weightKg":22.5,"reps":8,"rir":2,"done":true,"unknownSet":{"preserve":["yes",1]}}],"unknownRecord":{"nested":{"untouched":true}}},{"schema":4,"release":"synthetic","id":"legacy-102","workoutKey":"chest","workoutName":"Synthetic <img src=x onerror=alert(1)>","startedAt":"2026-01-01T00:00:00.000Z","endedAt":"2026-01-01T01:00:00.000Z","durationSec":3600,"plan":{"preset":"full","includedExerciseIndices":[0,1,2,3,4,5],"excludedExerciseIndices":[],"fullSets":20,"confirmedSets":20,"estimatedMin":45},"sets":[{"exerciseIndex":0,"exerciseName":"Synthetic","setIndex":0,"weightKg":22.5,"reps":8,"rir":2,"done":true,"unknownSet":{"preserve":["yes",1]}}],"unknownRecord":{"nested":{"untouched":true}}},{"schema":5,"release":"synthetic","id":103,"workoutKey":"chest","workoutName":"Synthetic <img src=x onerror=alert(1)>","startedAt":"2026-01-01T00:00:00.000Z","endedAt":"2026-01-01T01:00:00.000Z","durationSec":3600,"plan":{"preset":"full","includedExerciseIndices":[0,1,2,3,4,5],"excludedExerciseIndices":[],"fullSets":20,"confirmedSets":20,"estimatedMin":45},"sets":[{"exerciseIndex":0,"exerciseName":"Synthetic","setIndex":0,"weightKg":22.5,"reps":8,"rir":2,"done":true,"unknownSet":{"preserve":["yes",1]}}],"unknownRecord":{"nested":{"untouched":true}}},{"schema":5,"release":"synthetic","id":303,"workoutKey":"chest","workoutName":"Synthetic <img src=x onerror=alert(1)>","startedAt":"2026-01-01T00:00:00.000Z","endedAt":"2026-01-01T01:00:00.000Z","durationSec":3600,"plan":{"preset":"full","includedExerciseIndices":[0,1,2,3,4,5],"excludedExerciseIndices":[],"fullSets":20,"confirmedSets":20,"estimatedMin":45},"sets":[{"exerciseIndex":0,"exerciseName":"Synthetic","setIndex":0,"weightKg":22.5,"reps":8,"rir":2,"done":true,"unknownSet":{"preserve":["yes",1]}}],"unknownRecord":{"nested":{"untouched":true}}}]'
+- '[{"schema":3,"release":"synthetic","id":101,"workoutKey":"chest","workoutName":"Synthetic <img src=x onerror=alert(1)>","startedAt":"2026-01-01T00:00:00.000Z","endedAt":"2026-01-01T01:00:00.000Z","durationSec":3600,"plan":{"preset":"full","includedExerciseIndices":[0,1,2,3,4,5],"excludedExerciseIndices":[],"fullSets":20,"confirmedSets":20,"estimatedMin":45},"sets":[{"exerciseIndex":0,"exerciseName":"Synthetic","setIndex":0,"weightKg":22.5,"reps":8,"rir":2,"done":true,"unknownSet":{"preserve":["yes",1]}}],"unknownRecord":{"nested":{"untouched":true}}},{"schema":4,"release":"synthetic","id":"legacy-102","workoutKey":"chest","workoutName":"Synthetic <img src=x onerror=alert(1)>","startedAt":"2026-01-01T00:00:00.000Z","endedAt":"2026-01-01T01:00:00.000Z","durationSec":3600,"plan":{"preset":"full","includedExerciseIndices":[0,1,2,3,4,5],"excludedExerciseIndices":[],"fullSets":20,"confirmedSets":20,"estimatedMin":45},"sets":[{"exerciseIndex":0,"exerciseName":"Synthetic","setIndex":0,"weightKg":22.5,"reps":8,"rir":2,"done":true,"unknownSet":{"preserve":["yes",1]}}],"unknownRecord":{"nested":{"untouched":true}}},{"schema":5,"release":"synthetic","id":103,"workoutKey":"chest","workoutName":"Synthetic <img src=x onerror=alert(1)>","startedAt":"2026-01-01T00:00:00.000Z","endedAt":"2026-01-01T01:00:00.000Z","durationSec":3600,"plan":{"preset":"full","includedExerciseIndices":[0,1,2,3,4,5],"excludedExerciseIndices":[],"fullSets":20,"confirmedSets":20,"estimatedMin":45},"sets":[{"exerciseIndex":0,"exerciseName":"Synthetic","setIndex":0,"weightKg":22.5,"reps":8,"rir":2,"done":true,"unknownSet":{"preserve":["yes",1]}}],"unknownRecord":{"nested":{"untouched":true}}}]'
+
+PASS | G3_BROWSER unsupported Web Locks refuses normal writes while raw export stays available
+G3_BROWSER_TOTAL 1/8 PASS

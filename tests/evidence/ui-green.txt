@@ -1,0 +1,24 @@
+PASS | inline scripts compile
+PASS | critical DOM ids are unique
+PASS | RC6 critical surfaces exist
+PASS | simple $ id references resolve
+PASS | bottom navigation has exactly Today Program Progress
+PASS | Week tab and permanent MVP explainer are removed
+PASS | Today uses decision stack and weekly snapshot
+PASS | Program uses Decision Cards and includes standalone Arms flex session
+PASS | Pre-workout planner deduplicates equivalent presets and keeps per-exercise toggles
+PASS | planned confirmed executed metrics are persisted
+PASS | skip set and skip exercise force workout scroll to top
+PASS | tempo renderer remains centralized
+PASS | Node 24 compatible Pages action majors are selected
+PASS | shoulder standalone is fully restored
+PASS | Today exposes explainable flexible recommendations
+PASS | time presets are not rendered as redundant hard-coded options
+PASS | warmup and cooldown are first-class session states
+PASS | rest has no-scroll bottom action
+PASS | planner exposes supersets before training
+PASS | alternatives are visible in planner and live workout
+PASS | tempo UI prioritizes chronological execution over acronym decoding
+PASS | external technique links are contained and instrumented
+PASS | program card includes routine-review checkpoint
+TOTAL 23/23 PASS

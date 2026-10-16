@@ -1,0 +1,313 @@
+{
+  "provenance": "Synthetic records generated from production source recipes; never owner storage",
+  "historical": [
+    {
+      "sha": "c871672",
+      "ei": 1,
+      "sets": 4,
+      "record": {
+        "schema": 4,
+        "release": "synthetic",
+        "id": "c871672-1",
+        "workoutKey": "back",
+        "workoutName": "Espalda + Bíceps",
+        "startedAt": "2026-01-01T00:00:00.000Z",
+        "endedAt": "2026-01-01T01:00:00.000Z",
+        "durationSec": 3600,
+        "sets": [
+          {
+            "exerciseIndex": 1,
+            "exerciseName": "Neutral-Grip Lat Pulldown",
+            "setIndex": 3,
+            "weightKg": 20,
+            "reps": 8,
+            "rir": 2,
+            "done": true,
+            "unknownHistorical": {
+              "sha": "c871672"
+            }
+          }
+        ],
+        "unknownRecord": {
+          "nested": {
+            "untouched": true
+          }
+        }
+      }
+    },
+    {
+      "sha": "c871672",
+      "ei": 2,
+      "sets": 3,
+      "record": {
+        "schema": 4,
+        "release": "synthetic",
+        "id": "c871672-2",
+        "workoutKey": "back",
+        "workoutName": "Espalda + Bíceps",
+        "startedAt": "2026-01-01T00:00:00.000Z",
+        "endedAt": "2026-01-01T01:00:00.000Z",
+        "durationSec": 3600,
+        "sets": [
+          {
+            "exerciseIndex": 2,
+            "exerciseName": "1-Arm Cable Row",
+            "setIndex": 2,
+            "weightKg": 20,
+            "reps": 8,
+            "rir": 2,
+            "done": true,
+            "unknownHistorical": {
+              "sha": "c871672"
+            }
+          }
+        ],
+        "unknownRecord": {
+          "nested": {
+            "untouched": true
+          }
+        }
+      }
+    },
+    {
+      "sha": "c871672",
+      "ei": 4,
+      "sets": 4,
+      "record": {
+        "schema": 4,
+        "release": "synthetic",
+        "id": "c871672-4",
+        "workoutKey": "back",
+        "workoutName": "Espalda + Bíceps",
+        "startedAt": "2026-01-01T00:00:00.000Z",
+        "endedAt": "2026-01-01T01:00:00.000Z",
+        "durationSec": 3600,
+        "sets": [
+          {
+            "exerciseIndex": 4,
+            "exerciseName": "Cable Curl",
+            "setIndex": 3,
+            "weightKg": 20,
+            "reps": 8,
+            "rir": 2,
+            "done": true,
+            "unknownHistorical": {
+              "sha": "c871672"
+            }
+          }
+        ],
+        "unknownRecord": {
+          "nested": {
+            "untouched": true
+          }
+        }
+      }
+    },
+    {
+      "sha": "c871672",
+      "ei": 5,
+      "sets": 3,
+      "record": {
+        "schema": 4,
+        "release": "synthetic",
+        "id": "c871672-5",
+        "workoutKey": "back",
+        "workoutName": "Espalda + Bíceps",
+        "startedAt": "2026-01-01T00:00:00.000Z",
+        "endedAt": "2026-01-01T01:00:00.000Z",
+        "durationSec": 3600,
+        "sets": [
+          {
+            "exerciseIndex": 5,
+            "exerciseName": "Preacher / Supported Curl",
+            "setIndex": 2,
+            "weightKg": 20,
+            "reps": 8,
+            "rir": 2,
+            "done": true,
+            "unknownHistorical": {
+              "sha": "c871672"
+            }
+          }
+        ],
+        "unknownRecord": {
+          "nested": {
+            "untouched": true
+          }
+        }
+      }
+    },
+    {
+      "sha": "0494bc8",
+      "ei": 1,
+      "sets": 4,
+      "record": {
+        "schema": 4,
+        "release": "synthetic",
+        "id": "0494bc8-1",
+        "workoutKey": "back",
+        "workoutName": "Espalda + Bíceps",
+        "startedAt": "2026-01-01T00:00:00.000Z",
+        "endedAt": "2026-01-01T01:00:00.000Z",
+        "durationSec": 3600,
+        "sets": [
+          {
+            "exerciseIndex": 1,
+            "exerciseName": "Neutral-Grip Lat Pulldown",
+            "setIndex": 3,
+            "weightKg": 20,
+            "reps": 8,
+            "rir": 2,
+            "done": true,
+            "unknownHistorical": {
+              "sha": "0494bc8"
+            }
+          }
+        ],
+        "unknownRecord": {
+          "nested": {
+            "untouched": true
+          }
+        }
+      }
+    },
+    {
+      "sha": "0494bc8",
+      "ei": 2,
+      "sets": 3,
+      "record": {
+        "schema": 4,
+        "release": "synthetic",
+        "id": "0494bc8-2",
+        "workoutKey": "back",
+        "workoutName": "Espalda + Bíceps",
+        "startedAt": "2026-01-01T00:00:00.000Z",
+        "endedAt": "2026-01-01T01:00:00.000Z",
+        "durationSec": 3600,
+        "sets": [
+          {
+            "exerciseIndex": 2,
+            "exerciseName": "1-Arm Cable Row",
+            "setIndex": 2,
+            "weightKg": 20,
+            "reps": 8,
+            "rir": 2,
+            "done": true,
+            "unknownHistorical": {
+              "sha": "0494bc8"
+            }
+          }
+        ],
+        "unknownRecord": {
+          "nested": {
+            "untouched": true
+          }
+        }
+      }
+    },
+    {
+      "sha": "0494bc8",
+      "ei": 4,
+      "sets": 4,
+      "record": {
+        "schema": 4,
+        "release": "synthetic",
+        "id": "0494bc8-4",
+        "workoutKey": "back",
+        "workoutName": "Espalda + Bíceps",
+        "startedAt": "2026-01-01T00:00:00.000Z",
+        "endedAt": "2026-01-01T01:00:00.000Z",
+        "durationSec": 3600,
+        "sets": [
+          {
+            "exerciseIndex": 4,
+            "exerciseName": "Cable Curl",
+            "setIndex": 3,
+            "weightKg": 20,
+            "reps": 8,
+            "rir": 2,
+            "done": true,
+            "unknownHistorical": {
+              "sha": "0494bc8"
+            }
+          }
+        ],
+        "unknownRecord": {
+          "nested": {
+            "untouched": true
+          }
+        }
+      }
+    },
+    {
+      "sha": "0494bc8",
+      "ei": 5,
+      "sets": 3,
+      "record": {
+        "schema": 4,
+        "release": "synthetic",
+        "id": "0494bc8-5",
+        "workoutKey": "back",
+        "workoutName": "Espalda + Bíceps",
+        "startedAt": "2026-01-01T00:00:00.000Z",
+        "endedAt": "2026-01-01T01:00:00.000Z",
+        "durationSec": 3600,
+        "sets": [
+          {
+            "exerciseIndex": 5,
+            "exerciseName": "Preacher / Supported Curl",
+            "setIndex": 2,
+            "weightKg": 20,
+            "reps": 8,
+            "rir": 2,
+            "done": true,
+            "unknownHistorical": {
+              "sha": "0494bc8"
+            }
+          }
+        ],
+        "unknownRecord": {
+          "nested": {
+            "untouched": true
+          }
+        }
+      }
+    }
+  ],
+  "v3": [
+    {
+      "schemaVersion": 3,
+      "id": 1792109455247,
+      "workoutKey": "chest",
+      "workoutName": "Pecho + Tríceps",
+      "startedAt": "2026-01-01T00:00:00.000Z",
+      "endedAt": "2026-01-01T00:00:00.000Z",
+      "durationSec": 0,
+      "readiness": {},
+      "sets": [
+        {
+          "exerciseIndex": 0,
+          "exerciseName": "Machine / Lever Chest Press",
+          "group": "Pecho",
+          "setIndex": 0,
+          "weightKg": 20,
+          "captureUnit": "kg",
+          "reps": 8,
+          "rir": "",
+          "done": true,
+          "completedAt": null,
+          "source": "blank"
+        }
+      ],
+      "events": [],
+      "summary": {
+        "setsCompleted": 1,
+        "totalSets": 20,
+        "completionPct": 5,
+        "volumeKgReps": 0,
+        "avgRIR": 0,
+        "bestE1RM": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,227 @@
+{
+  "schema": 6,
+  "history": [
+    {
+      "schema": 3,
+      "release": "synthetic",
+      "id": 101,
+      "workoutKey": "chest",
+      "workoutName": "Synthetic <img src=x onerror=alert(1)>",
+      "startedAt": "2026-01-01T00:00:00.000Z",
+      "endedAt": "2026-01-01T01:00:00.000Z",
+      "durationSec": 3600,
+      "plan": {
+        "preset": "full",
+        "includedExerciseIndices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "excludedExerciseIndices": [],
+        "fullSets": 20,
+        "confirmedSets": 20,
+        "estimatedMin": 45
+      },
+      "sets": [
+        {
+          "exerciseIndex": 0,
+          "exerciseName": "Synthetic",
+          "setIndex": 0,
+          "weightKg": 22.5,
+          "reps": 8,
+          "rir": 2,
+          "done": true,
+          "unknownSet": {
+            "preserve": [
+              "yes",
+              1
+            ]
+          }
+        }
+      ],
+      "unknownRecord": {
+        "nested": {
+          "untouched": true
+        }
+      }
+    },
+    {
+      "schema": 4,
+      "release": "synthetic",
+      "id": "legacy-102",
+      "workoutKey": "chest",
+      "workoutName": "Synthetic <img src=x onerror=alert(1)>",
+      "startedAt": "2026-01-01T00:00:00.000Z",
+      "endedAt": "2026-01-01T01:00:00.000Z",
+      "durationSec": 3600,
+      "plan": {
+        "preset": "full",
+        "includedExerciseIndices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "excludedExerciseIndices": [],
+        "fullSets": 20,
+        "confirmedSets": 20,
+        "estimatedMin": 45
+      },
+      "sets": [
+        {
+          "exerciseIndex": 0,
+          "exerciseName": "Synthetic",
+          "setIndex": 0,
+          "weightKg": 22.5,
+          "reps": 8,
+          "rir": 2,
+          "done": true,
+          "unknownSet": {
+            "preserve": [
+              "yes",
+              1
+            ]
+          }
+        }
+      ],
+      "unknownRecord": {
+        "nested": {
+          "untouched": true
+        }
+      }
+    },
+    {
+      "schema": 5,
+      "release": "synthetic",
+      "id": 103,
+      "workoutKey": "chest",
+      "workoutName": "Synthetic <img src=x onerror=alert(1)>",
+      "startedAt": "2026-01-01T00:00:00.000Z",
+      "endedAt": "2026-01-01T01:00:00.000Z",
+      "durationSec": 3600,
+      "plan": {
+        "preset": "full",
+        "includedExerciseIndices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "excludedExerciseIndices": [],
+        "fullSets": 20,
+        "confirmedSets": 20,
+        "estimatedMin": 45
+      },
+      "sets": [
+        {
+          "exerciseIndex": 0,
+          "exerciseName": "Synthetic",
+          "setIndex": 0,
+          "weightKg": 22.5,
+          "reps": 8,
+          "rir": 2,
+          "done": true,
+          "unknownSet": {
+            "preserve": [
+              "yes",
+              1
+            ]
+          }
+        }
+      ],
+      "unknownRecord": {
+        "nested": {
+          "untouched": true
+        }
+      }
+    }
+  ],
+  "active": {
+    "schema": 6,
+    "release": "synthetic",
+    "id": 303,
+    "workoutKey": "chest",
+    "startedAt": "2026-01-02T00:00:00.000Z",
+    "updatedAt": "2026-01-02T00:05:00.000Z",
+    "index": 1,
+    "state": "rest",
+    "endsAt": 1767312360000,
+    "restOriginal": 120,
+    "last": {
+      "exerciseIndex": 0,
+      "exerciseName": "Synthetic",
+      "setIndex": 0,
+      "weightKg": 22.5,
+      "reps": 8,
+      "rir": 2,
+      "done": true,
+      "unknownSet": {
+        "preserve": [
+          "yes",
+          1
+        ]
+      }
+    },
+    "plan": {
+      "preset": "full",
+      "includedExerciseIndices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "excludedExerciseIndices": [],
+      "fullSets": 20,
+      "confirmedSets": 20,
+      "estimatedMin": 45
+    },
+    "logs": {
+      "0_0": {
+        "exerciseIndex": 0,
+        "exerciseName": "Synthetic",
+        "setIndex": 0,
+        "weightKg": 22.5,
+        "reps": 8,
+        "rir": 2,
+        "done": true,
+        "unknownSet": {
+          "preserve": [
+            "yes",
+            1
+          ]
+        }
+      }
+    },
+    "drafts": {
+      "0_1": {
+        "weightKg": 21.5,
+        "reps": 9,
+        "rir": 3,
+        "reason": "<svg onload=alert(1)>",
+        "futureField": {
+          "keep": 1
+        }
+      }
+    },
+    "futureActive": {
+      "keep": [
+        1,
+        2,
+        3
+      ]
+    }
+  },
+  "unit": "lb",
+  "unknownEnvelope": {
+    "retainInSource": true
+  }
+}
