@@ -19,7 +19,8 @@ async function setup(unit = 'kg') {
     if (elements.has(key)) return elements.get(key);
     let hidden = false, markup = '';
     const attributes=new Map();
-    const result = { value: '', dataset: {}, children: [], textContent: '',
+    const result = { value: '', dataset: {}, children: [], textContent: '', scrollTop: 0,
+      getBoundingClientRect(){return {top:0};},
       setAttribute(k,v){attributes.set(k,String(v));},getAttribute(k){return attributes.get(k)??null;},focus(){events.push({op:'focus',key});},
       classList: { toggle() {}, contains: () => key === '#sessionOverlay' },
       replaceChildren() { this.children = []; events.push({ op: 'replaceChildren', key }); },
