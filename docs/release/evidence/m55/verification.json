@@ -1,0 +1,587 @@
+{
+  "M5-01": "Automated PASS; physical pending",
+  "M5-02": "UNKNOWN",
+  "aliasBindings": [
+    {
+      "alias": "training-os-pr-s1-qa.vercel.app",
+      "deploymentId": "dpl_2HkzDYDSVFvmeoJq1upj7eB8NDU4",
+      "projectId": "prj_M0HJcEQBmyGGbkzVBEeMdNhwQpjd"
+    },
+    {
+      "alias": "training-os-pr-s1-qa-valcan.vercel.app",
+      "deploymentId": "dpl_2HkzDYDSVFvmeoJq1upj7eB8NDU4",
+      "projectId": "prj_M0HJcEQBmyGGbkzVBEeMdNhwQpjd"
+    }
+  ],
+  "browserSmoke": {
+    "boot": {
+      "boot": "ok",
+      "isSecureContext": true,
+      "locksAvailable": true,
+      "manifest": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app/training-os/manifest.webmanifest?v=4.0.0-rc6.2.1",
+      "origin": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app",
+      "release": "4.0.0-rc6.2.1",
+      "serviceWorkerRegistrations": 0,
+      "url": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app/training-os/"
+    },
+    "browser": "145.0.7632.6",
+    "checks": {
+      "emptyLoadRejectedWithoutRAMOrDiskChange": true,
+      "explicitZeroControlVisible": true,
+      "launch": true,
+      "manifestSameOrigin": true,
+      "noCrossOriginRequests": true,
+      "noPageErrors": true,
+      "noServiceWorkerRegistered": true,
+      "positive20KgLogged": true,
+      "secureContext": true,
+      "webLocksAvailable": true
+    },
+    "disposableContext": true,
+    "errors": [],
+    "observedAt": "2026-10-16T21:35:23.096Z",
+    "pass": true,
+    "physicalIPhoneAcceptance": false,
+    "requestURLs": [
+      "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app/training-os/"
+    ],
+    "syntheticDataOnly": true
+  },
+  "buildId": "pr-s1-m5-c23f7cdd21b895c0aed3a6da49ea02da27d25aad",
+  "candidateCI": {
+    "conclusion": "success",
+    "headSha": "c23f7cdd21b895c0aed3a6da49ea02da27d25aad",
+    "url": "https://github.com/fevaldez/training-os/actions/runs/38961446777"
+  },
+  "decision": "GO for isolated physical QA; production NO-GO",
+  "deployment": {
+    "builds": [],
+    "createdAt": 1792186442617,
+    "gitSource": null,
+    "id": "dpl_FKDaxaMZFt3Ty1YyRXyjMrTQTTb7",
+    "meta": {
+      "buildId": "pr-s1-m5-c23f7cdd21b895c0aed3a6da49ea02da27d25aad",
+      "purpose": "M5.5 single authorized isolated Preview; synthetic iPhone QA",
+      "sourceCommit": "c23f7cdd21b895c0aed3a6da49ea02da27d25aad",
+      "sourceRepository": "fevaldez/training-os"
+    },
+    "projectId": "prj_M0HJcEQBmyGGbkzVBEeMdNhwQpjd",
+    "ready": 1792186445136,
+    "readyState": "READY",
+    "target": null,
+    "url": "training-os-pr-s1-bvwfy5e7g-valcan.vercel.app"
+  },
+  "entryURL": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app/training-os/",
+  "environment": "preview",
+  "format": "training-os-m55-verification-v1",
+  "httpValidation": {
+    "authenticationSent": false,
+    "checks": [
+      {
+        "bytes": 1139,
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentEncoding": null,
+        "contentType": "application/json; charset=utf-8",
+        "expectedSHA256": "133bbff47e9218532befd6fa1f9c5fd1e924f6626540d9d56a79ba32d5bbecd6",
+        "expectedStatus": 200,
+        "finalURL": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app/preview-provenance.json",
+        "hashMatches": true,
+        "mimeMatches": true,
+        "origin": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app",
+        "pass": true,
+        "path": "/preview-provenance.json",
+        "redirects": [],
+        "sha256": "133bbff47e9218532befd6fa1f9c5fd1e924f6626540d9d56a79ba32d5bbecd6",
+        "status": 200,
+        "xRobotsTag": "noindex"
+      },
+      {
+        "bytes": 153713,
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentEncoding": null,
+        "contentType": "text/html; charset=utf-8",
+        "expectedSHA256": "492315931392f2244276d4b41e3991b5b0ba619dca07e5406b82f305c4a36ac5",
+        "expectedStatus": 200,
+        "finalURL": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app/training-os/index.html",
+        "hashMatches": true,
+        "mimeMatches": true,
+        "origin": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app",
+        "pass": true,
+        "path": "/training-os/index.html",
+        "redirects": [],
+        "sha256": "492315931392f2244276d4b41e3991b5b0ba619dca07e5406b82f305c4a36ac5",
+        "status": 200,
+        "xRobotsTag": "noindex"
+      },
+      {
+        "bytes": 708,
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentEncoding": null,
+        "contentType": "application/manifest+json; charset=utf-8",
+        "expectedSHA256": "6516991bc5de27d6431bc7849e772d6e02131741d458f533e214c71a38ae4162",
+        "expectedStatus": 200,
+        "finalURL": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app/training-os/manifest.webmanifest",
+        "hashMatches": true,
+        "mimeMatches": true,
+        "origin": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app",
+        "pass": true,
+        "path": "/training-os/manifest.webmanifest",
+        "redirects": [],
+        "sha256": "6516991bc5de27d6431bc7849e772d6e02131741d458f533e214c71a38ae4162",
+        "status": 200,
+        "xRobotsTag": "noindex"
+      },
+      {
+        "bytes": 866242,
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentEncoding": null,
+        "contentType": "image/png",
+        "expectedSHA256": "dc2a0c826857dbcfa0a2fb5942787e8ebae5174ccf647f3f56a7ba9bea7b97c8",
+        "expectedStatus": 200,
+        "finalURL": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app/training-os/training-os-loop-v1-1024.png",
+        "hashMatches": true,
+        "mimeMatches": true,
+        "origin": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app",
+        "pass": true,
+        "path": "/training-os/training-os-loop-v1-1024.png",
+        "redirects": [],
+        "sha256": "dc2a0c826857dbcfa0a2fb5942787e8ebae5174ccf647f3f56a7ba9bea7b97c8",
+        "status": 200,
+        "xRobotsTag": "noindex"
+      },
+      {
+        "bytes": 34324,
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentEncoding": null,
+        "contentType": "image/png",
+        "expectedSHA256": "8fe31c9fe94619e41ccebbbf88010bbc53571ff8e6585c03b657d0ef630bb234",
+        "expectedStatus": 200,
+        "finalURL": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app/training-os/training-os-loop-v1-180.png",
+        "hashMatches": true,
+        "mimeMatches": true,
+        "origin": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app",
+        "pass": true,
+        "path": "/training-os/training-os-loop-v1-180.png",
+        "redirects": [],
+        "sha256": "8fe31c9fe94619e41ccebbbf88010bbc53571ff8e6585c03b657d0ef630bb234",
+        "status": 200,
+        "xRobotsTag": "noindex"
+      },
+      {
+        "bytes": 38310,
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentEncoding": null,
+        "contentType": "image/png",
+        "expectedSHA256": "1e985f8e487ba7a2076ec33f4388bf2ba6c1e6dbe2bab2dedb460c9f0519566c",
+        "expectedStatus": 200,
+        "finalURL": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app/training-os/training-os-loop-v1-192.png",
+        "hashMatches": true,
+        "mimeMatches": true,
+        "origin": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app",
+        "pass": true,
+        "path": "/training-os/training-os-loop-v1-192.png",
+        "redirects": [],
+        "sha256": "1e985f8e487ba7a2076ec33f4388bf2ba6c1e6dbe2bab2dedb460c9f0519566c",
+        "status": 200,
+        "xRobotsTag": "noindex"
+      },
+      {
+        "bytes": 231912,
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentEncoding": null,
+        "contentType": "image/png",
+        "expectedSHA256": "00f7eda1245cc441b71d6e577a9537fb8d4937335848d08c3890fe90a1b1fb83",
+        "expectedStatus": 200,
+        "finalURL": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app/training-os/training-os-loop-v1-512.png",
+        "hashMatches": true,
+        "mimeMatches": true,
+        "origin": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app",
+        "pass": true,
+        "path": "/training-os/training-os-loop-v1-512.png",
+        "redirects": [],
+        "sha256": "00f7eda1245cc441b71d6e577a9537fb8d4937335848d08c3890fe90a1b1fb83",
+        "status": 200,
+        "xRobotsTag": "noindex"
+      },
+      {
+        "bytes": 267,
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentEncoding": null,
+        "contentType": "application/json; charset=utf-8",
+        "expectedSHA256": "98d558f05cc6337fa7b4b85068a258a86bc0d90477625b6da9129a176c2d5251",
+        "expectedStatus": 200,
+        "finalURL": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app/training-os/version.json",
+        "hashMatches": true,
+        "mimeMatches": true,
+        "origin": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app",
+        "pass": true,
+        "path": "/training-os/version.json",
+        "redirects": [],
+        "sha256": "98d558f05cc6337fa7b4b85068a258a86bc0d90477625b6da9129a176c2d5251",
+        "status": 200,
+        "xRobotsTag": "noindex"
+      },
+      {
+        "bytes": 153713,
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentEncoding": null,
+        "contentType": "text/html; charset=utf-8",
+        "expectedSHA256": "492315931392f2244276d4b41e3991b5b0ba619dca07e5406b82f305c4a36ac5",
+        "expectedStatus": 200,
+        "finalURL": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app/training-os/",
+        "hashMatches": true,
+        "mimeMatches": true,
+        "origin": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app",
+        "pass": true,
+        "path": "/training-os/",
+        "redirects": [],
+        "sha256": "492315931392f2244276d4b41e3991b5b0ba619dca07e5406b82f305c4a36ac5",
+        "status": 200,
+        "xRobotsTag": "noindex"
+      },
+      {
+        "bytes": 153713,
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentEncoding": null,
+        "contentType": "text/html; charset=utf-8",
+        "expectedSHA256": "492315931392f2244276d4b41e3991b5b0ba619dca07e5406b82f305c4a36ac5",
+        "expectedStatus": 200,
+        "finalURL": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app/training-os",
+        "hashMatches": true,
+        "mimeMatches": true,
+        "origin": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app",
+        "pass": true,
+        "path": "/training-os",
+        "redirects": [],
+        "sha256": "492315931392f2244276d4b41e3991b5b0ba619dca07e5406b82f305c4a36ac5",
+        "status": 200,
+        "xRobotsTag": "noindex"
+      },
+      {
+        "bytes": 79,
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentEncoding": null,
+        "contentType": "text/plain; charset=utf-8",
+        "expectedSHA256": null,
+        "expectedStatus": 404,
+        "finalURL": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app/training-os/does-not-exist.js",
+        "hashMatches": null,
+        "mimeMatches": true,
+        "origin": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app",
+        "pass": true,
+        "path": "/training-os/does-not-exist.js",
+        "redirects": [],
+        "sha256": "c625b43a6ce4149d686b83ed6a055a920a03f999542977f6fd62ecf71125a681",
+        "status": 404,
+        "xRobotsTag": "noindex"
+      },
+      {
+        "bytes": 79,
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentEncoding": null,
+        "contentType": "text/plain; charset=utf-8",
+        "expectedSHA256": null,
+        "expectedStatus": 404,
+        "finalURL": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app/training-os/sw.js",
+        "hashMatches": null,
+        "mimeMatches": true,
+        "origin": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app",
+        "pass": true,
+        "path": "/training-os/sw.js",
+        "redirects": [],
+        "sha256": "7ba1be7404952c82cdcd7dc42e94a98417657b4bf8ed8d1c12ca742bf4e43898",
+        "status": 404,
+        "xRobotsTag": "noindex"
+      },
+      {
+        "bytes": 1136,
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentEncoding": null,
+        "contentType": "application/json; charset=utf-8",
+        "expectedSHA256": "872b8f08d7483e9fcdc4d62f8f9d9458d0d4b5d2dcd5b68e697b00fbc8f6f936",
+        "expectedStatus": 200,
+        "finalURL": "https://training-os-pr-s1-nphf0td5s-valcan.vercel.app/preview-provenance.json",
+        "hashMatches": true,
+        "mimeMatches": true,
+        "origin": "https://training-os-pr-s1-nphf0td5s-valcan.vercel.app",
+        "pass": true,
+        "path": "/preview-provenance.json",
+        "redirects": [],
+        "sha256": "872b8f08d7483e9fcdc4d62f8f9d9458d0d4b5d2dcd5b68e697b00fbc8f6f936",
+        "status": 200,
+        "xRobotsTag": "noindex"
+      },
+      {
+        "bytes": 152100,
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentEncoding": null,
+        "contentType": "text/html; charset=utf-8",
+        "expectedSHA256": "cc3284cb5eaf41778e0f8fcda86352cf85ab1d41b816d57f7e9e0ad7efbad5b3",
+        "expectedStatus": 200,
+        "finalURL": "https://training-os-pr-s1-nphf0td5s-valcan.vercel.app/training-os/index.html",
+        "hashMatches": true,
+        "mimeMatches": true,
+        "origin": "https://training-os-pr-s1-nphf0td5s-valcan.vercel.app",
+        "pass": true,
+        "path": "/training-os/index.html",
+        "redirects": [],
+        "sha256": "cc3284cb5eaf41778e0f8fcda86352cf85ab1d41b816d57f7e9e0ad7efbad5b3",
+        "status": 200,
+        "xRobotsTag": "noindex"
+      },
+      {
+        "bytes": 708,
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentEncoding": null,
+        "contentType": "application/manifest+json; charset=utf-8",
+        "expectedSHA256": "6516991bc5de27d6431bc7849e772d6e02131741d458f533e214c71a38ae4162",
+        "expectedStatus": 200,
+        "finalURL": "https://training-os-pr-s1-nphf0td5s-valcan.vercel.app/training-os/manifest.webmanifest",
+        "hashMatches": true,
+        "mimeMatches": true,
+        "origin": "https://training-os-pr-s1-nphf0td5s-valcan.vercel.app",
+        "pass": true,
+        "path": "/training-os/manifest.webmanifest",
+        "redirects": [],
+        "sha256": "6516991bc5de27d6431bc7849e772d6e02131741d458f533e214c71a38ae4162",
+        "status": 200,
+        "xRobotsTag": "noindex"
+      },
+      {
+        "bytes": 866242,
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentEncoding": null,
+        "contentType": "image/png",
+        "expectedSHA256": "dc2a0c826857dbcfa0a2fb5942787e8ebae5174ccf647f3f56a7ba9bea7b97c8",
+        "expectedStatus": 200,
+        "finalURL": "https://training-os-pr-s1-nphf0td5s-valcan.vercel.app/training-os/training-os-loop-v1-1024.png",
+        "hashMatches": true,
+        "mimeMatches": true,
+        "origin": "https://training-os-pr-s1-nphf0td5s-valcan.vercel.app",
+        "pass": true,
+        "path": "/training-os/training-os-loop-v1-1024.png",
+        "redirects": [],
+        "sha256": "dc2a0c826857dbcfa0a2fb5942787e8ebae5174ccf647f3f56a7ba9bea7b97c8",
+        "status": 200,
+        "xRobotsTag": "noindex"
+      },
+      {
+        "bytes": 34324,
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentEncoding": null,
+        "contentType": "image/png",
+        "expectedSHA256": "8fe31c9fe94619e41ccebbbf88010bbc53571ff8e6585c03b657d0ef630bb234",
+        "expectedStatus": 200,
+        "finalURL": "https://training-os-pr-s1-nphf0td5s-valcan.vercel.app/training-os/training-os-loop-v1-180.png",
+        "hashMatches": true,
+        "mimeMatches": true,
+        "origin": "https://training-os-pr-s1-nphf0td5s-valcan.vercel.app",
+        "pass": true,
+        "path": "/training-os/training-os-loop-v1-180.png",
+        "redirects": [],
+        "sha256": "8fe31c9fe94619e41ccebbbf88010bbc53571ff8e6585c03b657d0ef630bb234",
+        "status": 200,
+        "xRobotsTag": "noindex"
+      },
+      {
+        "bytes": 38310,
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentEncoding": null,
+        "contentType": "image/png",
+        "expectedSHA256": "1e985f8e487ba7a2076ec33f4388bf2ba6c1e6dbe2bab2dedb460c9f0519566c",
+        "expectedStatus": 200,
+        "finalURL": "https://training-os-pr-s1-nphf0td5s-valcan.vercel.app/training-os/training-os-loop-v1-192.png",
+        "hashMatches": true,
+        "mimeMatches": true,
+        "origin": "https://training-os-pr-s1-nphf0td5s-valcan.vercel.app",
+        "pass": true,
+        "path": "/training-os/training-os-loop-v1-192.png",
+        "redirects": [],
+        "sha256": "1e985f8e487ba7a2076ec33f4388bf2ba6c1e6dbe2bab2dedb460c9f0519566c",
+        "status": 200,
+        "xRobotsTag": "noindex"
+      },
+      {
+        "bytes": 231912,
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentEncoding": null,
+        "contentType": "image/png",
+        "expectedSHA256": "00f7eda1245cc441b71d6e577a9537fb8d4937335848d08c3890fe90a1b1fb83",
+        "expectedStatus": 200,
+        "finalURL": "https://training-os-pr-s1-nphf0td5s-valcan.vercel.app/training-os/training-os-loop-v1-512.png",
+        "hashMatches": true,
+        "mimeMatches": true,
+        "origin": "https://training-os-pr-s1-nphf0td5s-valcan.vercel.app",
+        "pass": true,
+        "path": "/training-os/training-os-loop-v1-512.png",
+        "redirects": [],
+        "sha256": "00f7eda1245cc441b71d6e577a9537fb8d4937335848d08c3890fe90a1b1fb83",
+        "status": 200,
+        "xRobotsTag": "noindex"
+      },
+      {
+        "bytes": 267,
+        "cacheControl": "public, max-age=0, must-revalidate",
+        "contentEncoding": null,
+        "contentType": "application/json; charset=utf-8",
+        "expectedSHA256": "8f318a6439aef2245c55a66e3a454dd6ac67e9020ad3db00f331fce7e2c8af74",
+        "expectedStatus": 200,
+        "finalURL": "https://training-os-pr-s1-nphf0td5s-valcan.vercel.app/training-os/version.json",
+        "hashMatches": true,
+        "mimeMatches": true,
+        "origin": "https://training-os-pr-s1-nphf0td5s-valcan.vercel.app",
+        "pass": true,
+        "path": "/training-os/version.json",
+        "redirects": [],
+        "sha256": "8f318a6439aef2245c55a66e3a454dd6ac67e9020ad3db00f331fce7e2c8af74",
+        "status": 200,
+        "xRobotsTag": "noindex"
+      }
+    ],
+    "cookiesSent": false,
+    "deploymentId": "dpl_FKDaxaMZFt3Ty1YyRXyjMrTQTTb7",
+    "httpsCertificateValidated": true,
+    "m4Origin": "https://training-os-pr-s1-nphf0td5s-valcan.vercel.app",
+    "observedAt": "2026-10-16T21:34:49.116407+00:00",
+    "origin": "https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app",
+    "originDistinct": true,
+    "pass": true,
+    "productionOrigin": "https://fevaldez.github.io",
+    "sourceCommit": "c23f7cdd21b895c0aed3a6da49ea02da27d25aad"
+  },
+  "observedAt": "2026-10-16T21:35:43.475535+00:00",
+  "package": {
+    "buildId": "pr-s1-m5-c23f7cdd21b895c0aed3a6da49ea02da27d25aad",
+    "fileCount": 8,
+    "files": {
+      "preview-provenance.json": {
+        "bytes": 1139,
+        "sha256": "133bbff47e9218532befd6fa1f9c5fd1e924f6626540d9d56a79ba32d5bbecd6"
+      },
+      "training-os/index.html": {
+        "bytes": 153713,
+        "sha256": "492315931392f2244276d4b41e3991b5b0ba619dca07e5406b82f305c4a36ac5"
+      },
+      "training-os/manifest.webmanifest": {
+        "bytes": 708,
+        "sha256": "6516991bc5de27d6431bc7849e772d6e02131741d458f533e214c71a38ae4162"
+      },
+      "training-os/training-os-loop-v1-1024.png": {
+        "bytes": 866242,
+        "sha256": "dc2a0c826857dbcfa0a2fb5942787e8ebae5174ccf647f3f56a7ba9bea7b97c8"
+      },
+      "training-os/training-os-loop-v1-180.png": {
+        "bytes": 34324,
+        "sha256": "8fe31c9fe94619e41ccebbbf88010bbc53571ff8e6585c03b657d0ef630bb234"
+      },
+      "training-os/training-os-loop-v1-192.png": {
+        "bytes": 38310,
+        "sha256": "1e985f8e487ba7a2076ec33f4388bf2ba6c1e6dbe2bab2dedb460c9f0519566c"
+      },
+      "training-os/training-os-loop-v1-512.png": {
+        "bytes": 231912,
+        "sha256": "00f7eda1245cc441b71d6e577a9537fb8d4937335848d08c3890fe90a1b1fb83"
+      },
+      "training-os/version.json": {
+        "bytes": 267,
+        "sha256": "98d558f05cc6337fa7b4b85068a258a86bc0d90477625b6da9129a176c2d5251"
+      }
+    },
+    "helperUnchanged": true,
+    "sourceCommit": "c23f7cdd21b895c0aed3a6da49ea02da27d25aad"
+  },
+  "physicalIPhoneAcceptance": "PENDING",
+  "providerPostflight": {
+    "deploymentCount": 2,
+    "deployments": [
+      {
+        "meta": {
+          "buildId": "pr-s1-m5-c23f7cdd21b895c0aed3a6da49ea02da27d25aad",
+          "purpose": "M5.5 single authorized isolated Preview; synthetic iPhone QA",
+          "sourceCommit": "c23f7cdd21b895c0aed3a6da49ea02da27d25aad",
+          "sourceRepository": "fevaldez/training-os"
+        },
+        "state": "READY",
+        "target": null,
+        "uid": "dpl_FKDaxaMZFt3Ty1YyRXyjMrTQTTb7",
+        "url": "training-os-pr-s1-bvwfy5e7g-valcan.vercel.app"
+      },
+      {
+        "meta": {
+          "buildId": "pr-s1-54e25199e33b8cc725d86881b950bb68b4cf0cd4",
+          "purpose": "M4 isolated synthetic iPhone QA - single approved preview",
+          "sourceCommit": "54e25199e33b8cc725d86881b950bb68b4cf0cd4",
+          "sourceRepository": "fevaldez/training-os"
+        },
+        "state": "READY",
+        "target": "production",
+        "uid": "dpl_2HkzDYDSVFvmeoJq1upj7eB8NDU4",
+        "url": "training-os-pr-s1-nphf0td5s-valcan.vercel.app"
+      }
+    ],
+    "newPaidServicesRequested": false,
+    "observedAt": "2026-10-16T21:35:43.475535+00:00",
+    "pass": true,
+    "productionAliasesUnchanged": true,
+    "productionTarget": {
+      "alias": [
+        "training-os-pr-s1-qa.vercel.app",
+        "training-os-pr-s1-qa-valcan.vercel.app"
+      ],
+      "id": "dpl_2HkzDYDSVFvmeoJq1upj7eB8NDU4",
+      "readyState": "READY",
+      "target": "production",
+      "url": "training-os-pr-s1-nphf0td5s-valcan.vercel.app"
+    },
+    "productionTargetUnchanged": true,
+    "project": {
+      "accountId": "team_nDnZ22QwPZGeWvn57vHdOvFG",
+      "buildCommand": null,
+      "connectConfigurationId": null,
+      "enablePreviewFeedback": false,
+      "enableProductionFeedback": false,
+      "environmentVariableCount": 0,
+      "framework": null,
+      "id": "prj_M0HJcEQBmyGGbkzVBEeMdNhwQpjd",
+      "installCommand": null,
+      "integrations": null,
+      "link": null,
+      "name": "training-os-pr-s1-qa",
+      "outputDirectory": ".",
+      "passwordProtection": null,
+      "resourceConfig": {
+        "buildMachineSelection": "fixed",
+        "buildMachineType": "basic",
+        "fluid": true,
+        "functionDefaultRegions": [
+          "iad1"
+        ]
+      },
+      "ssoProtection": null
+    },
+    "projectConfigurationUnchanged": true,
+    "team": {
+      "billing": {
+        "addons": null,
+        "plan": "pro",
+        "status": "active"
+      },
+      "role": "OWNER",
+      "slug": "valcan"
+    }
+  },
+  "request": {
+    "attemptedAt": "2026-10-16T21:34:01.773325+00:00",
+    "deploymentCreateRequestCount": 1,
+    "productionAliasesBefore": [
+      "training-os-pr-s1-qa.vercel.app",
+      "training-os-pr-s1-qa-valcan.vercel.app"
+    ],
+    "productionTargetBefore": "dpl_2HkzDYDSVFvmeoJq1upj7eB8NDU4",
+    "projectId": "prj_M0HJcEQBmyGGbkzVBEeMdNhwQpjd",
+    "requestSha256": "990d236e4ecf96c1fc8c6652b037fc6966c73756026560c9a3fd1cc4f94ae691",
+    "sourceCommit": "c23f7cdd21b895c0aed3a6da49ea02da27d25aad",
+    "targetRequest": "omitted: documented Preview default after existing READY production deployment"
+  },
+  "sourceCommit": "c23f7cdd21b895c0aed3a6da49ea02da27d25aad"
+}

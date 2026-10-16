@@ -1,8 +1,8 @@
 # PR-S1 isolated preview and cutover preparation
 
-Status: **M4 DONE — one owner-authorized isolated Vercel QA deployment is READY and verified.** [Immutable preview](https://training-os-pr-s1-nphf0td5s-valcan.vercel.app/training-os/); [deployment receipt and exact-hash results](PR_S1_M4_EVIDENCE.md). Physical iPhone launch is now self-reported with two OPEN/P1 findings; [M5 triage and acceptance stop](PR_S1_M5_FINDINGS.md) supersedes the earlier device handoff. Independent code acceptance remains pending; production is NO-GO.
+Status: **M5.5 DONE — one additional owner-authorized actual Preview of F is READY and verified; M4 is preserved.** Current [M5.5 immutable Preview](https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app/training-os/); [new receipt](PR_S1_M55_EVIDENCE.md). Historical M4: [Immutable preview](https://training-os-pr-s1-nphf0td5s-valcan.vercel.app/training-os/); [deployment receipt and exact-hash results](PR_S1_M4_EVIDENCE.md). Original C iPhone launch was self-reported with two P1 findings. M5-01 is now automated PASS at F with physical verification pending; M5-02 remains UNKNOWN. The [current physical handoff](PR_S1_QA_MATRIX.md#m55-three-minute-owner-iphone-check) uses F. Independent code acceptance remains pending; production is NO-GO.
 
-Source is pinned to `54e25199e33b8cc725d86881b950bb68b4cf0cd4` (C), not main `b82218dbc05662124821d1d6c27369ae717dd767` (B). Keep [PR #2](https://github.com/fevaldez/training-os/pull/2) Draft. This branch changes only release documents and local preparation tools.
+The historical M4 package/helper is pinned to `54e25199e33b8cc725d86881b950bb68b4cf0cd4` (C); the new M5.5 package is separately pinned to F `c23f7cdd21b895c0aed3a6da49ea02da27d25aad`. Neither is main `b82218dbc05662124821d1d6c27369ae717dd767` (B). Keep [PR #2](https://github.com/fevaldez/training-os/pull/2) Draft. This branch changes only release documents and local preparation tools.
 
 ## Reproducible local package
 
@@ -64,7 +64,7 @@ The owner selected Vercel for M4. Project `training-os-pr-s1-qa` has no Git conn
 
 ## M4 authorization and publication record
 
-The owner subsequently explicitly authorized **one** public, non-sensitive publication of C on a new isolated Vercel project named `training-os-pr-s1-qa`. That authorization was exercised once, using the existing eight-file bundle. **Stop before any additional deployment or production action.** No workflow dispatch or Git publishing integration was used.
+The owner subsequently explicitly authorized **one** public, non-sensitive publication of C on a new isolated Vercel project named `training-os-pr-s1-qa`. That authorization was exercised once, using the existing eight-file bundle. That authorization ended at M4. A later explicit M5.5 authorization permitted exactly one additional F Preview in the same project; it is now complete. **Stop before any further deployment or production action.** No workflow dispatch or Git publishing integration was used.
 
 The M4 execution followed these boundaries (M5 device checks remain pending):
 
@@ -87,6 +87,16 @@ The M4 execution followed these boundaries (M5 device checks remain pending):
 | iPhone access and Home Screen launch URL | UNKNOWN — physical M5 is next. Desktop in-app-browser launch succeeded with `data-boot=ok`; this is not device evidence |
 
 Vercel returned `target: production` for this QA project's first deployment even though the request omitted `target`; default QA aliases were assigned. This is recorded explicitly, not reported as a production release of Training OS. No existing project, production Pages/domain/workflow or PR #2 changed, and no corrective second deployment was attempted. Use the unique deployment URL above, never a mutable project alias, for acceptance. See [M4 evidence](PR_S1_M4_EVIDENCE.md).
+
+## M5.5 additional Preview record
+
+The owner authorized one fresh eight-file package from F without changing the committed helper, candidate runtime, release label or M4. A disposable in-memory helper adaptation set `SOURCE=F` and `BUILD_ID="pr-s1-m5-"+F`, then used the existing regular-blob allowlist, version/hash, manifest-path, external-output and exact-byte checks. See the [complete receipt and hashes](PR_S1_M55_EVIDENCE.md).
+
+Before upload, Vercel’s [merged first-deploy notice](https://github.com/vercel/vercel/pull/17206) explained that future deployments default to Preview. Read-only preflight confirmed this project already had READY M4 as its production target. One `POST /v13/deployments` reused the existing project/settings, with eight inline files and source/build metadata, omitting `target`, `gitSource`, aliases and project-settings changes. No production flag, promotion or alias API mutation was used.
+
+Actual result: `dpl_FKDaxaMZFt3Ty1YyRXyjMrTQTTb7`, READY, **`target:null`, OIDC environment `preview`**; [https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app/training-os/](https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app/training-os/). All 8/8 new files and 8/8 original M4 files matched; 20/20 unauthenticated HTTPS checks and the brief synthetic Chromium smoke passed. Both QA production aliases still bind M4. Project configuration, zero environment variables, no Git/integrations and existing Pro/active/no-add-on billing are unchanged. No new paid service was requested.
+
+M5.5 is GO for targeted physical testing. M5-01 automated PASS does not establish physical acceptance; M5-02 remains UNKNOWN. Full physical signoff, independent code acceptance and production remain pending/NO-GO as applicable. No new deployment is authorized after this receipt.
 
 ## Cutover and repository governance
 
@@ -115,4 +125,4 @@ Before a separately authorized release, require a reviewable release-impact prop
 3. Owner separately authorizes redeployment of the verified previous artifact or a corrective release. Rehearse on the isolated origin first, including read compatibility with candidate-written data. HTML rollback alone does not prove data/client rollback. PR #2 remains unmerged until the release boundary is approved.
 4. Verify effective URL, delivered hashes, app identity, history/active state and installed-client behavior after rollback; retain both before/after synthetic evidence. RC6.2.1 cleanup makes blindly rolling back a future offline-worker release unsafe; that future mechanism belongs to separately approved PR-A work.
 
-Current M5 next action: preserve this exact M4 deployment and collect only bounded diagnostic evidence for [M5-01/M5-02](PR_S1_M5_FINDINGS.md), including exact device/iOS/context and a per-button flicker recording with synthetic data. Full remaining M5 acceptance is NO-GO while both P1s remain OPEN; launch is PARTIAL and unobserved assertions remain UNKNOWN. Runtime correction, a new source pin/preview and later D01–D10 re-verification each require the applicable separate authorization. No deployment or implementation occurs in this findings update.
+Current M5 next action: preserve M4 and open the verified M5.5/F URL for the [three-minute load/zero/reload and flicker check](PR_S1_QA_MATRIX.md#m55-three-minute-owner-iphone-check), recording exact device/iOS/context and synthetic evidence. Repeat in Home Screen, then complete applicable D01–D10 rows. Targeted physical testing is GO; full signoff and production remain NO-GO. M5-02 stays UNKNOWN; no runtime change or further publication is implied.

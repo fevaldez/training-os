@@ -1,8 +1,8 @@
 # M5-01 / M5-02 — bounded triage and correction plan
 
-Status: **both OPEN/P1; not remediated or redeployed.** Source C is `54e25199e33b8cc725d86881b950bb68b4cf0cd4`, HTML SHA-256 `cc3284cb5eaf41778e0f8fcda86352cf85ab1d41b816d57f7e9e0ad7efbad5b3`. Existing [M4 preview](https://training-os-pr-s1-nphf0td5s-valcan.vercel.app/training-os/) and its deployment remain unchanged. Findings update only Draft PR #3.
+Status: **historical triage at C retained; M5-01 automated fix PASS at F, physical pending; M5-02 OPEN/P1, UNKNOWN.** F `c23f7cdd21b895c0aed3a6da49ea02da27d25aad` is now available only on the [M5.5 actual Preview](https://training-os-pr-s1-bvwfy5e7g-valcan.vercel.app/training-os/); [receipt](PR_S1_M55_EVIDENCE.md). The original source facts and acceptance criteria below remain preserved. Source C is `54e25199e33b8cc725d86881b950bb68b4cf0cd4`, HTML SHA-256 `cc3284cb5eaf41778e0f8fcda86352cf85ab1d41b816d57f7e9e0ad7efbad5b3`. Existing [M4 preview](https://training-os-pr-s1-nphf0td5s-valcan.vercel.app/training-os/) and its deployment remain unchanged. Findings update only Draft PR #3.
 
-The owner supplied `TRAINING_OS_M5_IPHONE_FEEDBACK_2026-10-16.md` and authorized registration plus bounded read-only source investigation, not implementation of the document's suggested experiments. No Gate 0/G2/G3/G4, broad audit, runtime edit, real workout history access, browser-storage/cache clearing, worker operation, new deployment or PR #2 edit occurred.
+At the original investigation checkpoint, the owner supplied `TRAINING_OS_M5_IPHONE_FEEDBACK_2026-10-16.md` and authorized registration plus bounded read-only source investigation, not implementation of the document's suggested experiments. During that original investigation, no Gate 0/G2/G3/G4, broad audit, runtime edit, real workout history access, browser-storage/cache clearing, worker operation, new deployment or PR #2 edit occurred.
 
 ## Observed facts and provenance
 
@@ -34,7 +34,7 @@ The owner supplied `TRAINING_OS_M5_IPHONE_FEEDBACK_2026-10-16.md` and authorized
 
 The probe checks the actual serialized `fv4.active` in a disposable Map, not merely a copied formula. Stage rendering/scroll/ticker are stubbed; no physical transition, durable download or end-to-end history acceptance is inferred.
 
-### Minimal proposed fix (not implemented)
+### Original minimal correction plan (implemented at F; physical verification pending)
 
 1. Keep raw weight text and an explicit per-session/per-set no-external-load confirmation in additive UI state outside serialized active/history data. Add an explicit **Sin carga externa (0 kg)** choice. Do not infer confirmation from default/prefilled zero, empty input, prior history or an exercise name.
 2. Parse the entire nonempty input strictly; require positive finite load after kg/lb conversion, or deliberate zero choice. Reject negative, malformed, partial, NaN/nonfinite and cleared input. Do not use a falsy-to-zero fallback to validate completion. Keep raw invalid text outside the persisted numeric draft and avoid replacing a prior valid numeric load with zero merely because another input changed.
@@ -80,7 +80,15 @@ Likely implementation surfaces are recovery-status presentation, renderHome/Toda
 - Cover current-page and cross-page navigation, Today preset/planner, overlay open/close, unit switching, repeated weight/reps/RIR actions, warmup/set/superset/rest/cooldown transitions, retries and completion. Preserve intentional scroll-to-top transitions and all training semantics.
 - Physical acceptance: repeat the recorded tap sequence in both Safari and Home Screen, idle and running, with versioned recordings. Require **no visible flash/blank frame on repeated taps**, stable focus/scroll and zero lost taps, values or session state. DOM counters or desktop emulation cannot substitute for this evidence.
 
-## Verification mapping and stop
+## M5.5 current execution status
+
+The later four-gate implementation authorization produced [stacked Draft PR #4](https://github.com/fevaldez/training-os/pull/4) at F: M5-01 strict input validation, transient explicit-zero intent and accessible rejection, with no history/schema/prescription change. RED→GREEN and mandatory regression/durability/browser evidence are recorded in the [milestone ledger](PR_S1_MILESTONES.md#m5-fast-track-execution-checkpoint); [exact F CI](https://github.com/fevaldez/training-os/actions/runs/38961446777) passed. This supersedes the original unexecuted M5-01 planning status above, without altering the C observations or their line references.
+
+M5.5 then authorized and completed exactly one additional immutable F Preview. Live brief smoke passed secure boot, empty-load no-mutation rejection and positive 20 kg completion. Physical Safari/Home Screen acceptance, zero reconfirmation and downloaded/parsed export/restore remain pending; M5-02 UNKNOWN. The bounded Chromium layout observation (stage top 70→284 synchronously→70 next frame) did not reproduce or causally match the reported physical screen-wide flicker; no speculative fix was made.
+
+**Current recommendation:** GO for [targeted physical testing on M5.5/F](PR_S1_QA_MATRIX.md#m55-three-minute-owner-iphone-check) and non-dependent remaining M5 checks. Full M5 signoff and production remain NO-GO. Preserve M4/C, both Draft implementation PRs and all data. Earlier investigation-only recommendations below are historical; they do not describe the later authorized implementation/publication. No further deployment, broad audit or independent review cycle is authorized.
+
+## Original verification mapping and bounded stop
 
 These commands describe **future bugfix regression**, not tests rerun by this documentation task:
 
@@ -98,6 +106,6 @@ These commands describe **future bugfix regression**, not tests rerun by this do
 
 Read-only source probe run in this task: `node docs/release/evidence/m5/bounded-source-probe.cjs` (after registration; the identical probe was executed from a temporary file). It reads exact Git objects and writes JSON to stdout; no network, server, deployment, profile or filesystem storage mutation. Its result is [source-trace.json](evidence/m5/source-trace.json). No existing acceptance suite or broad audit was rerun manually. A documentation push triggers the existing read-only PR CI normally; it does not deploy.
 
-**Recommendation:** NO-GO for continuing/completing full remaining M5 acceptance on C while these P1s are OPEN. GO only for bounded diagnostic recording and non-dependent read-only checks with synthetic data. M5-01's missing-load subcase is FAIL; launch is PARTIAL; every unobserved D01–D10 assertion remains UNKNOWN. M2 durability CODE GO stays separate and pending; no prior audit is reopened.
+**Original C-only recommendation (superseded for F by M5.5 above):** NO-GO for continuing/completing full remaining M5 acceptance on C while these P1s are OPEN. GO only for bounded diagnostic recording and non-dependent read-only checks with synthetic data. M5-01's missing-load subcase is FAIL; launch is PARTIAL; every unobserved D01–D10 assertion remains UNKNOWN. M2 durability CODE GO stays separate and pending; no prior audit is reopened.
 
-Stop after this record and correction plan. If the owner later authorizes implementation: one new isolated fix branch/worktree rooted at C and one Draft bugfix PR, without changing PR #2 or promoting a new source pin automatically. Keep M4 immutable. Any preview republication, release/hash approval, merge, release or PR-A requires its own authorization. Never clear device storage/caches or remove the production installed app.
+Historical investigation checkpoint: stop after that record and correction plan. At that time, later implementation required authorization for: one new isolated fix branch/worktree rooted at C and one Draft bugfix PR, without changing PR #2 or promoting a new source pin automatically. Keep M4 immutable. Any preview republication, release/hash approval, merge, release or PR-A requires its own authorization. Never clear device storage/caches or remove the production installed app.
