@@ -55,3 +55,6 @@ jobs:
 
       - name: M5 explicit-load regression gate
         run: node tests/m5_load.test.js
+
+      - name: Release safety controls
+        run: node tests/release_controls.test.js
