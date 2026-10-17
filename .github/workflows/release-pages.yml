@@ -82,6 +82,9 @@ jobs:
       - name: M5 explicit-load regression gate
         run: node tests/m5_load.test.js
 
+      - name: Superset-skip core regression gate
+        run: node tests/superset_skip.test.js
+
       - name: Release safety controls
         run: node tests/release_controls.test.js
 
@@ -90,7 +93,7 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/tos-browser-deps" --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.62.1
           node "$RUNNER_TEMP/tos-browser-deps/node_modules/playwright/cli.js" install --with-deps chromium
 
-      - name: Original, G3/G4.1 and M5 load/scroll browser gates
+      - name: Original, G3/G4.1, M5 and superset-skip browser gates
         env:
           PLAYWRIGHT_MODULE: ${{ runner.temp }}/tos-browser-deps/node_modules/playwright
         run: |
@@ -98,6 +101,7 @@ jobs:
           node tests/storage_g3_browser.test.js
           node tests/m5_load_browser.test.js
           node tests/m5_scroll_browser.test.js
+          node tests/superset_skip_browser.test.js
 
       - name: Build deploy artifact
         run: |

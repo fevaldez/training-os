@@ -6,10 +6,10 @@ function workflowGate(){
  const fs=require('node:fs'),{execFileSync}=require('node:child_process');
  for(const file of ['.github/workflows/validate-pr.yml','.github/workflows/release-pages.yml']){
   // Owner-authorized RC6.3 release controls: retain exact workflow-byte preservation.
-  if(file.endsWith('/release-pages.yml')){assert.equal(require('node:crypto').createHash('sha256').update(fs.readFileSync(file)).digest('hex'),'44b167f6e372d9ed9076608c7b2f6c970dfd2194d8f83daf669298808a897ba6');continue;}
+  if(file.endsWith('/release-pages.yml')){assert.equal(require('node:crypto').createHash('sha256').update(fs.readFileSync(file)).digest('hex'),'9106d53c3e4975acf2ce8e327cc00754fe614127574c2b000d31f6bfee04b9fa');continue;}
   let expected=execFileSync('git',['show','84d381915f601dd189dc6fb3f96117352eb8bef3:'+file],{encoding:'utf8'});
-  // Only the owner-authorized stack target and additive M5 gate may differ.
-  if(file.endsWith('/validate-pr.yml'))expected=expected.replace('branches: [main]','branches: [main, codex/pr-s1-data-durability]')+'\n      - name: M5 explicit-load regression gate\n        run: node tests/m5_load.test.js\n\n      - name: Release safety controls\n        run: node tests/release_controls.test.js\n';
+  // Only the owner-authorized stack target and additive M5/superset-skip gates may differ.
+  if(file.endsWith('/validate-pr.yml'))expected=expected.replace('branches: [main]','branches: [main, codex/pr-s1-data-durability]')+'\n      - name: M5 explicit-load regression gate\n        run: node tests/m5_load.test.js\n\n      - name: Superset-skip core regression gate\n        run: node tests/superset_skip.test.js\n\n      - name: Release safety controls\n        run: node tests/release_controls.test.js\n';
   assert.equal(fs.readFileSync(file,'utf8'),expected);
  }
 }

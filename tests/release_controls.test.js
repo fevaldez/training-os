@@ -54,9 +54,11 @@ try{
   assert(deploy.indexOf('actions/configure-pages')<deploy.indexOf('actions/deploy-pages'));
  });
  test('all mandatory release, durability and M5 gates precede upload without optional skips',()=>{
-  const commands=['python scripts/validate_release.py','node scripts/test_engine.js','node scripts/test_ui_static.js','python3 scripts/test_reliability_rc621.py','node tests/storage_durability.test.js','node tests/m5_load.test.js','node tests/release_controls.test.js','node tests/storage_g3_browser.test.js --original-suite','node tests/storage_g3_browser.test.js','node tests/m5_load_browser.test.js','node tests/m5_scroll_browser.test.js'];
+  const commands=['python scripts/validate_release.py','node scripts/test_engine.js','node scripts/test_ui_static.js','python3 scripts/test_reliability_rc621.py','node tests/storage_durability.test.js','node tests/m5_load.test.js','node tests/superset_skip.test.js','node tests/release_controls.test.js','node tests/storage_g3_browser.test.js --original-suite','node tests/storage_g3_browser.test.js','node tests/m5_load_browser.test.js','node tests/m5_scroll_browser.test.js','node tests/superset_skip_browser.test.js'];
   const upload=validate.indexOf('actions/upload-pages-artifact@v5');assert(upload>0);
   for(const command of commands){const at=validate.indexOf(command);assert(at>=0&&at<upload,command)}
+  const prWorkflow=fs.readFileSync('.github/workflows/validate-pr.yml','utf8');
+  assert(prWorkflow.includes('run: node tests/superset_skip.test.js'),'PR must run permanent superset-skip regression');
   assert(!validate.includes('continue-on-error'));assert(!validate.includes('      if:'));assert(!validate.includes('|| true'));
   assert(validate.includes('test "$(git rev-parse HEAD)" = "$GITHUB_SHA"'));assert(validate.includes('test "$REQUESTED_SHA" = "$GITHUB_SHA"'));
   assert(validate.indexOf('Verify the actual Pages archive')>upload);
