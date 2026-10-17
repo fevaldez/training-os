@@ -1,0 +1,108 @@
+PASS | release marker in index
+PASS | T·OS brand marker
+PASS | apple touch icon linked
+PASS | manifest linked
+PASS | kg/lb control present
+PASS | rest skip present
+PASS | active set flow present
+PASS | no stale Hombro + Brazos label
+PASS | standalone shoulder present
+PASS | shoulder standalone restored with press strength blocks
+PASS | shoulder standalone retains lateral rear-delt stability blocks
+PASS | shoulder routine no longer carries incomplete-inventory note
+PASS | Week tab removed
+PASS | Week page removed
+PASS | permanent MVP explainer removed
+PASS | three-tab navigation present
+PASS | Today decision stack present
+PASS | Today recommendation can express uncertainty instead of fake precision
+PASS | Today recommendation explains its signals
+PASS | Today supports equipment-occupied reranking
+PASS | recommendation uses weekly recency time and overlap signals
+PASS | active Today avoids duplicate recommendation with next-priority state
+PASS | weekly snapshot absorbed into Today
+PASS | weekly rows expose done partial active pending semantics
+PASS | Today time-fit controls are planner-derived and deduplicated
+PASS | Program Decision Cards present
+PASS | Program decision metrics present
+PASS | qualitative core status labels present
+PASS | standalone Arms session present
+PASS | Arms includes biceps triceps forearm groups
+PASS | Arms preserves heavy non-superset blocks
+PASS | Arms contains sourced lying curl volume pair
+PASS | Arms contains direct forearm pair
+PASS | Arms optional myo-rep finisher present
+PASS | Arms is Flex not core
+PASS | catch-up coverage avoids debt framing
+PASS | pre-workout planner surface present
+PASS | planner time presets are deduplicated by actual plan
+PASS | planner per-exercise include exclude present
+PASS | planner changes are session scoped
+PASS | planner estimates time
+PASS | planner stores included and excluded exercise indices
+PASS | planner stores program full vs confirmed sets
+PASS | plan-aware workout sequence present
+PASS | catch-up Arms planner preset present
+PASS | catch-up forearm explicitly optional
+PASS | history persists session plan snapshot
+PASS | execution adherence persisted
+PASS | history shows plan execution metric
+PASS | short plan can count against weekly core coverage
+PASS | skip action sheet present
+PASS | skip set semantic status present
+PASS | skip exercise semantic status present
+PASS | skip set scrolls session to top
+PASS | skip exercise scrolls session to top
+PASS | other workout state changes also reset viewport
+PASS | scroll-top action is diagnosed
+PASS | finish early control present
+PASS | discard session destructive control present
+PASS | legacy CPEP label removed
+PASS | canonical E-PE-C-PC tempo helper present
+PASS | single tempo markup helper used across execution states
+PASS | chronological execution label present
+PASS | concentric-start exercise map present
+PASS | intra-session load memory present
+PASS | cross-session load memory present
+PASS | memory prefill copies trusted reps but keeps target RIR
+PASS | two-exposure progression gate present
+PASS | progression is suggestion not silent auto-load
+PASS | load memory context present
+PASS | semantic surface tokens present
+PASS | dark mode adaptive blue present
+PASS | operational font sizes >=14 rules present
+PASS | enriched next preview present
+PASS | discard button uses semantic danger style
+PASS | navigation diagnostics present
+PASS | scroll diagnostics present
+PASS | canonical back program id
+PASS | canonical back D superset present
+PASS | canonical back E superset present
+PASS | canonical back unilateral tempo restored
+PASS | warmup first-class data present
+PASS | cooldown first-class data present
+PASS | reps memory provenance present
+PASS | ambiguous prior-set fallback removed
+PASS | planner visualizes supersets before workout
+PASS | alternatives exposed in planner and workout
+PASS | rest no-scroll dock present
+PASS | routine review checkpoint present
+PASS | manifest explicit app identity
+PASS | no insecure http URL
+PASS | leg tempo corrected for E-first canonical
+PASS | video integrity helper labels search URLs unverified
+PASS | configure-pages Node24 major
+PASS | upload-pages-artifact current major
+PASS | deploy-pages Node24 major
+PASS | CI triggers when engine/UI tests change
+PASS | CI runs engine and UI tests
+PASS | icon 180 exists
+PASS | icon 180 valid PNG + dimensions
+PASS | icon 192 exists
+PASS | icon 192 valid PNG + dimensions
+PASS | icon 512 exists
+PASS | icon 512 valid PNG + dimensions
+PASS | icon 1024 exists
+PASS | icon 1024 valid PNG + dimensions
+PASS | index SHA matches version.json
+TOTAL 107/107 PASS

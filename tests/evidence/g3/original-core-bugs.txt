@@ -1,0 +1,14 @@
+R1_JOURNAL_LOST_ON_RESTART {"import":{"ok":false,"status":"read-back-failed","key":"fv4.recovery.v1"},"recovery":{"ok":true,"status":"verified"},"history":"[]","active":null,"journal":null}
+R2_REAL_V3_OPTIONAL_RIR {"rir":"","migration":{"ok":false,"status":"malformed","key":"tos_v3_history"},"sourcePreserved":true,"dest":null}
+R2_V3_RIR_TYPE_CONTROL {"rir":"2","migration":{"ok":false,"status":"malformed","key":"tos_v3_history"}}
+R2_V3_RIR_TYPE_CONTROL {"rir":2,"migration":{"ok":true,"status":"verified"}}
+R3_HISTORIC_PROGRAM_REJECTED {"sha":"c871672","workout":"back","exercise":"Neutral-Grip Lat Pulldown","exerciseIndex":1,"setIndex":3,"currentSets":3}
+R3_HISTORIC_PROGRAM_REJECTED {"sha":"c871672","workout":"back","exercise":"1-Arm Cable Row","exerciseIndex":2,"setIndex":2,"currentSets":2}
+R3_HISTORIC_PROGRAM_REJECTED {"sha":"c871672","workout":"back","exercise":"Cable Curl","exerciseIndex":4,"setIndex":3,"currentSets":3}
+R3_HISTORIC_PROGRAM_REJECTED {"sha":"c871672","workout":"back","exercise":"Preacher / Supported Curl","exerciseIndex":5,"setIndex":2,"currentSets":2}
+R3_HISTORIC_PROGRAM_REJECTED {"sha":"0494bc8","workout":"back","exercise":"Neutral-Grip Lat Pulldown","exerciseIndex":1,"setIndex":3,"currentSets":3}
+R3_HISTORIC_PROGRAM_REJECTED {"sha":"0494bc8","workout":"back","exercise":"1-Arm Cable Row","exerciseIndex":2,"setIndex":2,"currentSets":2}
+R3_HISTORIC_PROGRAM_REJECTED {"sha":"0494bc8","workout":"back","exercise":"Cable Curl","exerciseIndex":4,"setIndex":3,"currentSets":3}
+R3_HISTORIC_PROGRAM_REJECTED {"sha":"0494bc8","workout":"back","exercise":"Preacher / Supported Curl","exerciseIndex":5,"setIndex":2,"currentSets":2}
+R4_EXPLICIT_ACTIVE_COLLISION {"import":{"ok":true,"status":"verified"},"completion":{"ok":false,"status":"history-conflict","key":"fv4.history"}}
+R5_RECOVERY_REAUTHORIZES_STALE_MEMORY {"newer":15,"persisted":9}
