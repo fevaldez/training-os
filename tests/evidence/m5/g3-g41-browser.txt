@@ -1,0 +1,14 @@
+G3_BROWSER 145.0.7632.6 | CURRENT
+PASS | G3_BROWSER F3/B1 unit write retains dirty active warning, Retry/Export and exact revision retry
+PASS | G3_BROWSER F3/B1 force-close limitation is honest; unsaved RAM requires Retry or external backup
+PASS | G3_BROWSER F1/B2 cooperating tabs cannot overwrite newer draft after recovery; export retains both copies
+PASS | G3_BROWSER F2/R1 reload loses RAM but retains durable original after journal cleanup/readback/reinsertion faults
+PASS | G3_BROWSER F4/R3 historical eight-case mixed collection is visible and exportable
+PASS | G3_BROWSER F4 corrupt history is unavailable rather than an empty-history claim
+PASS | G3_BROWSER F6 explicit-active collision announces invalid import with zero replacement
+PASS | G3_BROWSER unsupported Web Locks refuses normal writes while raw export stays available
+N1_BROWSER_COUNTEREXAMPLE {"artifactsUnchanged":true,"save16":{"ok":true,"status":"verified"},"third":{"ready":true,"reps":16},"localReps":9,"storedReps":16}
+PASS | G3_BROWSER N1 retired journal cannot block B 15→16 or fresh third-tab initialization
+N2_BROWSER_PRODUCER {"ready":true,"schema":4,"release":"4.0.0-rc4","values":["2","",2]}
+PASS | G3_BROWSER N2 actual RC4 mixed history initializes, exports and imports without normalizing RIR
+G3_BROWSER_TOTAL 10/10 PASS

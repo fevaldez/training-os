@@ -2,7 +2,7 @@ name: Validate Training OS PR
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, codex/pr-s1-data-durability]
     types: [opened, synchronize, reopened, ready_for_review]
 
 # Unspecified token permissions are disabled. Never use pull_request_target here.
@@ -52,3 +52,6 @@ jobs:
 
       - name: Data durability failure-injection gate
         run: node tests/storage_durability.test.js
+
+      - name: M5 explicit-load regression gate
+        run: node tests/m5_load.test.js

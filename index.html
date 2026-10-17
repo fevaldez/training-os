@@ -2,8 +2,8 @@
 <html lang="es"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#f5f5f7"><title>Training OS · FV Hybrid</title>
-<link rel="apple-touch-icon" sizes="180x180" href="./training-os-loop-v1-180.png?v=4.0.0-rc6.2.1">
-<link rel="manifest" href="./manifest.webmanifest?v=4.0.0-rc6.2.1">
+<link rel="apple-touch-icon" sizes="180x180" href="./training-os-loop-v1-180.png?v=4.0.0-rc6.3">
+<link rel="manifest" href="./manifest.webmanifest?v=4.0.0-rc6.3">
 <meta name="application-name" content="Training OS">
 <meta name="apple-mobile-web-app-title" content="Training OS">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -108,7 +108,7 @@ button:disabled{opacity:.45}
 <div class="app">
 <div class="card" id="storageRecovery" role="status" aria-live="polite"></div>
 <section class="page active" id="today">
-<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><div class="eyebrow">T·OS · 4.0.0-rc6.2.1 · Continuous Loop</div><h1>Hoy</h1><p class="sub" id="todayDate"></p></div><div class="unit"><button data-unit="kg">kg</button><button data-unit="lb">lb</button></div></div>
+<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><div class="eyebrow">T·OS · 4.0.0-rc6.3 · Continuous Loop</div><h1>Hoy</h1><p class="sub" id="todayDate"></p></div><div class="unit"><button data-unit="kg">kg</button><button data-unit="lb">lb</button></div></div>
 <div class="card resume" id="resumeCard"><div class="eyebrow">Sesión activa</div><h2 id="resumeTitle"></h2><p class="small" id="resumeMeta"></p><button class="btn primary" id="resumeBtn">Reanudar</button><div class="actionrow"><button class="btn secondary" id="finishEarlyBtn">Finalizar y guardar</button><button class="btn danger" id="discardSessionBtn">Descartar sesión</button></div></div>
 <div class="card" id="todayDecisionCard"><div id="todayDecision"></div></div>
 <div class="card" id="weekSnapshotCard"><div id="weekSnapshot"></div></div>
@@ -1157,7 +1157,7 @@ function recommendedWorkoutKeyFromHistory(h=[]){
 }
 
 if(typeof location!=='undefined'&&location.protocol==='http:'&&location.hostname.endsWith('github.io')){location.replace('https://'+location.host+location.pathname+location.search+location.hash)}
-const RELEASE='4.0.0-rc6.2.1';
+const RELEASE='4.0.0-rc6.3';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 // DATA DURABILITY CORE START — extracted verbatim by the synthetic failure suite.
 function createDurability(storage, locks, workouts, options={}){
@@ -1429,6 +1429,8 @@ function persistenceMessage(result,key=result.key||'general',revision=null){
  renderRecovery();
 }
 function renderRecovery(){
+ const overlay=$('#sessionOverlay'),stage=$('#sessionStage');
+ const top=persistence.ready&&!persistence.busy&&overlay.classList.contains('open')?stage.getBoundingClientRect().top:null;
  for(const selector of ['#storageRecovery','#completionRecovery']){
   const box=$(selector);box.replaceChildren();box.hidden=!persistence.message;
   if(!persistence.message)continue;
@@ -1436,6 +1438,8 @@ function renderRecovery(){
   const retry=document.createElement('button');retry.className='btn secondary';retry.textContent='Reintentar';retry.disabled=persistence.busy;retry.onclick=()=>!persistence.ready||durability.blocked?retryPersistence():active()?.completionIntent?finishSession(active()):retryPersistence();box.append(retry);
   const backup=document.createElement('button');backup.className='btn ghost';backup.textContent='Exportar respaldo';backup.onclick=exportBackup;box.append(backup);
  }
+ // Keep session content anchored while the recovery card enters/leaves the scroll flow.
+ if(top!==null){const shift=stage.getBoundingClientRect().top-top;if(shift)overlay.scrollTop+=shift}
  for(const b of $$('[data-unit],#cooldownDone,#cooldownSkip,#finishSession,#finishEarlyBtn,#discardSessionBtn'))b.disabled=persistence.busy||!persistence.ready;
 }
 let pendingActive=Promise.resolve({ok:true});
@@ -1475,6 +1479,12 @@ async function bootPersistence(){
 const escapeStoredText=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const storedRirLabel=x=>x===null||x===undefined||x===''?'—':typeof x==='number'||typeof x==='string'&&/^\d+(?:\.\d+)?$/.test(x)?String(x):'—';
 const fmtWeight=kg=>{if(!kg)return '';return String(roundDisplay(fromKg(+kg,unit),unit))};
+// Input intent is transient UI state; never migrate or normalize stored zero values.
+const loadInputs=new WeakMap();
+function positiveLoad(raw,u){
+ const text=String(raw).trim();if(!/^(?:\d+(?:[.,]\d*)?|[.,]\d+)$/.test(text))return null;
+ const n=Number(text.replace(',','.')),kg=toKg(n,u);return n>0&&Number.isFinite(kg)&&kg>0?kg:null;
+}
 function renderUnits(){$$('[data-unit]').forEach(b=>b.classList.toggle('active',b.dataset.unit===unit))}
 async function setUnit(u){if(!persistence.ready||persistence.busy)return;persistence.pendingUnit=u;const r=await durability.saveUnit(u);persistenceMessage(r,'fv4.unit');if(!r.ok)return;persistence.pendingUnit=null;unit=u;renderUnits();if($('#sessionOverlay').classList.contains('open'))renderStage()}
 $$('[data-unit]').forEach(b=>b.onclick=()=>setUnit(b.dataset.unit));
@@ -1612,6 +1622,7 @@ function renderHome(){
 }
 $$('.bottom button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
 function showPage(id){
+ if($('.page.active')?.id===id)return;
  diagnostics('nav:start',{target:id});
  try{
   $$('.page').forEach(p=>p.classList.toggle('active',p.id===id));$$('.bottom button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
@@ -1764,6 +1775,8 @@ document.addEventListener('click',async e=>{const b=e.target.closest?.('[data-ex
 document.addEventListener('click',e=>{const a=e.target.closest?.('a[href]');if(!a)return;const standalone=window.matchMedia?.('(display-mode: standalone)').matches||navigator.standalone===true;if(!standalone)return;let u;try{u=new URL(a.href,location.href)}catch(_){return}const inScope=u.origin===location.origin&&u.pathname.startsWith('/training-os/');if(inScope)return;e.preventDefault();diagnostics('external:block',{url:u.href,text:(a.textContent||'').trim().slice(0,80)});shareExternalUrl(u.href,(a.textContent||'T·OS').trim()).catch(()=>{})},true);
 function renderSet(a,w,seq,item){
  const e=w.exercises[item.ei],d=draftFor(a,item),histPrev=previousSet(a.workoutKey,e.name,item.si),memory=loadMemoryInsight(a.workoutKey,e.name),progress=progressionInsight(a.workoutKey,e.name,e);
+ let input=loadInputs.get(d);if(!input){input={raw:fmtWeight(d.weightKg),unit,zero:false};loadInputs.set(d,input)}
+ if(input.unit!==unit){const kg=positiveLoad(input.raw,input.unit);if(kg!==null)input.raw=String(roundDisplay(fromKg(d.weightKg,unit),unit));input.unit=unit}
  const memoryLine=memory.loadKg?`${fmtWeight(memory.loadKg)} ${unit} · ${memory.sessions} exposición${memory.sessions===1?'':'es'} con carga base${memory.days?` · ${memory.days}d`:''}`:'Sin historial de carga';
  const progressLine=progress.status==='eligible'?'Elegible +2.5% · 2/2 exposiciones al techo con ≥2 RIR. Usa el menor incremento práctico ≤5%.':progress.reason;
  $('#sessionStage').innerHTML=`<div class="stage">
@@ -1773,19 +1786,22 @@ function renderSet(a,w,seq,item){
  ${tempoMarkup(e,false)}
  <div class="memory-card"><strong>Memoria de carga</strong><div>${memoryLine}</div><div class="progress-note ${progress.status==='eligible'?'eligible':''}">${progressLine}</div></div>
  ${histPrev?`<div class="previous"><b>Última sesión · set ${item.si+1}:</b> ${fmtWeight(histPrev.weightKg)} ${unit} × ${histPrev.reps} @RIR ${storedRirLabel(histPrev.rir)}<br>${escapeStoredText(d.reason)}</div>`:`<div class="previous">${escapeStoredText(d.reason)}</div>`}
- <div class="control"><label>Peso · ${unit}</label><div class="stepper"><button id="wMinus">−5</button><input id="wInput" inputmode="decimal" value="${fmtWeight(d.weightKg)}" placeholder="—"><button id="wPlus">+5</button></div><div class="quickstep"><button data-w="-10">−10</button><button data-w="10">+10</button></div></div>
+ <div class="control"><label for="wInput">Peso · ${unit}</label><div class="stepper"><button id="wMinus">−5</button><input id="wInput" inputmode="decimal" value="${escapeStoredText(input.raw)}" placeholder="—" aria-describedby="weightError" aria-invalid="false"><button id="wPlus">+5</button></div><div class="quickstep"><button data-w="-10">−10</button><button data-w="10">+10</button><button id="wZero" aria-pressed="${input.zero}">Sin carga externa (0 ${unit})</button></div><p id="weightError" class="small" role="alert" hidden></p></div>
  <div class="control"><label>Repeticiones</label><div class="stepper"><button id="rMinus">−1</button><input id="rInput" inputmode="numeric" value="${d.reps||''}" placeholder="${parseRepRange(e.reps).min||'—'}"><button id="rPlus">+1</button></div></div>
  <div class="control"><label>RIR real</label><div class="rir">${[0,1,2,3].map(v=>`<button data-rir="${v}" class="${Number(d.rir)===v?'active':''}">${v===3?'3+':v}</button>`).join('')}</div></div>
  ${e.alt?`<div class="alt-note"><b>Si está ocupado / no puedes hacerlo:</b> ${e.alt}. Si cambias variante, usa carga baseline; no asumas equivalencia 1:1.</div>`:''}<div class="tip ${a.workoutKey==='legs'||a.workoutKey==='shoulders'?'guard':''}"><strong>Pro tip 1%</strong><br>${e.tip}</div>
  <button class="cta" id="completeSet">Completar set</button><button class="btn secondary" id="skipAction" style="width:100%;margin-top:8px">Omitir…</button>
  ${nextPreviewMarkup(w,seq,a.index)}</div>`;
- const sync=()=>{d.weightKg=toKg(parseFloat($('#wInput').value)||0,unit);d.reps=parseInt($('#rInput').value)||0;saveDraft(a,item,d)};
- $('#wInput').oninput=sync;$('#rInput').oninput=sync;
- const bump=x=>{$('#wInput').value=Math.max(0,(parseFloat($('#wInput').value)||0)+x);sync()};
+ const weight=$('#wInput'),error=$('#weightError');
+ const syncWeight=(zero=false)=>{input.raw=weight.value;input.unit=unit;input.zero=zero;$('#wZero').setAttribute('aria-pressed',String(zero));error.hidden=true;error.textContent='';weight.setAttribute('aria-invalid','false');const kg=zero?0:positiveLoad(input.raw,unit);if(kg!==null){d.weightKg=kg;saveDraft(a,item,d)}};
+ const syncReps=()=>{d.reps=parseInt($('#rInput').value)||0;saveDraft(a,item,d)};
+ weight.oninput=()=>syncWeight();$('#rInput').oninput=syncReps;
+ $('#wZero').onclick=()=>{weight.value='0';syncWeight(true)};
+ const bump=x=>{const n=positiveLoad(weight.value,unit)===null?0:Number(weight.value.trim().replace(',','.'));weight.value=String(Math.max(0,n+x));syncWeight()};
  $('#wMinus').onclick=()=>bump(-5);$('#wPlus').onclick=()=>bump(5);$$('[data-w]').forEach(b=>b.onclick=()=>bump(Number(b.dataset.w)));
- $('#rMinus').onclick=()=>{$('#rInput').value=Math.max(0,(parseInt($('#rInput').value)||0)-1);sync()};$('#rPlus').onclick=()=>{$('#rInput').value=(parseInt($('#rInput').value)||0)+1;sync()};
+ $('#rMinus').onclick=()=>{$('#rInput').value=Math.max(0,(parseInt($('#rInput').value)||0)-1);syncReps()};$('#rPlus').onclick=()=>{$('#rInput').value=(parseInt($('#rInput').value)||0)+1;syncReps()};
  $$('[data-rir]').forEach(b=>b.onclick=()=>{d.rir=Number(b.dataset.rir);saveDraft(a,item,d);$$('[data-rir]').forEach(x=>x.classList.toggle('active',x===b))});
- $('#completeSet').onclick=()=>completeSet(a,seq,item,e,d);$('#skipAction').onclick=()=>openSkipSheet(a,seq,item,e)
+ $('#completeSet').onclick=()=>{const kg=input.zero&&weight.value==='0'?0:positiveLoad(weight.value,unit);if(kg===null){error.textContent='Captura un peso válido o confirma Sin carga externa.';error.hidden=false;weight.setAttribute('aria-invalid','true');weight.focus();return}if(!d.reps){completeSet(a,seq,item,e,d);return}loadInputs.delete(d);completeSet(a,seq,item,e,d)};$('#skipAction').onclick=()=>openSkipSheet(a,seq,item,e)
 }
 function skippedLog(item,e,status='skipped_set'){
  return {exerciseIndex:item.ei,exerciseName:e.name,setIndex:item.si,weightKg:0,reps:0,rir:null,tempo:e.tempo,restSec:0,completedAt:new Date().toISOString(),done:false,skipped:true,status};
@@ -1930,6 +1946,6 @@ $('#importFile').onchange=async e=>{
 renderHome();renderProgress();renderUnits();startTicker();bootPersistence();
 window.__FV_QA__={release:RELEASE,storage:store.ok,unit,programs:ORDER.length};
 
-document.documentElement.dataset.release='4.0.0-rc6.2.1';document.documentElement.dataset.boot='ok';
+document.documentElement.dataset.release='4.0.0-rc6.3';document.documentElement.dataset.boot='ok';
 </script>
 </body></html>
