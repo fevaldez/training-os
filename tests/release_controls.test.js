@@ -3,6 +3,7 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const cp=require('node:child_process'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto');
 const RC='51e1a753c6a7539006d28fc3a1b1b49f2e882f23';
+const hotfixAssets={"index.html": "1038abc5977ec71e655439374b31f34e49b5734416cbabdba59136501f07b99e", "version.json": "8d37cbc7fd7268fcb9ec2004c1fa12ca97d519011b3a7df4adcef375db838ad9"};
 const names=['index.html','version.json','manifest.webmanifest','training-os-loop-v1-180.png','training-os-loop-v1-192.png','training-os-loop-v1-512.png','training-os-loop-v1-1024.png'];
 const workflow=fs.readFileSync('.github/workflows/release-pages.yml','utf8');
 const validate=workflow.split('  validate:\n')[1].split('\n  deploy:\n')[0];
@@ -69,11 +70,11 @@ try{
  test('F7 exact approved workflow bytes and read-only PR workflow pass',()=>gate());
  test('F7 rejects one-byte release-workflow mutation',()=>assert.throws(()=>gate({badRelease:true})));
  test('F7 rejects one-byte PR-workflow mutation',()=>assert.throws(()=>gate({badPR:true})));
- test('seven RC6.3 assets are unchanged and the actual archive rejects extra or altered bytes',()=>{
+ test('exact hotfix assets and the source-bound archive reject extra or altered bytes',()=>{
   const old=cp.execFileSync('git',['show',RC+':.github/workflows/release-pages.yml'],{encoding:'utf8'});
   const build=s=>s.split('      - name: Build deploy artifact\n')[1].split('\n      - name:')[0];assert.equal(build(workflow),build(old));
   const site=path.join(temporary,'site');fs.mkdirSync(site);
-  for(const name of names){const expected=cp.execFileSync('git',['show',RC+':'+name]);assert.deepEqual(fs.readFileSync(name),expected,name);fs.writeFileSync(path.join(site,name),expected)}
+  for(const name of names){const expected=cp.execFileSync('git',['show',RC+':'+name]);if(hotfixAssets[name])assert.equal(crypto.createHash('sha256').update(fs.readFileSync(name)).digest('hex'),hotfixAssets[name],name);else assert.deepEqual(fs.readFileSync(name),expected,name);fs.writeFileSync(path.join(site,name),cp.execFileSync('git',['show','HEAD:'+name]))}
   const command=validate.split('      - name: Verify the actual Pages archive against the source SHA\n')[1].split('        run: |\n')[1].trimEnd().split('\n').map(l=>l.slice(10)).join('\n');
   const source=cp.execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
   const archive=()=>cp.execFileSync('tar',['-cf',path.join(temporary,'artifact.tar'),'-C',site,'.'],{env:{...process.env,COPYFILE_DISABLE:'1'}});

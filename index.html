@@ -2,8 +2,8 @@
 <html lang="es"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#f5f5f7"><title>Training OS · FV Hybrid</title>
-<link rel="apple-touch-icon" sizes="180x180" href="./training-os-loop-v1-180.png?v=4.0.0-rc6.3">
-<link rel="manifest" href="./manifest.webmanifest?v=4.0.0-rc6.3">
+<link rel="apple-touch-icon" sizes="180x180" href="./training-os-loop-v1-180.png?v=4.0.0-rc6.3.1">
+<link rel="manifest" href="./manifest.webmanifest?v=4.0.0-rc6.3.1">
 <meta name="application-name" content="Training OS">
 <meta name="apple-mobile-web-app-title" content="Training OS">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -108,7 +108,7 @@ button:disabled{opacity:.45}
 <div class="app">
 <div class="card" id="storageRecovery" role="status" aria-live="polite"></div>
 <section class="page active" id="today">
-<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><div class="eyebrow">T·OS · 4.0.0-rc6.3 · Continuous Loop</div><h1>Hoy</h1><p class="sub" id="todayDate"></p></div><div class="unit"><button data-unit="kg">kg</button><button data-unit="lb">lb</button></div></div>
+<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><div class="eyebrow">T·OS · 4.0.0-rc6.3.1 · Continuous Loop</div><h1>Hoy</h1><p class="sub" id="todayDate"></p></div><div class="unit"><button data-unit="kg">kg</button><button data-unit="lb">lb</button></div></div>
 <div class="card resume" id="resumeCard"><div class="eyebrow">Sesión activa</div><h2 id="resumeTitle"></h2><p class="small" id="resumeMeta"></p><button class="btn primary" id="resumeBtn">Reanudar</button><div class="actionrow"><button class="btn secondary" id="finishEarlyBtn">Finalizar y guardar</button><button class="btn danger" id="discardSessionBtn">Descartar sesión</button></div></div>
 <div class="card" id="todayDecisionCard"><div id="todayDecision"></div></div>
 <div class="card" id="weekSnapshotCard"><div id="weekSnapshot"></div></div>
@@ -946,12 +946,12 @@ function buildSequence(workout,includedIndices=null) {
   }
   return seq;
 }
-function nextTransition(sequence, completedIndex, workout) {
+function nextTransition(sequence, completedIndex, workout, logs={}) {
   const current = sequence[completedIndex];
-  const next = sequence[completedIndex+1] || null;
+  const next = sequence.slice(completedIndex+1).find(s=>!logs[`${s.ei}_${s.si}`]?.skipped) || null;
   if (!next) return {type:'finish', next:null, restSec:0};
   if (current?.superset && current.position === 'first' &&
-      next.superset && next.position === 'second' && current.si === next.si) {
+      next.superset && next.position === 'second' && current.si === next.si && next.ei === current.partner && next.partner === current.ei) {
     return {type:'superset-switch', next, restSec:0};
   }
   const completedExercise = workout.exercises[current.ei];
@@ -1157,7 +1157,7 @@ function recommendedWorkoutKeyFromHistory(h=[]){
 }
 
 if(typeof location!=='undefined'&&location.protocol==='http:'&&location.hostname.endsWith('github.io')){location.replace('https://'+location.host+location.pathname+location.search+location.hash)}
-const RELEASE='4.0.0-rc6.3';
+const RELEASE='4.0.0-rc6.3.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 // DATA DURABILITY CORE START — extracted verbatim by the synthetic failure suite.
 function createDurability(storage, locks, workouts, options={}){
@@ -1812,8 +1812,8 @@ function openSkipSheet(a,seq,item,e){
 }
 function skipCurrentSet(a,seq,item,e){
  const key=`${item.ei}_${item.si}`;a.logs[key]=skippedLog(item,e,'skipped_set');
- const oldIndex=a.index,transition=nextTransition(seq,oldIndex,WORKOUTS[a.workoutKey]),prior=oldIndex>0?seq[oldIndex-1]:null,priorLog=prior?a.logs[`${prior.ei}_${prior.si}`]:null;
- a.index+=1;
+ const oldIndex=a.index,transition=nextTransition(seq,oldIndex,WORKOUTS[a.workoutKey],a.logs),prior=oldIndex>0?seq[oldIndex-1]:null,priorLog=prior?a.logs[`${prior.ei}_${prior.si}`]:null;
+ a.index=transition.next?seq.indexOf(transition.next):seq.length;
  if(transition.type==='finish'){a.state='cooldown';a.endsAt=0}
  else if(transition.type==='superset-switch'){a.state='transition';a.endsAt=0}
  else if(item.superset&&item.position==='second'&&prior?.superset&&prior.position==='first'&&prior.si===item.si&&priorLog?.done){
@@ -1840,14 +1840,20 @@ $('#skipExercise').onclick=()=>{if(!skipContext)return;const {a,seq,item,e}=skip
 function completeSet(a,seq,item,e,d){
  if(!d.reps){alert('Captura reps antes de completar.');return}
  const key=`${item.ei}_${item.si}`;a.logs[key]={exerciseIndex:item.ei,exerciseName:e.name,setIndex:item.si,weightKg:+d.weightKg||0,reps:+d.reps||0,rir:d.rir,tempo:e.tempo,restSec:e.rest,completedAt:new Date().toISOString(),done:true};a.last=a.logs[key];
- const transition=nextTransition(seq,a.index,WORKOUTS[a.workoutKey]);a.index+=1;
+ const transition=nextTransition(seq,a.index,WORKOUTS[a.workoutKey],a.logs);a.index=transition.next?seq.indexOf(transition.next):seq.length;
  if(transition.type==='finish'){a.state='cooldown';a.endsAt=0}
  else if(transition.type==='superset-switch'){a.state='transition';a.endsAt=0}
  else {a.state='rest';a.restOriginal=transition.restSec;a.endsAt=transition.restSec?Date.now()+transition.restSec*1000:0}
  saveActive(a);renderStage();scrollSessionTop('set:complete');startTicker()
 }
 function renderTransition(a,w,seq){
- const next=seq[a.index],e=w.exercises[next.ei];
+ const next=seq[a.index],prior=seq[a.index-1];
+ // Older valid snapshots may still point at a skipped partner before current() advances.
+ if(!next){a.state='cooldown';a.endsAt=0;saveActive(a);return renderCooldown(a,w)}
+ if(!(prior?.superset&&prior.position==='first'&&next.superset&&next.position==='second'&&prior.si===next.si&&next.ei===prior.partner&&next.partner===prior.ei)){
+  const rest=Number(a.last?.restSec??w.exercises[a.last?.exerciseIndex]?.rest)||0;a.state='rest';a.restOriginal=rest;a.endsAt=rest?Date.now()+rest*1000:0;saveActive(a);return renderRest(a,w,seq)
+ }
+ const e=w.exercises[next.ei];
  $('#sessionStage').innerHTML=`<div class="stage transition"><div class="state-label">Biserie · sin descanso</div><div class="symbol">↔</div><div class="big">${e.name}</div><p class="sub">Set ${next.si+1}/${e.sets} · ${e.reps} reps · RIR ${e.rir}</p>${tempoMarkup(e,false)}<div class="tip" style="text-align:left"><strong>Pro tip 1%</strong><br>${e.tip}</div>${videoLinkMarkup(e,'Video partner')}<button class="cta" id="goPartner">Ir al partner</button></div>`;
  $('#goPartner').onclick=()=>{a.state='set';saveActive(a);renderStage();scrollSessionTop('biserie:partner')}
 }
@@ -1946,6 +1952,6 @@ $('#importFile').onchange=async e=>{
 renderHome();renderProgress();renderUnits();startTicker();bootPersistence();
 window.__FV_QA__={release:RELEASE,storage:store.ok,unit,programs:ORDER.length};
 
-document.documentElement.dataset.release='4.0.0-rc6.3';document.documentElement.dataset.boot='ok';
+document.documentElement.dataset.release='4.0.0-rc6.3.1';document.documentElement.dataset.boot='ok';
 </script>
 </body></html>

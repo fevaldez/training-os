@@ -6,7 +6,7 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const BASE='c23f7cdd21b895c0aed3a6da49ea02da27d25aad',baseline=process.argv.includes('--baseline');
 const html=baseline?execFileSync('git',['show',BASE+':index.html'],{encoding:'utf8'}):fs.readFileSync('index.html','utf8');
 // Only the two presentation routines and five exact release markers may differ from the pin.
-let preserved=html;const originalSource=execFileSync('git',['show',BASE+':index.html'],{encoding:'utf8'});
+let preserved=baseline?html:require('./superset_skip_scope.cjs').restore(html);const originalSource=execFileSync('git',['show',BASE+':index.html'],{encoding:'utf8'});
 const originalRelease=originalSource.match(/const RELEASE='([^']+)'/)[1];
 const release=baseline?originalRelease:JSON.parse(fs.readFileSync('version.json','utf8')).release;
 assert.equal(html.match(/const RELEASE='([^']+)'/)[1],release,'candidate release marker differs from metadata');
@@ -86,5 +86,6 @@ const copy=x=>JSON.parse(JSON.stringify(x));
    }finally{await x.ctx.close()}
   });
   console.log('M5_SCROLL_TOTAL '+results.filter(Boolean).length+'/'+results.length+' PASS');if(results.some(x=>!x))process.exitCode=1;
+  if(!baseline){const child=require('node:child_process').spawn(process.execPath,['tests/superset_skip_browser.test.js'],{env:process.env,stdio:'inherit'});if(await new Promise(r=>child.on('exit',r))!==0)process.exitCode=1;}
  }finally{if(browser)await browser.close();await new Promise(r=>server.close(r))}
 })().catch(e=>{console.error(e);process.exitCode=1});
