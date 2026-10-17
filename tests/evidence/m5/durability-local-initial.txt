@@ -1,0 +1,234 @@
+PASS | pinned baseline is RED for the original history-write failure
+PASS | strict result API distinguishes absence, unreadable, malformed, verified and write/serialization/read-back failure
+PASS | GREEN original quota regression: active retained; exact prior history retained; retry once with stable intent
+PASS | completion history unreadable never deletes active or overwrites default
+PASS | completion history malformed never deletes active or overwrites default
+PASS | completion history stale never deletes active or overwrites default
+PASS | completion history different never deletes active or overwrites default
+PASS | completion history read-back-throws never deletes active or overwrites default
+PASS | intent set failure prevents history mutation and preserves in-memory export
+PASS | intent get failure prevents history mutation and preserves in-memory export
+PASS | intent different failure prevents history mutation and preserves in-memory export
+PASS | interrupted completion after intent reconciles at startup exactly once
+PASS | interrupted completion after history reconciles at startup exactly once
+PASS | interruption between history set and read-back recognizes persisted payload on retry
+PASS | cleanup remove failure reports saved and retries cleanup only
+PASS | cleanup read-back failure reports saved and retries cleanup only
+PASS | repeated finish calls share frozen intent and append once under lock
+PASS | same ID different history payload is explicit conflict
+PASS | tampered intent digest fails closed
+PASS | competing cooperating tabs serialize; stale writer cannot delete or overwrite active
+PASS | two cooperating history replacements serialize and stale confirmation refuses the second
+PASS | unsupported same-origin lock refuses every mutation; raw export still works
+PASS | bounded lock acquisition times out with no writes
+PASS | old/uncooperating writer observed before completion is refused
+PASS | invalid import envelope schema has zero mutation
+PASS | invalid import record schema has zero mutation
+PASS | invalid import history object has zero mutation
+PASS | invalid import duplicate IDs has zero mutation
+PASS | invalid import workout ref has zero mutation
+PASS | invalid import exercise bound has zero mutation
+PASS | invalid import set bound has zero mutation
+PASS | invalid import active index has zero mutation
+PASS | invalid import active state has zero mutation
+PASS | invalid import active array has zero mutation
+PASS | invalid import draft bound has zero mutation
+PASS | invalid import plan bounds has zero mutation
+PASS | invalid import draft display type has zero mutation
+PASS | invalid import preset display type has zero mutation
+PASS | invalid import transition bound has zero mutation
+PASS | invalid import invalid units has zero mutation
+PASS | invalid import nonfinite has zero mutation
+PASS | invalid import invalid date has zero mutation
+PASS | invalid import invalid id has zero mutation
+PASS | invalid import negative load has zero mutation
+PASS | invalid import inconsistent status has zero mutation
+PASS | import requires concrete reviewed snapshot; stale confirmation cannot replace changed data
+PASS | lossless mixed-schema import/export round trip with kg, timers, drafts, skips and unknown fields
+PASS | lossless mixed-schema import/export round trip with lb, timers, drafts, skips and unknown fields
+PASS | import active null is explicit and deterministic
+PASS | import active absent-keep is explicit and deterministic
+PASS | import active absent-clear is explicit and deterministic
+PASS | import active absent-no-choice is explicit and deterministic
+PASS | import interruption after journal restores exact pre-import bytes on startup
+PASS | import interruption after fv4.history restores exact pre-import bytes on startup
+PASS | import interruption after fv4.active restores exact pre-import bytes on startup
+PASS | import interruption after fv4.unit restores exact pre-import bytes on startup
+PASS | import interruption after fv4.migrated restores exact pre-import bytes on startup
+PASS | import interruption after fv4.backupExtras.v1 restores exact pre-import bytes on startup
+PASS | import interruption after before-journal-removal restores exact pre-import bytes on startup
+PASS | import fv4.recovery.v1 write failure retains journal or untouched data and never success
+PASS | import fv4.recovery.v1 readback failure retains journal or untouched data and never success
+PASS | import fv4.history write failure retains journal or untouched data and never success
+PASS | import fv4.history readback failure retains journal or untouched data and never success
+PASS | import fv4.active write failure retains journal or untouched data and never success
+PASS | import fv4.active readback failure retains journal or untouched data and never success
+PASS | import fv4.unit write failure retains journal or untouched data and never success
+PASS | import fv4.unit readback failure retains journal or untouched data and never success
+PASS | import fv4.migrated write failure retains journal or untouched data and never success
+PASS | import fv4.migrated readback failure retains journal or untouched data and never success
+PASS | import fv4.backupExtras.v1 write failure retains journal or untouched data and never success
+PASS | import fv4.backupExtras.v1 readback failure retains journal or untouched data and never success
+PASS | journal removal failure keeps import recoverable and blocks normal writes
+PASS | rollback fv4.history failure retains journal and raw snapshots; retry restores exact bytes
+PASS | rollback fv4.active failure retains journal and raw snapshots; retry restores exact bytes
+PASS | rollback fv4.unit failure retains journal and raw snapshots; retry restores exact bytes
+PASS | rollback fv4.migrated failure retains journal and raw snapshots; retry restores exact bytes
+PASS | rollback fv4.backupExtras.v1 failure retains journal and raw snapshots; retry restores exact bytes
+PASS | external edit during interrupted import is conflict, preserving journal for manual recovery
+PASS | malformed recovery journal fails closed and remains exportable
+PASS | export fv4.history read failure leaves exact storage unchanged
+PASS | export fv4.active read failure leaves exact storage unchanged
+PASS | export fv4.unit read failure leaves exact storage unchanged
+PASS | export corrupt history reports parse failure without storage mutation
+PASS | export cyclic memory snapshot reports failure and preserves storage
+PASS | download initiation Blob reports honest status
+PASS | download initiation URL reports honest status
+PASS | download initiation createElement reports honest status
+PASS | download initiation click reports honest status
+PASS | download initiation success reports honest status
+PASS | v3 migration interruption journal keeps sources, restores, then retries without duplicates
+PASS | v3 migration interruption fv4.history keeps sources, restores, then retries without duplicates
+PASS | v3 migration interruption fv4.active keeps sources, restores, then retries without duplicates
+PASS | v3 migration interruption fv4.unit keeps sources, restores, then retries without duplicates
+PASS | v3 migration interruption fv4.migrated keeps sources, restores, then retries without duplicates
+PASS | v3 migration interruption fv4.backupExtras.v1 keeps sources, restores, then retries without duplicates
+PASS | v3 migration interruption before-journal-removal keeps sources, restores, then retries without duplicates
+PASS | v3 migration never reruns over existing history, active, or units
+PASS | corrupt existing history prevents lossy migration and marker write
+PASS | migration destination failure does not mark completion
+PASS | program, prescriptions, engine and timers unchanged from pinned baseline
+PASS | imported history and active text is escaped at all rendered stored-text sinks
+PASS | unverified autosave which landed can retry the identical bytes safely
+PASS | unverified unit write which landed can be retried idempotently
+PASS | stale tab export refuses to hide a newer persisted active session
+PASS | export serialization failure is explicit for cyclic or nonfinite memory
+PASS | production entry preserves complete active snapshot and computes original adherence semantics
+PASS | keep-active import refuses an ID collision before any mutation
+PASS | malformed legacy record structure fails with no marker or destination writes
+PASS | journal removal read-back failure retains durable or memory recovery, reinsertion fails=false
+PASS | journal removal read-back failure retains durable or memory recovery, reinsertion fails=true
+TOTAL 110/110 PASS
+PASS | G3 F1/R5 recover cannot give stale memory a new write token
+PASS | G3 F2/R1 fresh instance restores before-image when journal removal/read-back/reinsertion fail
+PASS | G3 F3/B1 unit success cannot clear failed dirty active revision
+PASS | G3 F4/R3 c871672 historical back index 1 round-trips without current prescription bounds
+PASS | G3 F4/R3 c871672 historical back index 2 round-trips without current prescription bounds
+PASS | G3 F4/R3 c871672 historical back index 4 round-trips without current prescription bounds
+PASS | G3 F4/R3 c871672 historical back index 5 round-trips without current prescription bounds
+PASS | G3 F4/R3 0494bc8 historical back index 1 round-trips without current prescription bounds
+PASS | G3 F4/R3 0494bc8 historical back index 2 round-trips without current prescription bounds
+PASS | G3 F4/R3 0494bc8 historical back index 4 round-trips without current prescription bounds
+PASS | G3 F4/R3 0494bc8 historical back index 5 round-trips without current prescription bounds
+PASS | G3 F5/R2 real v3 RIR "" migrates and round-trips without normalization
+PASS | G3 F5/R2 real v3 RIR "2" migrates and round-trips without normalization
+PASS | G3 F5/R2 real v3 RIR 2 migrates and round-trips without normalization
+PASS | G3 F6/R4 explicit-active ID conflict rejects with zero writes
+PASS | G3 F1 bindState rejects divergent RAM rather than granting a token
+PASS | G3 F1 fresh startup after rollback binds the restored snapshot before autosave
+PASS | G3 F2 fresh-instance interruption after backup has durable before-image or explicit committed outcome
+PASS | G3 F2 fresh-instance interruption after journal has durable before-image or explicit committed outcome
+PASS | G3 F2 fresh-instance interruption after fv4.history has durable before-image or explicit committed outcome
+PASS | G3 F2 fresh-instance interruption after fv4.active has durable before-image or explicit committed outcome
+PASS | G3 F2 fresh-instance interruption after fv4.unit has durable before-image or explicit committed outcome
+PASS | G3 F2 fresh-instance interruption after fv4.migrated has durable before-image or explicit committed outcome
+PASS | G3 F2 fresh-instance interruption after fv4.backupExtras.v1 has durable before-image or explicit committed outcome
+PASS | G3 F2 fresh-instance interruption after before-journal-removal has durable before-image or explicit committed outcome
+PASS | G3 F2 fresh-instance interruption after journal-removed has durable before-image or explicit committed outcome
+PASS | G3 F2 fresh-instance interruption after outcome has durable before-image or explicit committed outcome
+PASS | G3 F2 independent before-image write failure refuses all destructive destinations
+PASS | G3 F2 independent before-image readback failure refuses all destructive destinations
+PASS | G3 F2 uncertain outcome write resolves across a new instance with durable evidence
+PASS | G3 F2 uncertain outcome readback resolves across a new instance with durable evidence
+PASS | G3 F2 failed rollback cleanup after journal remains safe across a second process loss
+PASS | G3 F2 failed rollback cleanup after fv4.history remains safe across a second process loss
+PASS | G3 F2 failed rollback cleanup after fv4.active remains safe across a second process loss
+PASS | G3 F2 failed rollback cleanup after fv4.unit remains safe across a second process loss
+PASS | G3 F2 failed rollback cleanup after fv4.migrated remains safe across a second process loss
+PASS | G3 F2 failed rollback cleanup after fv4.backupExtras.v1 remains safe across a second process loss
+PASS | G3 F2 failed rollback cleanup after journal-removed remains safe across a second process loss
+PASS | G3 F2 corrupted backup digest stops recovery before mutation
+PASS | G3 F3 older verified revision cannot clear newer failed active revision; exact Retry can
+PASS | G3 F3 boot/re-entry with dirty memory remains explicit conflict and cannot hide it
+PASS | G3 F4 historical bounds reflect all pinned production source recipes
+PASS | G3 F4 mixed older and current schemas retain all unknown fields and original set semantics
+PASS | G3 F4 current active and current-release history retain strict prescription bounds
+PASS | G3 F5 unsafe or invalid legacy RIR "<img onerror=alert(1)>" rejects before destination writes
+PASS | G3 F5 unsafe or invalid legacy RIR "Infinity" rejects before destination writes
+PASS | G3 F5 unsafe or invalid legacy RIR "11" rejects before destination writes
+PASS | G3 F5 unsafe or invalid legacy RIR "-1" rejects before destination writes
+PASS | G3 F5 unsafe or invalid legacy RIR "2;alert(1)" rejects before destination writes
+PASS | G3 F5 unsafe or invalid legacy RIR {} rejects before destination writes
+PASS | G3 F6 import identity matrix explicit/none validates before writes
+PASS | G3 F6 import identity matrix explicit/matching validates before writes
+PASS | G3 F6 import identity matrix explicit/payload-conflict validates before writes
+PASS | G3 F6 import identity matrix explicit/bad-digest validates before writes
+PASS | G3 F6 import identity matrix keep/none validates before writes
+PASS | G3 F6 import identity matrix keep/matching validates before writes
+PASS | G3 F6 import identity matrix keep/payload-conflict validates before writes
+PASS | G3 F6 import identity matrix keep/bad-digest validates before writes
+PASS | G3 F6 import identity matrix null/none validates before writes
+PASS | G3 F6 import identity matrix null/matching validates before writes
+PASS | G3 F6 import identity matrix null/payload-conflict validates before writes
+PASS | G3 F6 import identity matrix null/bad-digest validates before writes
+PASS | G3 F6 import identity matrix clear/none validates before writes
+PASS | G3 F6 import identity matrix clear/matching validates before writes
+PASS | G3 F6 import identity matrix clear/payload-conflict validates before writes
+PASS | G3 F6 import identity matrix clear/bad-digest validates before writes
+FAIL | G3 F7 retains exact approved PR-only workflow and unchanged release workflow | Expected values to be strictly equal:
++ actual - expected
+... Skipped lines
+
+  'name: Validate Training OS PR\n' +
+    '\n' +
+    'on:\n' +
+    '  pull_request:\n' +
++   '    branches: [main, codex/pr-s1-data-durability]\n' +
+-   '    branches: [main]\n' +
+    '    types: [opened, synchronize, reopened, ready_for_review]\n' +
+    '\n' +
+    '# Unspecified token permissions are disabled. Never use pull_request_target here.\n' +
+    'permissions:\n' +
+    '  contents: read\n' +
+...
+    '      - name: Data durability failure-injection gate\n' +
++   '        run: node tests/storage_durability.test.js\n' +
++   '\n' +
++   '      - name: M5 explicit-load regression gate\n' +
++   '        run: node tests/m5_load.test.js\n'
+-   '        run: node tests/storage_durability.test.js\n'
+
+PASS | G3 G3 checked-in synthetic fixtures agree with the pinned historical production constructors
+PASS | G3 F2 committed before-image never rolls back later ordinary active writes after a fresh startup
+PASS | G3 F1 migrate cannot refresh a stale active token even when initializing missing bookkeeping
+PASS | G3 F2 new replacement after a committed backup keeps a consistent pending before-image on journal read-back failure
+PASS | G3 F2 rollback cleanup fv4.recovery.backup.v1 removal/read-back failure cannot remove the restored original across restart
+PASS | G3 F2 rollback cleanup fv4.recovery.outcome.v1 removal/read-back failure cannot remove the restored original across restart
+G3_TOTAL 72/73 PASS
+N1_COUNTEREXAMPLE {"retry":{"ok":true,"status":"verified"},"recoveryWrites":0,"save16":{"ok":true,"status":"verified"},"thirdReady":true,"persistedReps":16,"localReps":9,"artifacts":[["fv4.recovery.v1",false],["fv4.recovery.backup.v1",false],["fv4.recovery.outcome.v1",false]]}
+PASS | G4.1 N1 stale RAM journal cannot recreate artifacts, block B 15→16, or poison a fresh third tab
+N2_PRODUCER {"schema":4,"release":"4.0.0-rc4","rir":"2","import":{"ok":true,"status":"verified"}}
+PASS | G4.1 N2 actual RC4 constructor/draft/complete/finish preserves RIR "2"
+N2_PRODUCER {"schema":4,"release":"4.0.0-rc4","rir":"","import":{"ok":true,"status":"verified"}}
+PASS | G4.1 N2 actual RC4 constructor/draft/complete/finish preserves RIR ""
+N2_PRODUCER {"schema":4,"release":"4.0.0-rc4","rir":2,"import":{"ok":true,"status":"verified"}}
+PASS | G4.1 N2 actual RC4 constructor/draft/complete/finish preserves RIR 2
+PASS | G4.1 N1 persisted orphan journal conflicts are checked before any backup write
+PASS | G4.1 N1 persisted legacy journal still restores with verified backup after freshness checks
+PASS | G4.1 N2 invalid RC4 RIR <img src=x onerror=alert(1)> remains rejected with zero writes
+PASS | G4.1 N2 invalid RC4 RIR 2junk remains rejected with zero writes
+PASS | G4.1 N2 invalid RC4 RIR 2e0 remains rejected with zero writes
+PASS | G4.1 N2 invalid RC4 RIR Infinity remains rejected with zero writes
+PASS | G4.1 N2 invalid RC4 RIR NaN remains rejected with zero writes
+PASS | G4.1 N2 invalid RC4 RIR 11 remains rejected with zero writes
+PASS | G4.1 N2 invalid RC4 RIR -1 remains rejected with zero writes
+PASS | G4.1 N2 invalid RC4 RIR  2 remains rejected with zero writes
+PASS | G4.1 N2 invalid RC4 RIR 2  remains rejected with zero writes
+PASS | G4.1 N2 invalid RC4 RIR Infinity remains rejected with zero writes
+PASS | G4.1 N2 invalid RC4 RIR NaN remains rejected with zero writes
+PASS | G4.1 N2 invalid RC4 RIR 11 remains rejected with zero writes
+PASS | G4.1 N2 invalid RC4 RIR -1 remains rejected with zero writes
+PASS | G4.1 N2 current active logs and drafts remain strict for "2"
+PASS | G4.1 N2 current active logs and drafts remain strict for ""
+PASS | G4.1 N2 mixed RC4/current/v3 history round-trips unknown fields and original value types
+G41_TOTAL 22/22 PASS

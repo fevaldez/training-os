@@ -1,0 +1,9 @@
+M5_BROWSER 145.0.7632.6
+PASS | M5_BROWSER empty/cleared/typed-zero/invalid load rejects with identical RAM, disk and index
+PASS | M5_BROWSER explicit zero requires reconfirmation after reload and round-trips completed history
+PASS | M5_BROWSER cleared load remains invalid through RIR/reps and unit rerender
+PASS | M5_BROWSER positive kg 20.123 persists without conversion loss
+PASS | M5_BROWSER positive lb 10 persists without conversion loss
+PASS | M5_BROWSER positive kg 20,5 persists without conversion loss
+PASS | M5_BROWSER skip remains independent of missing load
+M5_BROWSER_TOTAL 7/7 PASS

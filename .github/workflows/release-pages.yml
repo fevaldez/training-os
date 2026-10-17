@@ -2,6 +2,15 @@ name: Release Training OS
 
 on:
   workflow_dispatch:
+    inputs:
+      approved_sha:
+        description: Full main commit SHA approved for this run
+        required: true
+        type: string
+      publish:
+        description: Request publication; separate owner environment approval is still required
+        type: boolean
+        default: false
   push:
     branches: [main]
     paths:
@@ -17,19 +26,37 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: training-os-pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   validate:
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      source_sha: ${{ steps.source.outputs.sha }}
+      artifact_sha256: ${{ steps.archive.outputs.sha256 }}
+      artifact_id: ${{ steps.upload.outputs.artifact_id }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Bind validation to the event source
+        id: source
+        env:
+          REQUESTED_SHA: ${{ inputs.approved_sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+            test "$REQUESTED_SHA" = "$GITHUB_SHA"
+          fi
+          echo "sha=$GITHUB_SHA" >> "$GITHUB_OUTPUT"
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -49,6 +76,33 @@ jobs:
       - name: Reliability regression gate
         run: python3 scripts/test_reliability_rc621.py
 
+      - name: Data durability failure-injection gate
+        run: node tests/storage_durability.test.js
+
+      - name: M5 explicit-load regression gate
+        run: node tests/m5_load.test.js
+
+      - name: Superset-skip core regression gate
+        run: node tests/superset_skip.test.js
+
+      - name: Release safety controls
+        run: node tests/release_controls.test.js
+
+      - name: Install pinned disposable browser tooling
+        run: |
+          npm install --prefix "$RUNNER_TEMP/tos-browser-deps" --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.62.1
+          node "$RUNNER_TEMP/tos-browser-deps/node_modules/playwright/cli.js" install --with-deps chromium
+
+      - name: Original, G3/G4.1, M5 and superset-skip browser gates
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/tos-browser-deps/node_modules/playwright
+        run: |
+          node tests/storage_g3_browser.test.js --original-suite
+          node tests/storage_g3_browser.test.js
+          node tests/m5_load_browser.test.js
+          node tests/m5_scroll_browser.test.js
+          node tests/superset_skip_browser.test.js
+
       - name: Build deploy artifact
         run: |
           rm -rf _site
@@ -59,21 +113,66 @@ jobs:
           cp training-os-loop-v1-512.png _site/
           cp training-os-loop-v1-1024.png _site/
 
-      - name: Configure Pages
-        uses: actions/configure-pages@v6
-
       - name: Upload Pages artifact
+        id: upload
         uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
+      - name: Verify the actual Pages archive against the source SHA
+        id: archive
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,subprocess,tarfile
+          from pathlib import Path
+          source=os.environ['GITHUB_SHA']
+          names=('index.html','version.json','manifest.webmanifest','training-os-loop-v1-180.png','training-os-loop-v1-192.png','training-os-loop-v1-512.png','training-os-loop-v1-1024.png')
+          expected={n:subprocess.check_output(['git','show',source+':'+n]) for n in names}
+          archive=Path(os.environ['RUNNER_TEMP'])/'artifact.tar'
+          with tarfile.open(archive) as handle:
+              files={}
+              for member in handle.getmembers():
+                  name=member.name.removeprefix('./')
+                  if member.isdir() and name in ('','.'):continue
+                  assert member.isfile() and name in expected and name not in files,'Unexpected archive entry'
+                  files[name]=handle.extractfile(member).read()
+          assert files==expected,'Archive differs from the validated source'
+          digest=hashlib.sha256(archive.read_bytes()).hexdigest()
+          with open(os.environ['GITHUB_OUTPUT'],'a') as output:output.write('sha256='+digest+'\n')
+          print(json.dumps({'sourceSha':source,'artifactSHA256':digest,'files':{n:hashlib.sha256(d).hexdigest() for n,d in sorted(files.items())}},sort_keys=True))
+          PY
+
   deploy:
     needs: validate
+    if: >-
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == 'refs/heads/main' &&
+      inputs.publish == true &&
+      inputs.approved_sha == github.sha &&
+      needs.validate.result == 'success' &&
+      needs.validate.outputs.source_sha == inputs.approved_sha &&
+      needs.validate.outputs.artifact_sha256 != '' &&
+      needs.validate.outputs.artifact_id != ''
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Reject a stale approval after the environment hold
+        env:
+          APPROVED_SHA: ${{ inputs.approved_sha }}
+        run: |
+          CURRENT_MAIN=$(git ls-remote https://github.com/fevaldez/training-os.git refs/heads/main | cut -f1)
+          test "$CURRENT_MAIN" = "$APPROVED_SHA"
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v6
+
       - name: Deploy GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5

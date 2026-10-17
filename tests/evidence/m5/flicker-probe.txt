@@ -1,0 +1,3 @@
+M5_BROWSER 145.0.7632.6
+M5_02_BOUNDED_RENDER_TRACE [{"label":"before","top":70,"recoveryHidden":true,"scroll":0},{"label":"sync-after-tap","top":284,"recoveryHidden":false,"scroll":0},{"label":"next-frame","top":70,"recoveryHidden":true,"scroll":0},{"label":"verified-save","top":70,"recoveryHidden":true,"scroll":0}]
+M5_02 UNKNOWN: DOM/layout transition is observable; no physical iPhone screen-wide flicker, paint trace or matched device recording established. Runtime presentation/blur/persistence unchanged.

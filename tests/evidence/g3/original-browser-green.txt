@@ -1,0 +1,10 @@
+PASS | imported history renders as literal text
+PASS | quota failure stays on Today with intent, prior history, visible Retry and Export
+PASS | visible Retry appends once, verifies cleanup and navigates to Progress
+PASS | disposable Chromium emits a parseable download with matching history/unit
+PASS | interrupted multi-key import keeps journal and never announces success
+PASS | failed import can download exact raw recovery journal
+PASS | startup automatically rolls interrupted import back to exact prior raw bytes
+PASS | verified import restores timers, drafts, unit and unknown fields
+PASS | real same-origin Web Locks serialize two tabs and reject stale active writes
+TOTAL 9/9 PASS | Chromium 390×844; synthetic context only; physical iPhone remains unverified

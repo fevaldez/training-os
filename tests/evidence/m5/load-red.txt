@@ -1,0 +1,24 @@
+M5_LOAD_OBSERVATION {"raw":"","indexBefore":0,"indexAfter":1,"weightKg":0,"completionWrites":1}
+FAIL | M5_LOAD reject "" without session/save mutation | Expected values to be strictly equal:
+M5_LOAD_OBSERVATION {"raw":"0","indexBefore":0,"indexAfter":1,"weightKg":0,"completionWrites":1}
+FAIL | M5_LOAD reject "0" without session/save mutation | Expected values to be strictly equal:
+M5_LOAD_OBSERVATION {"raw":"-1","indexBefore":0,"indexAfter":1,"weightKg":-1,"completionWrites":0}
+FAIL | M5_LOAD reject "-1" without session/save mutation | Expected values to be strictly equal:
+M5_LOAD_OBSERVATION {"raw":"bad","indexBefore":0,"indexAfter":1,"weightKg":0,"completionWrites":1}
+FAIL | M5_LOAD reject "bad" without session/save mutation | Expected values to be strictly equal:
+M5_LOAD_OBSERVATION {"raw":"20junk","indexBefore":0,"indexAfter":1,"weightKg":20,"completionWrites":1}
+FAIL | M5_LOAD reject "20junk" without session/save mutation | Expected values to be strictly equal:
+M5_LOAD_OBSERVATION {"raw":"NaN","indexBefore":0,"indexAfter":1,"weightKg":0,"completionWrites":1}
+FAIL | M5_LOAD reject "NaN" without session/save mutation | Expected values to be strictly equal:
+M5_LOAD_OBSERVATION {"raw":"Infinity","indexBefore":0,"indexAfter":1,"weightKg":null,"completionWrites":0}
+FAIL | M5_LOAD reject "Infinity" without session/save mutation | Expected values to be strictly equal:
+M5_LOAD_OBSERVATION {"raw":"1e309","indexBefore":0,"indexAfter":1,"weightKg":null,"completionWrites":0}
+FAIL | M5_LOAD reject "1e309" without session/save mutation | Expected values to be strictly equal:
+FAIL | M5_LOAD cleared positive stays unconfirmed through reps/RIR/unit rerender | Expected values to be strictly equal:
+FAIL | M5_LOAD old zero requires explicit choice and explicit zero remains numeric | Expected values to be strictly equal:
+PASS | M5_LOAD positive kg 20.5 is saved accurately
+PASS | M5_LOAD positive lb 10 is saved accurately
+FAIL | M5_LOAD positive kg 20,5 is saved accurately | The expression evaluated to a falsy value:
+FAIL | M5_LOAD reps and RIR edits never replace prior valid load with coerced zero | Expected values to be strictly equal:
+FAIL | M5_LOAD literal numeric zero never implicitly confirms on render | Expected values to be strictly equal:
+M5_LOAD_TOTAL 2/15 PASS | HTML_SHA256 cc3284cb5eaf41778e0f8fcda86352cf85ab1d41b816d57f7e9e0ad7efbad5b3

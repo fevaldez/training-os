@@ -2,8 +2,8 @@
 <html lang="es"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#f5f5f7"><title>Training OS · FV Hybrid</title>
-<link rel="apple-touch-icon" sizes="180x180" href="./training-os-loop-v1-180.png?v=4.0.0-rc6.2.1">
-<link rel="manifest" href="./manifest.webmanifest?v=4.0.0-rc6.2.1">
+<link rel="apple-touch-icon" sizes="180x180" href="./training-os-loop-v1-180.png?v=4.0.0-rc6.3.1">
+<link rel="manifest" href="./manifest.webmanifest?v=4.0.0-rc6.3.1">
 <meta name="application-name" content="Training OS">
 <meta name="apple-mobile-web-app-title" content="Training OS">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -106,8 +106,9 @@ button:disabled{opacity:.45}
 </head><body>
 <div id="fatalBoot" hidden style="position:fixed;z-index:9999;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top));background:#fff1f0;color:#b42318;border:1px solid #f3b4ae;border-radius:14px;padding:12px 14px;font:600 14px -apple-system,BlinkMacSystemFont,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.12)"></div>
 <div class="app">
+<div class="card" id="storageRecovery" role="status" aria-live="polite"></div>
 <section class="page active" id="today">
-<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><div class="eyebrow">T·OS · 4.0.0-rc6.2.1 · Continuous Loop</div><h1>Hoy</h1><p class="sub" id="todayDate"></p></div><div class="unit"><button data-unit="kg">kg</button><button data-unit="lb">lb</button></div></div>
+<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><div class="eyebrow">T·OS · 4.0.0-rc6.3.1 · Continuous Loop</div><h1>Hoy</h1><p class="sub" id="todayDate"></p></div><div class="unit"><button data-unit="kg">kg</button><button data-unit="lb">lb</button></div></div>
 <div class="card resume" id="resumeCard"><div class="eyebrow">Sesión activa</div><h2 id="resumeTitle"></h2><p class="small" id="resumeMeta"></p><button class="btn primary" id="resumeBtn">Reanudar</button><div class="actionrow"><button class="btn secondary" id="finishEarlyBtn">Finalizar y guardar</button><button class="btn danger" id="discardSessionBtn">Descartar sesión</button></div></div>
 <div class="card" id="todayDecisionCard"><div id="todayDecision"></div></div>
 <div class="card" id="weekSnapshotCard"><div id="weekSnapshot"></div></div>
@@ -116,7 +117,7 @@ button:disabled{opacity:.45}
 <section class="page" id="progress"><div class="eyebrow">Data</div><h1>Progreso</h1><div class="card"><span class="small">Storage</span><div class="health" id="storageHealth">—</div></div><div class="card"><h2 id="stats">0 sesiones</h2><p class="small" id="statsSub"></p></div><div class="card"><h2>Diagnóstico</h2><p class="small" id="diagSummary">Sin eventos.</p></div><div class="card"><h2>Backup</h2><button class="btn secondary" id="exportBtn">Exportar JSON</button> <label class="btn ghost" style="display:inline-flex;align-items:center;cursor:pointer">Importar<input type="file" id="importFile" accept=".json,application/json" hidden></label></div><div class="card"><h2>Historial</h2><div id="history"></div></div></section>
 </div>
 <nav class="bottom"><button class="active" data-page="today">Hoy</button><button data-page="program">Programa</button><button data-page="progress">Progreso</button></nav>
-<div class="overlay" id="sessionOverlay"><div class="session"><div class="sessionbar"><button class="circle" id="closeSession">‹</button><div class="meta"><div class="title" id="sessionTitle"></div><div class="progress" id="sessionProgress"></div></div><div class="unit"><button data-unit="kg">kg</button><button data-unit="lb">lb</button></div></div><div id="sessionStage"></div></div></div>
+<div class="overlay" id="sessionOverlay"><div class="session"><div class="sessionbar"><button class="circle" id="closeSession">‹</button><div class="meta"><div class="title" id="sessionTitle"></div><div class="progress" id="sessionProgress"></div></div><div class="unit"><button data-unit="kg">kg</button><button data-unit="lb">lb</button></div></div><div class="card" id="completionRecovery" role="status" aria-live="polite" hidden></div><div id="sessionStage"></div></div></div>
 <div class="picker" id="workoutPicker" aria-hidden="true"><div class="picker-sheet" role="dialog" aria-modal="true" aria-labelledby="pickerTitle"><div class="picker-handle"></div><div class="picker-head"><div><div class="eyebrow">Tú decides</div><div class="picker-title" id="pickerTitle">Elige tu sesión</div></div><button class="circle" id="closePicker" aria-label="Cerrar">×</button></div><p class="small">La recomendación guía la rotación; nunca bloquea otra rutina.</p><div id="workoutOptions"></div></div></div>
 <div class="picker" id="plannerSheet" aria-hidden="true"><div class="picker-sheet planner-sheet" role="dialog" aria-modal="true" aria-labelledby="plannerTitle"><div class="picker-handle"></div><div class="picker-head"><div><div class="eyebrow">Plan de hoy</div><div class="picker-title" id="plannerTitle">Confirma tu sesión</div></div><button class="circle" id="closePlanner" aria-label="Cerrar">×</button></div><p class="small" id="plannerSubtitle"></p><div class="preset-row" id="plannerPresets"></div><div class="planner-summary" id="plannerSummary"></div><div id="plannerExercises"></div><p class="planner-note">Los cambios aplican solo a hoy; tu Programa base no se modifica.</p><button class="cta" id="startPlannedSession">Empezar plan</button></div></div>
 <div class="picker" id="skipSheet" aria-hidden="true"><div class="picker-sheet compact-sheet" role="dialog" aria-modal="true" aria-labelledby="skipTitle"><div class="picker-handle"></div><div class="picker-head"><div><div class="eyebrow">Modificar sesión</div><div class="picker-title" id="skipTitle">¿Qué quieres omitir?</div></div><button class="circle" id="closeSkipSheet" aria-label="Cerrar">×</button></div><button class="sheet-action" id="skipOneSet">Omitir este set<span>Continúa con el siguiente set.</span></button><button class="sheet-action danger-action" id="skipExercise">Omitir resto del ejercicio<span>Útil si el equipo está ocupado o necesitas recortar la sesión.</span></button><button class="sheet-cancel" id="cancelSkip">Cancelar</button></div></div>
@@ -945,12 +946,12 @@ function buildSequence(workout,includedIndices=null) {
   }
   return seq;
 }
-function nextTransition(sequence, completedIndex, workout) {
+function nextTransition(sequence, completedIndex, workout, logs={}) {
   const current = sequence[completedIndex];
-  const next = sequence[completedIndex+1] || null;
+  const next = sequence.slice(completedIndex+1).find(s=>!logs[`${s.ei}_${s.si}`]?.skipped) || null;
   if (!next) return {type:'finish', next:null, restSec:0};
   if (current?.superset && current.position === 'first' &&
-      next.superset && next.position === 'second' && current.si === next.si) {
+      next.superset && next.position === 'second' && current.si === next.si && next.ei === current.partner && next.partner === current.ei) {
     return {type:'superset-switch', next, restSec:0};
   }
   const completedExercise = workout.exercises[current.ei];
@@ -1156,33 +1157,336 @@ function recommendedWorkoutKeyFromHistory(h=[]){
 }
 
 if(typeof location!=='undefined'&&location.protocol==='http:'&&location.hostname.endsWith('github.io')){location.replace('https://'+location.host+location.pathname+location.search+location.hash)}
-const RELEASE='4.0.0-rc6.2.1';
+const RELEASE='4.0.0-rc6.3.1';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
-const store={ok:false,test(){try{localStorage.setItem('__fv4test','1');localStorage.removeItem('__fv4test');this.ok=true}catch(e){this.ok=false}return this.ok},get(k,d=null){if(!this.ok)return d;try{const x=localStorage.getItem(k);return x===null?d:JSON.parse(x)}catch(e){return d}},set(k,v){if(!this.ok)return false;try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}},del(k){if(this.ok)try{localStorage.removeItem(k)}catch(e){}}};store.test();
-let unit=store.get('fv4.unit',null)||store.get('tos_v3_display_unit','kg')||'kg',wake=null,ticker=null,lastAlarmAt=0,skipContext=null;
+// DATA DURABILITY CORE START — extracted verbatim by the synthetic failure suite.
+function createDurability(storage, locks, workouts, options={}){
+ const H='fv4.history',A='fv4.active',U='fv4.unit',J='fv4.recovery.v1',M='fv4.migrated',E='fv4.backupExtras.v1',B='fv4.recovery.backup.v1',O='fv4.recovery.outcome.v1';
+ const keys=[H,A,U,M,E],copy=x=>{jsonSafe(x);return JSON.parse(JSON.stringify(x))},obj=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
+ const fail=(status,key)=>({ok:false,status,key});
+ let blocked=false,observedActive,observedUnit,memoryJournal=null;
+ const own=(x,k)=>Object.prototype.hasOwnProperty.call(x,k);
+ function jsonSafe(x,depth=0){
+  if(depth>80)throw Error('Estructura demasiado profunda');
+  if(typeof x==='number'&&!Number.isFinite(x))throw Error('Número no finito');
+  if(x===undefined||typeof x==='function'||typeof x==='symbol'||typeof x==='bigint')throw Error('Valor no JSON');
+  if(x&&typeof x==='object')for(const k of Object.keys(x))jsonSafe(x[k],depth+1);
+ }
+ const validId=x=>(typeof x==='string'&&x.length>0&&x.length<=200)||(Number.isSafeInteger(x)&&x>=0);
+ const date=x=>typeof x==='string'&&Number.isFinite(Date.parse(x));
+ const number=(x,min=0,max=Number.MAX_SAFE_INTEGER)=>typeof x==='number'&&Number.isFinite(x)&&x>=min&&x<=max;
+ // Historical snapshots use bounds from v3 / prior FV recipes, never today alone.
+ const historicalSets={"chest":[4,3,4,4,4,3,1],"back":[4,4,3,3,4,3,2,2],"legs":[5,3,3,4,2,4,4,3,3],"shoulders":[4,4,3,3,3,2,2],"arms":[4,4,3,3,3,3,2,2,1]};
+ function plan(p,k,historical=false){
+  if(!obj(p)||(own(p,'preset')&&typeof p.preset!=='string'))return false;
+  const n=historical?Math.max(workouts[k].exercises.length,historicalSets[k]?.length||0):workouts[k].exercises.length;
+  for(const key of ['includedExerciseIndices','excludedExerciseIndices'])if(own(p,key)&&(!Array.isArray(p[key])||new Set(p[key]).size!==p[key].length||!p[key].every(i=>Number.isInteger(i)&&i>=0&&i<n)))return false;
+  if(p.includedExerciseIndices&&p.excludedExerciseIndices&&p.includedExerciseIndices.some(i=>p.excludedExerciseIndices.includes(i)))return false;
+  return ['fullSets','confirmedSets','completedSets','skippedSets','estimatedMin','executionAdherencePct'].every(key=>!own(p,key)||number(p[key]));
+ }
+ function set(s,k,historical=false,legacyRir=false){
+  if(!obj(s))return false;
+  const w=workouts[k],counts=historical?Array.from({length:Math.max(w.exercises.length,historicalSets[k]?.length||0)},(_,i)=>Math.max(w.exercises[i]?.sets||0,historicalSets[k]?.[i]||0)):w.exercises.map(e=>e.sets);
+  if(own(s,'exerciseIndex')&&(!Number.isInteger(s.exerciseIndex)||s.exerciseIndex<0||!counts[s.exerciseIndex]))return false;
+  if(own(s,'setIndex')&&(!Number.isInteger(s.setIndex)||s.setIndex<0||(own(s,'exerciseIndex')&&s.setIndex>=counts[s.exerciseIndex])))return false;
+  if(own(s,'exerciseName')&&typeof s.exerciseName!=='string')return false;
+  if(!own(s,'exerciseName')&&!own(s,'exerciseIndex'))return false;
+  if(['weightKg','kg','reps','restSec'].some(key=>own(s,key)&&!number(s[key])))return false;
+  if(own(s,'rir')&&s.rir!==null&&!number(s.rir,0,10)&&!(legacyRir&&typeof s.rir==='string'&&/^(?:|\d+(?:\.\d+)?)$/.test(s.rir)&&(s.rir===''||number(Number(s.rir),0,10))))return false;
+  if(['done','skipped'].some(key=>own(s,key)&&typeof s[key]!=='boolean'))return false;
+  return !(s.done&&s.skipped);
+ }
+ function record(r){
+  const historical=r?.schema!==5||r?.release!==RELEASE,legacyRir=r?.schema===3||r?.schema===4||r?.schemaVersion===3||r?.release==='3.x-migrated';
+  return obj(r)&&validId(r.id)&&own(workouts,r.workoutKey)&&(!own(r,'schema')||[3,4,5].includes(r.schema))&&typeof r.workoutName==='string'&&date(r.startedAt)&&date(r.endedAt)&&Date.parse(r.endedAt)>=Date.parse(r.startedAt)&&number(r.durationSec)&&Array.isArray(r.sets)&&r.sets.every(s=>set(s,r.workoutKey,historical,legacyRir))&&(!own(r,'plan')||plan(r.plan,r.workoutKey,historical));
+ }
+ function validHistory(h){return Array.isArray(h)&&h.every(record)&&new Set(h.map(r=>String(r.id))).size===h.length}
+ function validActive(a){
+  if(a===null)return true;
+  if(!obj(a)||!validId(a.id)||!own(workouts,a.workoutKey)||(![4,5,6].includes(a.schema)&&own(a,'schema'))||!date(a.startedAt)||!['warmup','set','rest','transition','cooldown'].includes(a.state)||!Number.isInteger(a.index)||a.index<0||!number(a.endsAt)||!number(a.restOriginal)||!obj(a.logs)||!obj(a.drafts))return false;
+  if(own(a,'plan')&&!plan(a.plan,a.workoutKey))return false;
+  const seq=buildSequence(workouts[a.workoutKey],a.plan?.includedExerciseIndices??null);
+  if(a.index>seq.length||(a.state==='transition'&&a.index===seq.length))return false;
+  for(const [key,s] of Object.entries(a.logs)){
+   if(!set(s,a.workoutKey)||key!==`${s.exerciseIndex}_${s.setIndex}`||!seq.some(i=>i.ei===s.exerciseIndex&&i.si===s.setIndex))return false;
+  }
+  for(const [key,d] of Object.entries(a.drafts)){
+   if(!obj(d)||(own(d,'reason')&&typeof d.reason!=='string')||!seq.some(i=>key===`${i.ei}_${i.si}`)||['weightKg','reps'].some(k=>own(d,k)&&!number(d[k]))||(own(d,'rir')&&d.rir!==null&&!number(d.rir,0,10)))return false;
+  }
+  if(a.last!==null&&a.last!==undefined&&!set(a.last,a.workoutKey))return false;
+  if(own(a,'completionIntent')){const i=a.completionIntent;if(!obj(i)||i.id!==a.id||!record(i.entry)||i.entry.id!==a.id||i.entry.workoutKey!==a.workoutKey||i.endedAt!==i.entry.endedAt||typeof i.digest!=='string'||!/^[a-f0-9]{64}$/.test(i.digest))return false}
+  return true;
+ }
+ const validators={[H]:validHistory,[A]:validActive,[U]:u=>u==='kg'||u==='lb',[M]:x=>x===true,[E]:obj,[B]:backupValid,[O]:outcomeValid};
+ function raw(k){try{return {ok:true,status:'raw',raw:storage.getItem(k)}}catch(_){return fail('unreadable',k)}}
+ function read(k,validate=validators[k]||(()=>true)){
+  const r=raw(k);if(!r.ok)return r;if(r.raw===null)return {...r,status:'absent',value:null};
+  try{const value=JSON.parse(r.raw);jsonSafe(value);if(!validate(value))return {...fail('malformed',k),raw:r.raw};return {...r,status:'verified',value}}catch(_){return {...fail('malformed',k),raw:r.raw}}
+ }
+ function writeRaw(k,snapshot,validate=validators[k]||(()=>true),exactOnly=false){
+  if(snapshot!==null&&!exactOnly){try{const x=JSON.parse(snapshot);jsonSafe(x);if(!validate(x))return fail('malformed',k)}catch(_){return fail('malformed',k)}}
+  try{if(snapshot===null)storage.removeItem(k);else storage.setItem(k,snapshot)}catch(_){return fail('write-failed',k)}
+  const r=raw(k);if(!r.ok||r.raw!==snapshot)return fail('read-back-failed',k);
+  return {ok:true,status:'verified',raw:snapshot};
+ }
+ function write(k,v){let s;try{jsonSafe(v);s=JSON.stringify(v)}catch(_){return fail('serialization-failed',k)}return writeRaw(k,s)}
+ function canonical(x){if(Array.isArray(x))return '['+x.map(canonical).join(',')+']';if(obj(x))return '{'+Object.keys(x).sort().map(k=>JSON.stringify(k)+':'+canonical(x[k])).join(',')+'}';return JSON.stringify(x)}
+ async function digest(x){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(canonical(x)));return Array.from(new Uint8Array(b),v=>v.toString(16).padStart(2,'0')).join('')}
+ async function locked(fn){
+  if(!locks?.request)return fail('lock-unavailable');
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),options.lockTimeout??4000);
+  try{return await locks.request('training-os-data-v1',{mode:'exclusive',signal:controller.signal},async()=>{clearTimeout(timer);return await fn()})}catch(e){return fail(e.name==='AbortError'?'lock-timeout':'interrupted')}finally{clearTimeout(timer)}
+ }
+ function backupValid(b){return obj(b)&&b.schema===1&&typeof b.id==='string'&&/^[a-f0-9]{64}$/.test(b.id)&&typeof b.digest==='string'&&/^[a-f0-9]{64}$/.test(b.digest)&&journalValid(b.journal)}
+ function outcomeValid(o){return obj(o)&&o.schema===1&&typeof o.id==='string'&&/^[a-f0-9]{64}$/.test(o.id)&&typeof o.digest==='string'&&/^[a-f0-9]{64}$/.test(o.digest)&&o.status==='committed'}
+ function gate(){
+  const j=raw(J);if(!j.ok)return j;if(j.raw!==null){blocked=true;return fail('recovery-required',J)}
+  const b=read(B);if(!b.ok)return b;
+  if(b.status!=='absent'){const o=read(O);if(!o.ok)return o;if(o.status==='absent'||o.value.id!==b.value.id||o.value.digest!==b.value.digest){blocked=true;return fail('recovery-required',B)}}
+  if(blocked)return fail('recovery-required',J);return {ok:true};
+ }
+ function observe(){const a=raw(A),u=raw(U);if(a.ok)observedActive=a.raw;if(u.ok)observedUnit=u.raw}
+ function activeMatches(){const r=raw(A);return r.ok&&r.raw===observedActive}
+ // Recovery does not refresh a write token. The UI must bind the matching snapshot explicitly.
+ async function bindState(a,u){return locked(async()=>{
+  const g=gate();if(!g.ok)return g;const ar=read(A),ur=read(U);if(!ar.ok)return ar;if(!ur.ok)return ur;
+  if(canonical(a)!==canonical(ar.value))return fail('active-conflict',A);
+  if(u!==(ur.status==='absent'?'kg':ur.value))return fail('unit-conflict',U);
+  observedActive=ar.raw;observedUnit=ur.raw;return {ok:true,status:'verified',raw:ar.raw};
+ })}
+ function journalValid(j){
+  return obj(j)&&j.schema===1&&['import','migration'].includes(j.kind)&&obj(j.before)&&obj(j.after)&&Object.keys(j.before).length===keys.length&&Object.keys(j.after).length===keys.length&&keys.every(k=>own(j.before,k)&&own(j.after,k)&&[j.before[k],j.after[k]].every(v=>v===null||typeof v==='string'));
+ }
+ async function stage(name){if(options.stage)await options.stage(name)}
+ async function backupFor(journal){const id=Array.from(crypto.getRandomValues(new Uint8Array(32)),v=>v.toString(16).padStart(2,'0')).join('');return {schema:1,id,digest:await digest(journal),journal}}
+ async function replace(after,kind){
+  const before={};for(const k of keys){const r=raw(k);if(!r.ok)return r;before[k]=r.raw}
+  const journal={schema:1,kind,before,after:{...before,...after}};memoryJournal=journal;
+  const previous=raw(B);if(!previous.ok)return previous;
+  const backup=await backupFor(journal),b=write(B,backup);if(!b.ok){blocked=true;return b}
+  blocked=true;await stage('backup');
+  const j=write(J,journal);if(!j.ok){if(j.status==='write-failed')writeRaw(B,previous.raw,backupValid,true);return j}
+  await stage('journal');
+  for(const k of keys){const r=writeRaw(k,journal.after[k],validators[k],journal.after[k]===before[k]);if(!r.ok)return r;await stage(k)}
+  for(const k of keys){const r=raw(k);if(!r.ok||r.raw!==journal.after[k])return fail('read-back-failed',k)}
+  await stage('before-journal-removal');const r=writeRaw(J,null);if(!r.ok){write(J,journal);return r}
+  await stage('journal-removed');
+  // The immutable independent before-image survives uncertain journal removal and process death.
+  const outcome=write(O,{schema:1,id:backup.id,digest:backup.digest,status:'committed'});if(!outcome.ok)return outcome;
+  await stage('outcome');
+  memoryJournal=null;blocked=false;return {ok:true,status:'verified'};
+ }
+ async function recover(){return locked(async()=>{
+  let j=read(J,journalValid),b=read(B);if(!j.ok){blocked=true;return j}if(!b.ok){blocked=true;return b}
+  const o=read(O);if(!o.ok){blocked=true;return o}
+  if(b.status!=='absent'&&await digest(b.value.journal)!==b.value.digest){blocked=true;return fail('recovery-conflict',B)}
+  // Retired RAM journals are diagnostic only; absence of shared evidence never authorizes resurrection.
+  if(j.status==='absent'&&b.status==='absent'){blocked=false;return {ok:true,status:'verified'}}
+  if(j.status==='absent'&&b.status!=='absent'&&o.status!=='absent'&&o.value.id===b.value.id&&o.value.digest===b.value.digest){memoryJournal=null;blocked=false;return {ok:true,status:'committed'}}
+  if(b.status!=='absent'){
+   if(j.status!=='absent'&&canonical(j.value)!==canonical(b.value.journal))return fail('recovery-conflict',J);
+   j={ok:true,value:b.value.journal,status:'verified'};
+  }
+  memoryJournal=j.value;blocked=true;
+  // No durable commit outcome: restore the exact before-image, never a RAM-only promise.
+  for(const k of keys){const r=raw(k);if(!r.ok)return r;if(r.raw!==j.value.before[k]&&r.raw!==j.value.after[k])return fail('recovery-conflict',k)}
+  // Check persisted evidence and every conflict under the lock BEFORE creating a recovery backup.
+  if(b.status==='absent'){const retained=write(B,await backupFor(j.value));if(!retained.ok)return retained}
+  for(const k of keys){const r=writeRaw(k,j.value.before[k],()=>true,true);if(!r.ok)return r;await stage('rollback:'+k)}
+  for(const k of keys){const r=raw(k);if(!r.ok||r.raw!==j.value.before[k])return fail('read-back-failed',k)}
+  const r=writeRaw(J,null);if(!r.ok){write(J,j.value);return r}
+  // Cleanup after rollback is safe: the full original is already back in the destination keys.
+  for(const k of [B,O]){const cleaned=writeRaw(k,null);if(!cleaned.ok)return cleaned;await stage('rollback-cleanup:'+k)}
+  memoryJournal=null;blocked=false;return {ok:true,status:'restored'};
+ })}
+ async function migrate(){return locked(async()=>{
+  const g=gate();if(!g.ok)return g;
+  const marker=read(M);if(!marker.ok)return marker;if(marker.status==='verified')return {ok:true,status:'verified'}
+  const h=read(H),u=read(U);if(!h.ok)return h;if(!u.ok)return u;
+  const after={};
+  if(h.status==='absent'){
+   const old=read('tos_v3_history',Array.isArray);if(!old.ok)return old;
+   if(old.status==='verified'&&old.value.length){
+    if(!old.value.every(h=>obj(h)&&(!own(h,'sets')||Array.isArray(h.sets))&&(h.sets||[]).every(obj)))return fail('malformed','tos_v3_history');
+    const mapped=old.value.map(h=>({...h,release:h.release||'3.x-migrated',id:h.id,workoutKey:h.workoutKey||h.workout,workoutName:h.workoutName||h.name,startedAt:h.startedAt||h.date,endedAt:h.endedAt||h.date,durationSec:h.durationSec??0,sets:(h.sets||[]).map(s=>({...s,weightKg:s.weightKg??s.kg??0}))}));
+    if(!validHistory(mapped))return fail('malformed','tos_v3_history');after[H]=JSON.stringify(mapped);
+   }
+  }
+  if(u.status==='absent'){const old=read('tos_v3_display_unit',validators[U]);if(!old.ok)return old;after[U]=JSON.stringify(old.status==='absent'?'kg':old.value)}
+  after[M]='true';return replace(after,'migration');
+ })}
+ async function saveActive(a){let snapshot;try{snapshot=copy(a)}catch(_){return fail('serialization-failed',A)}return locked(async()=>{
+  const g=gate();if(!g.ok)return g;
+  const current=read(A);if(!current.ok)return current;
+  const intended=snapshot===null?null:JSON.stringify(snapshot);
+  if(current.raw===intended){observedActive=current.raw;return {ok:true,status:'verified',raw:current.raw}}
+  if(!activeMatches())return fail('active-conflict',A);
+  if(current.value?.completionIntent)return fail('completion-pending',A);
+  const r=snapshot===null?writeRaw(A,null):write(A,snapshot);if(r.ok)observedActive=r.raw;return r;
+ })}
+ async function saveUnit(u){return locked(async()=>{const g=gate();if(!g.ok)return g;const old=read(U);if(!old.ok)return old;if(old.status==='verified'&&old.value===u){observedUnit=old.raw;return {ok:true,status:'verified'}}if(old.raw!==observedUnit)return fail('unit-conflict',U);const r=write(U,u);if(r.ok)observedUnit=r.raw;return r})}
+ async function complete(a,makeEntry){return locked(async()=>{
+  const g=gate();if(!g.ok)return g;
+  const current=read(A);if(!current.ok)return current;
+  // Retries hold the same in-memory intent, even when its first write was unverified.
+  if(!a.completionIntent){
+   if(!activeMatches()||!current.value||current.value.id!==a.id)return fail('active-conflict',A);
+   const entry=copy(makeEntry(a));if(!record(entry))return fail('malformed',A);
+   a.completionIntent={id:a.id,endedAt:entry.endedAt,entry,digest:await digest(entry)};
+  }
+  const i=a.completionIntent;
+  if(!validActive(a)||await digest(i.entry)!==i.digest)return fail('intent-conflict',A);
+  // A removed active is accepted ONLY when this exact frozen intent is already committed.
+  if(current.value===null){const h=read(H);if(!h.ok)return h;const found=h.value?.find(r=>String(r.id)===String(a.id));if(!found||canonical(found)!==canonical(i.entry))return fail('active-conflict',A);return {ok:true,status:'verified'}}
+  if(current.value.id!==a.id)return fail('active-conflict',A);
+  if(current.value.completionIntent){if(canonical(current.value.completionIntent)!==canonical(i))return fail('intent-conflict',A)}
+  else if(!activeMatches())return fail('active-conflict',A);
+  const intent=write(A,a);if(!intent.ok)return intent;observedActive=intent.raw;
+  await stage('intent');
+  const h=read(H);if(!h.ok)return h;
+  const prior=h.status==='absent'?[]:h.value,found=prior.find(r=>String(r.id)===String(a.id));
+  if(found&&canonical(found)!==canonical(i.entry))return fail('history-conflict',H);
+  if(!found){const r=write(H,[...prior,i.entry]);if(!r.ok)return r}
+  await stage('history');
+  // Fresh read confirms prior records plus intended entry, even on interrupted retries.
+  const verified=read(H);if(!verified.ok||canonical(verified.value)!==canonical(found?prior:[...prior,i.entry]))return fail('read-back-failed',H);
+  if(raw(A).raw!==intent.raw)return fail('active-conflict',A);
+  const r=writeRaw(A,null);if(!r.ok)return {...r,saved:true};observedActive=null;
+  return {ok:true,status:'verified'};
+ })}
+ function validateEnvelope(d,activeChoice){
+  try{
+   jsonSafe(d);
+   if(!obj(d)||![4,5,6].includes(d.schema)||!validHistory(d.history)||!validators[U](d.unit))return fail('invalid-import');
+   if(own(d,'active')&&!validActive(d.active))return fail('invalid-import');
+   if(!own(d,'active')&&!['keep','clear'].includes(activeChoice))return fail('active-choice-required');
+   if(d.active){const r=d.history.find(h=>String(h.id)===String(d.active.id));if(r&&(!d.active.completionIntent||canonical(r)!==canonical(d.active.completionIntent.entry)))return fail('invalid-import')}
+   return {ok:true};
+  }catch(_){return fail('invalid-import')}
+ }
+ async function importData(d,choice,expected){
+  const v=validateEnvelope(d,choice);if(!v.ok)return v;const incoming=copy(d);
+  return locked(async()=>{
+   const g=gate();if(!g.ok)return g;
+   // The confirmation is bound to the exact snapshot the user reviewed.
+   if(!expected)return fail('import-review-required');
+   for(const k of [H,A,U,E]){const r=raw(k);if(!r.ok)return r;if(r.raw!==expected[k])return fail('import-review-stale',k)}
+   let targetActive;
+   if(own(incoming,'active'))targetActive=incoming.active;
+   else if(choice==='clear')targetActive=null;
+   else {const a=read(A);if(!a.ok)return a;targetActive=a.value}
+   if(targetActive){
+    const intent=targetActive.completionIntent,found=incoming.history.find(h=>String(h.id)===String(targetActive.id));
+    if(intent&&await digest(intent.entry)!==intent.digest)return fail('invalid-import');
+    if(found&&(!intent||canonical(found)!==canonical(intent.entry)))return fail('invalid-import');
+   }
+   const metadata=Object.fromEntries(Object.entries(incoming).filter(([k])=>!['schema','release','exportedAt','history','active','unit','excludedKeys'].includes(k)));
+   const after={[H]:JSON.stringify(incoming.history),[U]:JSON.stringify(incoming.unit),[E]:JSON.stringify(metadata)};
+   if(own(incoming,'active')||choice==='clear')after[A]=targetActive===null?null:JSON.stringify(targetActive);
+   return replace(after,'import');
+  });
+ }
+ function snapshot(){const values={};for(const k of [H,A,U,E]){const r=raw(k);if(!r.ok)return r;values[k]=r.raw}return {ok:true,values}}
+ async function exportData(memoryActive){return locked(async()=>{
+  const h=read(H),a=read(A),u=read(U),j=raw(J),extras=read(E);
+  if(!h.ok)return h;if(!a.ok)return a;if(!u.ok)return u;if(!j.ok)return j;if(!extras.ok)return extras;if(j.raw!==null)return fail('recovery-required',J);const g=gate();if(!g.ok)return g;
+  if(memoryActive!==undefined&&a.raw!==observedActive&&canonical(memoryActive)!==canonical(a.value))return fail('active-conflict',A);
+  let memory;try{memory=memoryActive===undefined?a.value:copy(memoryActive)}catch(_){return fail('serialization-failed')}
+  const data={...(extras.value||{}),schema:6,release:RELEASE,exportedAt:new Date().toISOString(),history:h.status==='absent'?[]:h.value,active:memory,unit:u.status==='absent'?'kg':u.value,excludedKeys:['fv4.migrated','fv4.todayPreset','fv4.todayAvoid','tos.diag','tos.lastAction','tos.reliability.v1','v3 source keys','fv4.recovery.v1','fv4.recovery.backup.v1','fv4.recovery.outcome.v1']};
+  if(!validateEnvelope(data).ok)return fail('invalid-export');
+  try{jsonSafe(data);return {ok:true,data,text:JSON.stringify(data,null,2)}}catch(_){return fail('serialization-failed')}
+ })}
+ function exportRaw(memoryActive){
+  const values={},errors=[];for(const k of [...keys,J,B,O,'tos_v3_history','tos_v3_display_unit']){const r=raw(k);if(r.ok)values[k]=r.raw;else errors.push({key:k,status:r.status})}
+  try{return {ok:true,text:JSON.stringify({format:'training-os-raw-recovery-v1',values,errors,memoryActive,memoryJournal},null,2)}}catch(_){return fail('serialization-failed')}
+ }
+ observe();
+ return {read,raw,write,writeRaw,saveActive,saveUnit,complete,migrate,recover,bindState,importData,validateEnvelope,exportData,exportRaw,snapshot,digest,canonical,validHistory,validActive,get blocked(){return blocked}};
+}
+function initiateBackup(text,env){
+ let url;
+ try{const blob=new env.Blob([text],{type:'application/json'});url=env.URL.createObjectURL(blob);const a=env.document.createElement('a');a.href=url;a.download='training-os-backup.json';a.click();return {ok:true,status:'download-initiated'}}catch(_){return {ok:false,status:'download-initiation-failed'}}finally{if(url)setTimeout(()=>{try{env.URL.revokeObjectURL(url)}catch(_){}},1000)}
+}
+// DATA DURABILITY CORE END
+const durability=createDurability({getItem:k=>localStorage.getItem(k),setItem:(k,v)=>localStorage.setItem(k,v),removeItem:k=>localStorage.removeItem(k)},navigator.locks,WORKOUTS);
+const persistence={ready:false,busy:false,memory:undefined,message:'Verificando almacenamiento…',failures:{},activeRevision:0,activeSnapshot:undefined};
+// Default reads here are only for optional preferences/diagnostics, never durability decisions.
+const store={ok:true,get(k,d=null){const r=durability.read(k);return r.ok&&r.status!=='absent'?r.value:d},set(k,v){if(['fv4.history','fv4.active','fv4.unit','fv4.migrated','fv4.backupExtras.v1'].includes(k))return false;const r=durability.write(k,v);return r.ok},del(k){return durability.writeRaw(k,null).ok}};
+let unit='kg',wake=null,ticker=null,lastAlarmAt=0,skipContext=null;
 const today=()=>new Intl.DateTimeFormat('es-MX',{weekday:'long',day:'numeric',month:'long'}).format(new Date());
 $('#todayDate').textContent=today();
-
-function legacyMigrate(){
- if(store.get('fv4.migrated',false)) return;
- if(!store.get('fv4.history',null)){
-   const old=store.get('tos_v3_history',[]);
-   if(Array.isArray(old)&&old.length){
-     const mapped=old.map(h=>({release:'3.x-migrated',id:h.id,workoutKey:h.workoutKey||h.workout,workoutName:h.workoutName||h.name,startedAt:h.startedAt||h.date,endedAt:h.endedAt||h.date,durationSec:h.durationSec||0,sets:(h.sets||[]).map(s=>({...s,weightKg:+(s.weightKg??s.kg??0)}))}));
-     store.set('fv4.history',mapped);
-   }
- }
- if(!store.get('fv4.unit',null)) store.set('fv4.unit',unit);
- store.set('fv4.migrated',true);
+const history=()=>{const r=durability.read('fv4.history');return r.ok&&r.status!=='absent'?r.value:[]};
+const active=()=>{if(persistence.memory!==undefined)return persistence.memory;const r=durability.read('fv4.active');return r.ok?r.value:null};
+function persistenceMessage(result,key=result.key||'general',revision=null){
+ if(revision!==null&&revision!==persistence.activeRevision)return;
+ if(!result.ok)persistence.failures[key]=result;
+ else if(key!=='fv4.active'||result.raw===persistence.activeSnapshot)delete persistence.failures[key];
+ const entries=Object.entries(persistence.failures),failure=persistence.failures['fv4.active']||entries[0]?.[1];
+ store.ok=persistence.ready&&!durability.blocked&&!failure;
+ const dirty=!!persistence.failures['fv4.active']&&!persistence.failures['fv4.active'].saved;
+ persistence.message=failure?(failure.saved?'Sesión guardada. Falta verificar la limpieza; reintenta.':`No se pudo verificar el guardado. Conservamos la sesión; reintenta o exporta un respaldo. (${failure.status}${failure.key?' · '+failure.key:''})`):'';
+ if(dirty)persistence.message+=' Cambios solo en memoria: no sobrevivirán a recargar o cerrar hasta guardar o exportar.';
+ renderRecovery();
 }
-legacyMigrate();
-
-const history=()=>store.get('fv4.history',[]);
-const active=()=>store.get('fv4.active',null);
-function saveActive(a){if(a){a.updatedAt=new Date().toISOString();store.set('fv4.active',a)}else store.del('fv4.active');renderHome()}
+function renderRecovery(){
+ const overlay=$('#sessionOverlay'),stage=$('#sessionStage');
+ const top=persistence.ready&&!persistence.busy&&overlay.classList.contains('open')?stage.getBoundingClientRect().top:null;
+ for(const selector of ['#storageRecovery','#completionRecovery']){
+  const box=$(selector);box.replaceChildren();box.hidden=!persistence.message;
+  if(!persistence.message)continue;
+  const p=document.createElement('p');p.textContent=persistence.message;box.append(p);
+  const retry=document.createElement('button');retry.className='btn secondary';retry.textContent='Reintentar';retry.disabled=persistence.busy;retry.onclick=()=>!persistence.ready||durability.blocked?retryPersistence():active()?.completionIntent?finishSession(active()):retryPersistence();box.append(retry);
+  const backup=document.createElement('button');backup.className='btn ghost';backup.textContent='Exportar respaldo';backup.onclick=exportBackup;box.append(backup);
+ }
+ // Keep session content anchored while the recovery card enters/leaves the scroll flow.
+ if(top!==null){const shift=stage.getBoundingClientRect().top-top;if(shift)overlay.scrollTop+=shift}
+ for(const b of $$('[data-unit],#cooldownDone,#cooldownSkip,#finishSession,#finishEarlyBtn,#discardSessionBtn'))b.disabled=persistence.busy||!persistence.ready;
+}
+let pendingActive=Promise.resolve({ok:true});
+function saveActive(a){
+ if(!persistence.ready||persistence.busy||active()?.completionIntent)return Promise.resolve({ok:false,status:'writes-paused'});
+ if(a)a.updatedAt=new Date().toISOString();
+ persistence.memory=a;
+ const snapshot=a===null?null:JSON.parse(JSON.stringify(a)),revision=++persistence.activeRevision;
+ persistence.activeSnapshot=snapshot===null?null:JSON.stringify(snapshot);
+ persistenceMessage({ok:false,status:'pending',key:'fv4.active'},'fv4.active',revision);
+ pendingActive=pendingActive.then(()=>durability.saveActive(snapshot)).then(r=>{persistenceMessage(r,'fv4.active',revision);return r});
+ renderHome();return pendingActive;
+}
+async function retryPersistence(){
+ if(persistence.busy)return;
+ if(!persistence.ready||durability.blocked)return bootPersistence();
+ if(persistence.memory!==undefined&&persistence.failures['fv4.active'])return saveActive(persistence.memory);
+ if(persistence.pendingUnit){await setUnit(persistence.pendingUnit);return}
+ return bootPersistence();
+}
+window.addEventListener('beforeunload',e=>{if(persistence.failures['fv4.active']){e.preventDefault();e.returnValue=''}});
+async function bootPersistence(){
+ if(persistence.busy)return;persistence.busy=true;persistence.ready=false;renderRecovery();
+ try{
+  let r=await durability.recover();if(!r.ok){persistenceMessage(r);return}
+  for(const key of ['fv4.recovery.v1','fv4.recovery.backup.v1','fv4.recovery.outcome.v1'])delete persistence.failures[key];
+  for(const k of ['fv4.history','fv4.active','fv4.unit']){r=durability.read(k);if(!r.ok){persistenceMessage(r);return}}
+  r=await durability.migrate();if(!r.ok){persistenceMessage(r);return}
+  const u=durability.read('fv4.unit'),a=durability.read('fv4.active');if(!u.ok||!a.ok){persistenceMessage(!u.ok?u:a);return}
+  if(persistence.memory!==undefined&&durability.canonical(persistence.memory)!==durability.canonical(a.value)){persistenceMessage({ok:false,status:'active-conflict',key:'fv4.active'});return}
+  const bound=await durability.bindState(a.value,u.value||'kg');if(!bound.ok){persistenceMessage(bound);return}
+  unit=u.value||'kg';persistence.memory=a.value;persistence.ready=true;
+  persistenceMessage(bound,'fv4.active');persistenceMessage({ok:true},'general');
+ }finally{persistence.busy=false;renderHome();renderProgress();renderRecovery()}
+ if(active()?.completionIntent)await finishSession(active());
+}
+const escapeStoredText=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const storedRirLabel=x=>x===null||x===undefined||x===''?'—':typeof x==='number'||typeof x==='string'&&/^\d+(?:\.\d+)?$/.test(x)?String(x):'—';
 const fmtWeight=kg=>{if(!kg)return '';return String(roundDisplay(fromKg(+kg,unit),unit))};
+// Input intent is transient UI state; never migrate or normalize stored zero values.
+const loadInputs=new WeakMap();
+function positiveLoad(raw,u){
+ const text=String(raw).trim();if(!/^(?:\d+(?:[.,]\d*)?|[.,]\d+)$/.test(text))return null;
+ const n=Number(text.replace(',','.')),kg=toKg(n,u);return n>0&&Number.isFinite(kg)&&kg>0?kg:null;
+}
 function renderUnits(){$$('[data-unit]').forEach(b=>b.classList.toggle('active',b.dataset.unit===unit))}
-function setUnit(u){unit=u==='lb'?'lb':'kg';store.set('fv4.unit',unit);renderUnits();if($('#sessionOverlay').classList.contains('open'))renderStage()}
+async function setUnit(u){if(!persistence.ready||persistence.busy)return;persistence.pendingUnit=u;const r=await durability.saveUnit(u);persistenceMessage(r,'fv4.unit');if(!r.ok)return;persistence.pendingUnit=null;unit=u;renderUnits();if($('#sessionOverlay').classList.contains('open'))renderStage()}
 $$('[data-unit]').forEach(b=>b.onclick=()=>setUnit(b.dataset.unit));
 
 function previousWorkout(k){return history().slice().reverse().find(h=>h.workoutKey===k)}
@@ -1313,10 +1617,12 @@ function renderTodayDecision(a=null){
 function renderHome(){
  const a=active();$('#resumeCard').classList.toggle('show',!!a);
  if(a){const w=WORKOUTS[a.workoutKey],c=sessionCompletion(sessionSequence(a,w),a.logs),p=a.plan?.preset||'legacy';$('#resumeTitle').textContent=w.name;$('#resumeMeta').textContent=`${c.done}/${c.total} sets · ${a.state==='rest'?'descanso':a.state==='transition'?'biserie':'set activo'} · plan ${p}`;$('#resumeBtn').onclick=openSession;$('#finishEarlyBtn').onclick=()=>finishEarlySession();$('#discardSessionBtn').onclick=()=>discardSession()}
+ const storedHistory=durability.read('fv4.history');if(!storedHistory.ok){$('#todayDecisionCard').hidden=true;$('#weekSnapshot').textContent='Historial no disponible; no se calculó cobertura. Reintenta o exporta un respaldo.';renderUnits();return}
  renderTodayDecision(a);$('#weekSnapshot').innerHTML=weeklySnapshotMarkup(a);renderUnits();
 }
 $$('.bottom button').forEach(b=>b.onclick=()=>showPage(b.dataset.page));
 function showPage(id){
+ if($('.page.active')?.id===id)return;
  diagnostics('nav:start',{target:id});
  try{
   $$('.page').forEach(p=>p.classList.toggle('active',p.id===id));$$('.bottom button').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
@@ -1338,6 +1644,7 @@ function renderProgramCard(k,a){
  return `<div class="card"><div class="program-card-head"><div><span class="status-chip ${status.cls}">${status.label}</span><div class="eyebrow" style="margin-top:8px">${k==='arms'?'Flex / catch-up':'Core'}</div><h2>${w.name}</h2></div><span class="integrity ${w.sourceConfidence==='alta'?'':'med'}">${w.sourceConfidence} confidence</span></div><div class="program-metrics"><div class="metric"><b>Última</b><span>${days===null?'Sin registro':days===0?'Hoy':days===1?'Ayer':`Hace ${days} días`}</span></div><div class="metric"><b>Semana</b><span>${weekLabel}</span></div><div class="metric"><b>Tiempo</b><span>Short ~${shortMin}m · Full ~${fullMin}m</span></div><div class="metric"><b>Anchor</b><span>${anchor}</span></div></div>${k==='arms'?`<div class="program-coverage"><b>Cobertura directa:</b> ${coverage}. Catch-up no equivale a deuda 1:1.</div>`:''}<div class="routine-review"><b>Rutina:</b> ${routineReviewInsight(k)}<br>Checkpoint, no cambio automático. Modifica antes si hay dolor recurrente, equipo incompatible o ejecución repetidamente truncada.</div><div class="program-card-note">${w.note}</div><div class="program-actions"><button class="btn ${same?'primary':'secondary'}" data-program-plan="${k}" ${a&&!same?'disabled':''}>${same?'Reanudar':a?'Sesión activa':'Planear '+w.short}</button></div></div>`;
 }
 function renderProgram(){
+ const storedHistory=durability.read('fv4.history');if(!storedHistory.ok){$('#programCards').textContent='Historial no disponible; no se calcularon métricas. Reintenta o exporta un respaldo.';return}
  const a=active();
  $('#programCards').innerHTML=`<div class="program-section-title">Core · 4 sesiones base</div>${CORE_ORDER.map(k=>renderProgramCard(k,a)).join('')}<div class="program-section-title">Flex</div>${FLEX_ORDER.map(k=>renderProgramCard(k,a)).join('')}`;
  $$('[data-program-plan]').forEach(b=>b.onclick=()=>{const k=b.dataset.programPlan;diagnostics('program:plan',{workout:k});if(active()){if(active().workoutKey===k)openSession();return}openPlanner(k,k==='arms'&&(armCatchUpNeeds().biceps||armCatchUpNeeds().triceps)?'catchup':'full')});
@@ -1402,7 +1709,7 @@ function renderPlanner(){
 }
 $('#closePlanner').onclick=closePlanner;$('#plannerSheet').onclick=e=>{if(e.target===$('#plannerSheet'))closePlanner()};
 
-function startSession(k,plan=null){if(active())return openSession();saveActive(makeSession(k,plan));openSession()}
+function startSession(k,plan=null){if(!persistence.ready||persistence.busy)return;if(active())return openSession();saveActive(makeSession(k,plan));openSession()}
 async function requestWake(){try{if('wakeLock'in navigator){wake=await navigator.wakeLock.request('screen')}}catch(e){}}
 function releaseWake(){try{wake&&wake.release()}catch(e){}wake=null}
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&active())requestWake();tick()});
@@ -1441,7 +1748,7 @@ function renderCooldown(a,w){
  $('#cooldownDone').onclick=()=>finishSession(a);$('#cooldownSkip').onclick=()=>{diagnostics('cooldown:skipped',{workout:a.workoutKey});finishSession(a)}
 }
 function renderStage(){
- const a=active();if(!a)return;const w=WORKOUTS[a.workoutKey],{seq,item}=current(a),c=sessionCompletion(seq,a.logs);
+ const a=active();if(!a)return;if(a.completionIntent||persistence.busy){$('#sessionStage').textContent='Finalización pendiente de verificar.';renderRecovery();return}const w=WORKOUTS[a.workoutKey],{seq,item}=current(a),c=sessionCompletion(seq,a.logs);
  $('#sessionTitle').textContent=w.name;$('#sessionProgress').textContent=`${c.done}/${c.total} sets · ${c.pct}%`;renderUnits();
  if(a.state==='warmup')return renderWarmup(a,w);
  if(a.state==='cooldown')return renderCooldown(a,w);
@@ -1468,6 +1775,8 @@ document.addEventListener('click',async e=>{const b=e.target.closest?.('[data-ex
 document.addEventListener('click',e=>{const a=e.target.closest?.('a[href]');if(!a)return;const standalone=window.matchMedia?.('(display-mode: standalone)').matches||navigator.standalone===true;if(!standalone)return;let u;try{u=new URL(a.href,location.href)}catch(_){return}const inScope=u.origin===location.origin&&u.pathname.startsWith('/training-os/');if(inScope)return;e.preventDefault();diagnostics('external:block',{url:u.href,text:(a.textContent||'').trim().slice(0,80)});shareExternalUrl(u.href,(a.textContent||'T·OS').trim()).catch(()=>{})},true);
 function renderSet(a,w,seq,item){
  const e=w.exercises[item.ei],d=draftFor(a,item),histPrev=previousSet(a.workoutKey,e.name,item.si),memory=loadMemoryInsight(a.workoutKey,e.name),progress=progressionInsight(a.workoutKey,e.name,e);
+ let input=loadInputs.get(d);if(!input){input={raw:fmtWeight(d.weightKg),unit,zero:false};loadInputs.set(d,input)}
+ if(input.unit!==unit){const kg=positiveLoad(input.raw,input.unit);if(kg!==null)input.raw=String(roundDisplay(fromKg(d.weightKg,unit),unit));input.unit=unit}
  const memoryLine=memory.loadKg?`${fmtWeight(memory.loadKg)} ${unit} · ${memory.sessions} exposición${memory.sessions===1?'':'es'} con carga base${memory.days?` · ${memory.days}d`:''}`:'Sin historial de carga';
  const progressLine=progress.status==='eligible'?'Elegible +2.5% · 2/2 exposiciones al techo con ≥2 RIR. Usa el menor incremento práctico ≤5%.':progress.reason;
  $('#sessionStage').innerHTML=`<div class="stage">
@@ -1476,20 +1785,23 @@ function renderSet(a,w,seq,item){
  ${videoLinkMarkup(e,'Técnica')}
  ${tempoMarkup(e,false)}
  <div class="memory-card"><strong>Memoria de carga</strong><div>${memoryLine}</div><div class="progress-note ${progress.status==='eligible'?'eligible':''}">${progressLine}</div></div>
- ${histPrev?`<div class="previous"><b>Última sesión · set ${item.si+1}:</b> ${fmtWeight(histPrev.weightKg)} ${unit} × ${histPrev.reps} @RIR ${histPrev.rir}<br>${d.reason}</div>`:`<div class="previous">${d.reason}</div>`}
- <div class="control"><label>Peso · ${unit}</label><div class="stepper"><button id="wMinus">−5</button><input id="wInput" inputmode="decimal" value="${fmtWeight(d.weightKg)}" placeholder="—"><button id="wPlus">+5</button></div><div class="quickstep"><button data-w="-10">−10</button><button data-w="10">+10</button></div></div>
+ ${histPrev?`<div class="previous"><b>Última sesión · set ${item.si+1}:</b> ${fmtWeight(histPrev.weightKg)} ${unit} × ${histPrev.reps} @RIR ${storedRirLabel(histPrev.rir)}<br>${escapeStoredText(d.reason)}</div>`:`<div class="previous">${escapeStoredText(d.reason)}</div>`}
+ <div class="control"><label for="wInput">Peso · ${unit}</label><div class="stepper"><button id="wMinus">−5</button><input id="wInput" inputmode="decimal" value="${escapeStoredText(input.raw)}" placeholder="—" aria-describedby="weightError" aria-invalid="false"><button id="wPlus">+5</button></div><div class="quickstep"><button data-w="-10">−10</button><button data-w="10">+10</button><button id="wZero" aria-pressed="${input.zero}">Sin carga externa (0 ${unit})</button></div><p id="weightError" class="small" role="alert" hidden></p></div>
  <div class="control"><label>Repeticiones</label><div class="stepper"><button id="rMinus">−1</button><input id="rInput" inputmode="numeric" value="${d.reps||''}" placeholder="${parseRepRange(e.reps).min||'—'}"><button id="rPlus">+1</button></div></div>
  <div class="control"><label>RIR real</label><div class="rir">${[0,1,2,3].map(v=>`<button data-rir="${v}" class="${Number(d.rir)===v?'active':''}">${v===3?'3+':v}</button>`).join('')}</div></div>
  ${e.alt?`<div class="alt-note"><b>Si está ocupado / no puedes hacerlo:</b> ${e.alt}. Si cambias variante, usa carga baseline; no asumas equivalencia 1:1.</div>`:''}<div class="tip ${a.workoutKey==='legs'||a.workoutKey==='shoulders'?'guard':''}"><strong>Pro tip 1%</strong><br>${e.tip}</div>
  <button class="cta" id="completeSet">Completar set</button><button class="btn secondary" id="skipAction" style="width:100%;margin-top:8px">Omitir…</button>
  ${nextPreviewMarkup(w,seq,a.index)}</div>`;
- const sync=()=>{d.weightKg=toKg(parseFloat($('#wInput').value)||0,unit);d.reps=parseInt($('#rInput').value)||0;saveDraft(a,item,d)};
- $('#wInput').oninput=sync;$('#rInput').oninput=sync;
- const bump=x=>{$('#wInput').value=Math.max(0,(parseFloat($('#wInput').value)||0)+x);sync()};
+ const weight=$('#wInput'),error=$('#weightError');
+ const syncWeight=(zero=false)=>{input.raw=weight.value;input.unit=unit;input.zero=zero;$('#wZero').setAttribute('aria-pressed',String(zero));error.hidden=true;error.textContent='';weight.setAttribute('aria-invalid','false');const kg=zero?0:positiveLoad(input.raw,unit);if(kg!==null){d.weightKg=kg;saveDraft(a,item,d)}};
+ const syncReps=()=>{d.reps=parseInt($('#rInput').value)||0;saveDraft(a,item,d)};
+ weight.oninput=()=>syncWeight();$('#rInput').oninput=syncReps;
+ $('#wZero').onclick=()=>{weight.value='0';syncWeight(true)};
+ const bump=x=>{const n=positiveLoad(weight.value,unit)===null?0:Number(weight.value.trim().replace(',','.'));weight.value=String(Math.max(0,n+x));syncWeight()};
  $('#wMinus').onclick=()=>bump(-5);$('#wPlus').onclick=()=>bump(5);$$('[data-w]').forEach(b=>b.onclick=()=>bump(Number(b.dataset.w)));
- $('#rMinus').onclick=()=>{$('#rInput').value=Math.max(0,(parseInt($('#rInput').value)||0)-1);sync()};$('#rPlus').onclick=()=>{$('#rInput').value=(parseInt($('#rInput').value)||0)+1;sync()};
+ $('#rMinus').onclick=()=>{$('#rInput').value=Math.max(0,(parseInt($('#rInput').value)||0)-1);syncReps()};$('#rPlus').onclick=()=>{$('#rInput').value=(parseInt($('#rInput').value)||0)+1;syncReps()};
  $$('[data-rir]').forEach(b=>b.onclick=()=>{d.rir=Number(b.dataset.rir);saveDraft(a,item,d);$$('[data-rir]').forEach(x=>x.classList.toggle('active',x===b))});
- $('#completeSet').onclick=()=>completeSet(a,seq,item,e,d);$('#skipAction').onclick=()=>openSkipSheet(a,seq,item,e)
+ $('#completeSet').onclick=()=>{const kg=input.zero&&weight.value==='0'?0:positiveLoad(weight.value,unit);if(kg===null){error.textContent='Captura un peso válido o confirma Sin carga externa.';error.hidden=false;weight.setAttribute('aria-invalid','true');weight.focus();return}if(!d.reps){completeSet(a,seq,item,e,d);return}loadInputs.delete(d);completeSet(a,seq,item,e,d)};$('#skipAction').onclick=()=>openSkipSheet(a,seq,item,e)
 }
 function skippedLog(item,e,status='skipped_set'){
  return {exerciseIndex:item.ei,exerciseName:e.name,setIndex:item.si,weightKg:0,reps:0,rir:null,tempo:e.tempo,restSec:0,completedAt:new Date().toISOString(),done:false,skipped:true,status};
@@ -1500,8 +1812,8 @@ function openSkipSheet(a,seq,item,e){
 }
 function skipCurrentSet(a,seq,item,e){
  const key=`${item.ei}_${item.si}`;a.logs[key]=skippedLog(item,e,'skipped_set');
- const oldIndex=a.index,transition=nextTransition(seq,oldIndex,WORKOUTS[a.workoutKey]),prior=oldIndex>0?seq[oldIndex-1]:null,priorLog=prior?a.logs[`${prior.ei}_${prior.si}`]:null;
- a.index+=1;
+ const oldIndex=a.index,transition=nextTransition(seq,oldIndex,WORKOUTS[a.workoutKey],a.logs),prior=oldIndex>0?seq[oldIndex-1]:null,priorLog=prior?a.logs[`${prior.ei}_${prior.si}`]:null;
+ a.index=transition.next?seq.indexOf(transition.next):seq.length;
  if(transition.type==='finish'){a.state='cooldown';a.endsAt=0}
  else if(transition.type==='superset-switch'){a.state='transition';a.endsAt=0}
  else if(item.superset&&item.position==='second'&&prior?.superset&&prior.position==='first'&&prior.si===item.si&&priorLog?.done){
@@ -1528,14 +1840,20 @@ $('#skipExercise').onclick=()=>{if(!skipContext)return;const {a,seq,item,e}=skip
 function completeSet(a,seq,item,e,d){
  if(!d.reps){alert('Captura reps antes de completar.');return}
  const key=`${item.ei}_${item.si}`;a.logs[key]={exerciseIndex:item.ei,exerciseName:e.name,setIndex:item.si,weightKg:+d.weightKg||0,reps:+d.reps||0,rir:d.rir,tempo:e.tempo,restSec:e.rest,completedAt:new Date().toISOString(),done:true};a.last=a.logs[key];
- const transition=nextTransition(seq,a.index,WORKOUTS[a.workoutKey]);a.index+=1;
+ const transition=nextTransition(seq,a.index,WORKOUTS[a.workoutKey],a.logs);a.index=transition.next?seq.indexOf(transition.next):seq.length;
  if(transition.type==='finish'){a.state='cooldown';a.endsAt=0}
  else if(transition.type==='superset-switch'){a.state='transition';a.endsAt=0}
  else {a.state='rest';a.restOriginal=transition.restSec;a.endsAt=transition.restSec?Date.now()+transition.restSec*1000:0}
  saveActive(a);renderStage();scrollSessionTop('set:complete');startTicker()
 }
 function renderTransition(a,w,seq){
- const next=seq[a.index],e=w.exercises[next.ei];
+ const next=seq[a.index],prior=seq[a.index-1];
+ // Older valid snapshots may still point at a skipped partner before current() advances.
+ if(!next){a.state='cooldown';a.endsAt=0;saveActive(a);return renderCooldown(a,w)}
+ if(!(prior?.superset&&prior.position==='first'&&next.superset&&next.position==='second'&&prior.si===next.si&&next.ei===prior.partner&&next.partner===prior.ei)){
+  const rest=Number(a.last?.restSec??w.exercises[a.last?.exerciseIndex]?.rest)||0;a.state='rest';a.restOriginal=rest;a.endsAt=rest?Date.now()+rest*1000:0;saveActive(a);return renderRest(a,w,seq)
+ }
+ const e=w.exercises[next.ei];
  $('#sessionStage').innerHTML=`<div class="stage transition"><div class="state-label">Biserie · sin descanso</div><div class="symbol">↔</div><div class="big">${e.name}</div><p class="sub">Set ${next.si+1}/${e.sets} · ${e.reps} reps · RIR ${e.rir}</p>${tempoMarkup(e,false)}<div class="tip" style="text-align:left"><strong>Pro tip 1%</strong><br>${e.tip}</div>${videoLinkMarkup(e,'Video partner')}<button class="cta" id="goPartner">Ir al partner</button></div>`;
  $('#goPartner').onclick=()=>{a.state='set';saveActive(a);renderStage();scrollSessionTop('biserie:partner')}
 }
@@ -1546,7 +1864,7 @@ function renderRest(a,w,seq){
  const afterPair=previousItem?.superset && previousItem.position==='second';
  $('#sessionStage').innerHTML=`<div class="stage rest"><div class="state-label">${s?'Descanso':'Listo'}</div><div class="rest-time ${s?'':'ready'}" id="restClock">${s?fmtTime(s):'READY'}</div>
  <div class="timercontrols"><button id="minus15">−15 s</button><button id="plus15">+15 s</button><button class="skip" id="skipRest">Saltar descanso</button></div>
- <div class="rest-last">${last?`<b>Último set:</b> ${last.exerciseName} · ${fmtWeight(last.weightKg)} ${unit} × ${last.reps} @RIR ${last.rir}`:'<b>Última acción:</b> set omitido'}</div>
+ <div class="rest-last">${last?`<b>Último set:</b> ${escapeStoredText(last.exerciseName)} · ${fmtWeight(last.weightKg)} ${unit} × ${last.reps} @RIR ${storedRirLabel(last.rir)}`:'<b>Última acción:</b> set omitido'}</div>
  ${e?`<div class="rest-next"><div class="eyebrow">${afterPair?'Biserie completada · siguiente':nextIsSame?'Mismo ejercicio · siguiente':'Siguiente ejercicio'}</div><div class="big">${e.name} · Set ${next.si+1}/${e.sets}</div>${next.superset?`<span class="superset-badge">Biserie · partner: ${w.exercises[next.partner].name}</span>`:''}<div class="specrow" style="margin-top:9px"><span class="spec">${e.reps} reps</span><span class="spec">RIR ${e.rir}</span><span class="spec">${fmtTime(Number(e.rest)||0)} descanso</span></div>${tempoMarkup(e,false)}<div class="tip"><strong>Pro tip 1%</strong><br>${e.tip}</div>${videoLinkMarkup(e,'Video siguiente')}</div>`:`<div class="rest-next"><div class="big">Sesión completada</div></div><button class="startnext" id="finishNow">Finalizar sesión</button>`}${e?`<div class="rest-dock"><div class="rest-dock-info"><div class="rest-dock-kicker" id="dockClock">${s?fmtTime(s):'LISTO'}</div><div class="rest-dock-next">${e.name} · set ${next.si+1}/${e.sets}</div></div><button id="dockStart" class="${s?'waiting':''}">${s?'Empezar ahora':'Empezar siguiente set'}</button></div>`:''}</div>`;
  $('#minus15').onclick=()=>{a.endsAt=Math.max(Date.now(),a.endsAt-15000);saveActive(a);tick()};
  $('#plus15').onclick=()=>{a.endsAt=Math.max(Date.now(),a.endsAt)+15000;saveActive(a);tick()};
@@ -1564,28 +1882,76 @@ function finishEarlySession(){
  if(!confirm(`Finalizar ahora y guardar ${resolved} set${resolved===1?'':'s'} resueltos?`))return;
  finishSession(a)
 }
-function discardSession(){
+async function discardSession(){
+ if(!persistence.ready||persistence.busy||active()?.completionIntent)return;
  const a=active();if(!a)return;
  const completed=Object.values(a.logs||{}).filter(x=>x.done).length;
  const msg=completed?`Descartar esta sesión eliminará ${completed} set${completed===1?'':'s'} completados de esta sesión. ¿Continuar?`:'Descartar esta sesión accidental? No se guardará en el historial.';
  if(!confirm(msg))return;
- saveActive(null);$('#sessionOverlay').classList.remove('open');releaseWake();renderHome();renderProgress();showPage('today')
+ persistence.busy=true;renderRecovery();await pendingActive;const r=await durability.saveActive(null);if(r.ok)delete persistence.failures['fv4.active'];persistenceMessage(r);persistence.busy=false;renderRecovery();if(!r.ok)return;persistence.memory=undefined;$('#sessionOverlay').classList.remove('open');releaseWake();renderHome();renderProgress();showPage('today')
 }
 
-function finishSession(a){const sets=Object.values(a.logs).filter(x=>x.done||x.skipped),ended=new Date().toISOString(),w=WORKOUTS[a.workoutKey],plan=a.plan||makePlanSnapshot(a.workoutKey,'legacy',allExerciseIndices(a.workoutKey)),completedSets=sets.filter(x=>x.done&&!x.skipped).length,entry={schema:5,release:RELEASE,id:a.id,workoutKey:a.workoutKey,workoutName:w.name,startedAt:a.startedAt,endedAt:ended,durationSec:Math.round((new Date(ended)-new Date(a.startedAt))/1000),plan:{...plan,completedSets,skippedSets:sets.filter(x=>x.skipped).length,executionAdherencePct:plan.confirmedSets?Math.round(completedSets/plan.confirmedSets*100):0},sets};const h=history();h.push(entry);store.set('fv4.history',h);saveActive(null);$('#sessionOverlay').classList.remove('open');releaseWake();renderProgress();showPage('progress')}
+function completionEntry(a){const sets=Object.values(a.logs).filter(x=>x.done||x.skipped),ended=new Date().toISOString(),w=WORKOUTS[a.workoutKey],plan=a.plan||makePlanSnapshot(a.workoutKey,'legacy',allExerciseIndices(a.workoutKey)),completedSets=sets.filter(x=>x.done&&!x.skipped).length,entry={schema:5,release:RELEASE,id:a.id,workoutKey:a.workoutKey,workoutName:w.name,startedAt:a.startedAt,endedAt:ended,durationSec:Math.round((new Date(ended)-new Date(a.startedAt))/1000),plan:{...plan,completedSets,skippedSets:sets.filter(x=>x.skipped).length,executionAdherencePct:plan.confirmedSets?Math.round(completedSets/plan.confirmedSets*100):0},sets};return {...entry,sessionSnapshot:JSON.parse(JSON.stringify(a))}}
+async function finishSession(a){
+ if(persistence.busy||!persistence.ready)return;
+ persistence.busy=true;renderRecovery();closeSkipSheet();$('#sessionStage').textContent='Verificando finalización…';
+ try{
+  await pendingActive;
+  const r=await durability.complete(a,completionEntry);if(r.ok)for(const key of ['fv4.active','fv4.history','general'])delete persistence.failures[key];persistenceMessage(r);
+  if(!r.ok)return;
+  persistence.memory=undefined;$('#sessionOverlay').classList.remove('open');releaseWake();renderHome();renderProgress();showPage('progress');
+ }finally{persistence.busy=false;renderRecovery()}
+}
 function renderProgress(){
- const h=history(),sets=h.flatMap(x=>x.sets||[]),completed=sets.filter(x=>x.done),skipped=sets.filter(x=>x.skipped),vol=completed.reduce((a,x)=>a+(+x.weightKg||0)*(+x.reps||0),0),lastDiag=store.get('tos.lastAction',null);
+ const read=durability.read('fv4.history');if(!read.ok){$('#storageHealth').textContent='Autosave OFF';$('#storageHealth').className='health warn';$('#stats').textContent='Historial no disponible';$('#statsSub').textContent='No se interpretó como un historial vacío.';$('#history').textContent='Conservamos los datos. Reintenta o exporta un respaldo. ('+read.status+')';return}
+ const h=read.status==='absent'?[]:read.value,sets=h.flatMap(x=>x.sets||[]),completed=sets.filter(x=>x.done),skipped=sets.filter(x=>x.skipped),vol=completed.reduce((a,x)=>a+(+x.weightKg||0)*(+x.reps||0),0),lastDiag=store.get('tos.lastAction',null);
  $('#storageHealth').textContent=store.ok?'Autosave ON':'Autosave OFF';$('#storageHealth').className='health '+(store.ok?'ok':'warn');
  $('#stats').textContent=`${h.length} sesiones · ${completed.length} sets completos`;
  $('#statsSub').textContent=`${Math.round(vol).toLocaleString('es-MX')} kg·reps normalizados · ${skipped.length} omitidos`;
  $('#diagSummary').textContent=lastDiag?`Última acción: ${lastDiag.action} · ${new Date(lastDiag.at).toLocaleTimeString('es-MX',{hour:'2-digit',minute:'2-digit',second:'2-digit'})}`:'Sin eventos.';
- $('#history').innerHTML=h.length?h.slice().reverse().slice(0,10).map(x=>`<div class="historyrow"><b>${x.workoutName}</b><br><span class="small">${new Date(x.endedAt).toLocaleDateString('es-MX')} · ${x.sets.filter(s=>s.done).length} completos · ${x.sets.filter(s=>s.skipped).length} omitidos · ${Math.round(x.durationSec/60)} min${x.plan?.confirmedSets?` · plan ${x.plan.confirmedSets} · ${x.plan.executionAdherencePct??Math.round(historyEntryAdherence(x)*100)}% ejecución`:''}</span></div>`).join(''):'<span class="small">Aún no hay sesiones.</span>'
+ $('#history').innerHTML=h.length?h.slice().reverse().slice(0,10).map(x=>`<div class="historyrow"><b>${escapeStoredText(x.workoutName)}</b><br><span class="small">${new Date(x.endedAt).toLocaleDateString('es-MX')} · ${x.sets.filter(s=>s.done).length} completos · ${x.sets.filter(s=>s.skipped).length} omitidos · ${Math.round(x.durationSec/60)} min${x.plan?.confirmedSets?` · plan ${x.plan.confirmedSets} · ${x.plan.executionAdherencePct??Math.round(historyEntryAdherence(x)*100)}% ejecución`:''}</span></div>`).join(''):'<span class="small">Aún no hay sesiones.</span>'
 }
-$('#exportBtn').onclick=()=>{const data={schema:4,release:RELEASE,exportedAt:new Date().toISOString(),history:history(),active:active(),unit};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=`training-os-${RELEASE}-backup.json`;a.click();setTimeout(()=>URL.revokeObjectURL(u),500)};
-$('#importFile').onchange=async e=>{const f=e.target.files?.[0];if(!f)return;try{const d=JSON.parse(await f.text());if(!Array.isArray(d.history))throw new Error('Backup inválido');if(!confirm(`Importar ${d.history.length} sesiones?`))return;store.set('fv4.history',d.history);if(d.active)store.set('fv4.active',d.active);if(d.unit)setUnit(d.unit);renderHome();renderProgress();alert('Importación completa')}catch(err){alert(err.message)}e.target.value=''};
-renderHome();renderProgress();renderUnits();startTicker();
+async function exportBackup(){
+ try{
+  const r=await durability.exportData(persistence.memory);
+  let data=r;
+  if(!r.ok){
+   if(!confirm(`Exportación normal no disponible (${r.status}). ¿Iniciar descarga de recuperación con valores crudos y sesión en memoria? Este archivo requiere revisión antes de restaurar.`))return;
+   data=durability.exportRaw(persistence.memory);
+  }
+  if(!data.ok){alert('No se pudo preparar el respaldo: '+data.status);return}
+  const download=initiateBackup(data.text,{Blob,URL,document});
+  alert(download.ok?'Descarga iniciada. Verifica que el archivo existe y prueba importarlo en un almacenamiento desechable antes de depender de él. Se excluyen preferencias y diagnósticos; el formato de recuperación incluye claves crudas.':'No se pudo iniciar la descarga. Conservamos los datos; reintenta.');
+ }catch(err){alert('No se pudo exportar: '+String(err.message||err))}
+}
+$('#exportBtn').onclick=exportBackup;
+$('#importFile').onchange=async e=>{
+ const f=e.target.files?.[0];if(!f)return;
+ try{
+  if(persistence.busy)throw Error('Espera a que termine el guardado actual.');
+  const d=JSON.parse(await f.text());let choice;
+  let v=durability.validateEnvelope(d);
+  if(v.status==='active-choice-required'){
+   choice=prompt('Este respaldo antiguo no incluye sesión activa. Escribe CONSERVAR para mantener la actual o BORRAR para reemplazarla por ninguna.');
+   choice=choice==='CONSERVAR'?'keep':choice==='BORRAR'?'clear':undefined;v=durability.validateEnvelope(d,choice);
+  }
+  if(!v.ok)throw Error('Respaldo inválido: '+v.status);
+  await pendingActive;
+  if(persistence.memory!==undefined&&JSON.stringify(persistence.memory)!==JSON.stringify(durability.read('fv4.active').value))throw Error('Hay una sesión en memoria sin verificar. Exporta un respaldo antes de importar.');
+  const review=durability.snapshot();if(!review.ok)throw Error(review.status);
+  if(!confirm(`Reemplazar TODO el historial por ${d.history.length} sesiones, unidad por ${d.unit} y sesión activa: ${Object.hasOwn(d,'active')?(d.active===null?'borrar':'reemplazar'):choice==='keep'?'conservar':'borrar'}? Se guardará un respaldo de recuperación antes de escribir.`))return;
+  persistence.busy=true;renderRecovery();
+  const r=await durability.importData(d,choice,review.values);persistenceMessage(r);
+  if(!r.ok)return;
+  const importedActive=Object.hasOwn(d,'active')?d.active:choice==='clear'?null:persistence.memory===undefined?durability.read('fv4.active').value:persistence.memory;
+  const bound=await durability.bindState(importedActive,d.unit);if(!bound.ok){persistence.ready=false;persistenceMessage(bound);return}
+  for(const key of ['fv4.history','fv4.active','fv4.unit','fv4.backupExtras.v1','general'])delete persistence.failures[key];persistenceMessage({ok:true});persistence.memory=importedActive;unit=d.unit;$('#sessionOverlay').classList.remove('open');releaseWake();renderHome();renderProgress();renderUnits();alert('Importación completa: valores verificados.');
+ }catch(err){alert('No se pudo importar: '+String(err.message||err))}
+ finally{persistence.busy=false;e.target.value='';renderRecovery()}
+};
+renderHome();renderProgress();renderUnits();startTicker();bootPersistence();
 window.__FV_QA__={release:RELEASE,storage:store.ok,unit,programs:ORDER.length};
 
-document.documentElement.dataset.release='4.0.0-rc6.2.1';document.documentElement.dataset.boot='ok';
+document.documentElement.dataset.release='4.0.0-rc6.3.1';document.documentElement.dataset.boot='ok';
 </script>
 </body></html>

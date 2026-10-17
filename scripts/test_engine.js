@@ -387,4 +387,5 @@ for (const [name, ok, detail] of tests) {
 }
 const passed = tests.filter(x=>x[1]).length;
 console.log(`TOTAL ${passed}/${tests.length} PASS`);
-process.exit(passed===tests.length ? 0 : 1);
+const p0=require('node:child_process').spawnSync(process.execPath,['tests/superset_skip.test.js'],{stdio:'inherit'});
+process.exit(passed===tests.length&&p0.status===0 ? 0 : 1);

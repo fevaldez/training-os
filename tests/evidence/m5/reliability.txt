@@ -1,0 +1,13 @@
+PASS | no target=_blank in app
+PASS | no window.open in app
+PASS | video action stays inside shell
+PASS | standalone external-navigation guard present
+PASS | launch lifecycle diagnostics present
+PASS | legacy Training OS SW cleanup present
+PASS | legacy Training OS cache cleanup is scoped
+PASS | single rest CTA id
+PASS | rest CTA is fixed safe-area dock
+PASS | rest waiting state uses semantic control color
+PASS | explicit PWA identity preserved
+PASS | no insecure URL literal
+TOTAL 12/12 PASS

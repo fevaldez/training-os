@@ -1,0 +1,25 @@
+M5_LOAD_OBSERVATION {"raw":"","indexBefore":0,"indexAfter":0,"weightKg":null,"completionWrites":0}
+PASS | M5_LOAD reject "" without session/save mutation
+M5_LOAD_OBSERVATION {"raw":"0","indexBefore":0,"indexAfter":0,"weightKg":null,"completionWrites":0}
+PASS | M5_LOAD reject "0" without session/save mutation
+M5_LOAD_OBSERVATION {"raw":"-1","indexBefore":0,"indexAfter":0,"weightKg":null,"completionWrites":0}
+PASS | M5_LOAD reject "-1" without session/save mutation
+M5_LOAD_OBSERVATION {"raw":"bad","indexBefore":0,"indexAfter":0,"weightKg":null,"completionWrites":0}
+PASS | M5_LOAD reject "bad" without session/save mutation
+M5_LOAD_OBSERVATION {"raw":"20junk","indexBefore":0,"indexAfter":0,"weightKg":null,"completionWrites":0}
+PASS | M5_LOAD reject "20junk" without session/save mutation
+M5_LOAD_OBSERVATION {"raw":"NaN","indexBefore":0,"indexAfter":0,"weightKg":null,"completionWrites":0}
+PASS | M5_LOAD reject "NaN" without session/save mutation
+M5_LOAD_OBSERVATION {"raw":"Infinity","indexBefore":0,"indexAfter":0,"weightKg":null,"completionWrites":0}
+PASS | M5_LOAD reject "Infinity" without session/save mutation
+M5_LOAD_OBSERVATION {"raw":"1e309","indexBefore":0,"indexAfter":0,"weightKg":null,"completionWrites":0}
+PASS | M5_LOAD reject "1e309" without session/save mutation
+PASS | M5_LOAD cleared positive stays unconfirmed through reps/RIR/unit rerender
+PASS | M5_LOAD old zero requires explicit choice and explicit zero remains numeric
+PASS | M5_LOAD positive kg 20.5 is saved accurately
+PASS | M5_LOAD positive lb 10 is saved accurately
+PASS | M5_LOAD positive kg 20,5 is saved accurately
+PASS | M5_LOAD reps and RIR edits never replace prior valid load with coerced zero
+PASS | M5_LOAD literal numeric zero never implicitly confirms on render
+PASS | M5_LOAD unit-only rerender preserves exact positive load without display-rounding drift
+M5_LOAD_TOTAL 16/16 PASS | HTML_SHA256 492315931392f2244276d4b41e3991b5b0ba619dca07e5406b82f305c4a36ac5

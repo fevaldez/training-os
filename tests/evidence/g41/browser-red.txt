@@ -1,0 +1,26 @@
+G3_BROWSER 145.0.7632.6 | PREVIOUS G3 HEAD RED EXPECTED
+N1_BROWSER_COUNTEREXAMPLE {"artifactsUnchanged":false,"save16":{"ok":false,"status":"recovery-required"},"third":{"ready":false,"reps":15},"localReps":9,"storedReps":15}
+FAIL | G3_BROWSER N1 retired journal cannot block B 15→16 or fresh third-tab initialization | Expected values to be strictly deep-equal:
++ actual - expected
+
+  [
+    [
+      'fv4.recovery.v1',
+      null
+    ],
+    [
+      'fv4.recovery.backup.v1',
++     '{"schema":1,"id":"fde0b469e6d617af3e11c9f3ab925707ac3b28847ed03ee175039e11963a2aae","digest":"f918ca71738bdc60d273461c38f6f4946ac9a508d088b1be38177f7e1a1de27b","journal":{"schema":1,"kind":"import","before":{"fv4.history":"[{\\"schema\\":3,\\"release\\":\\"synthetic\\",\\"id\\":101,\\"workoutKey\\":\\"chest\\",\\"workoutName\\":\\"Synthetic <img src=x onerror=alert(1)>\\",\\"startedAt\\":\\"2026-01-01T00:00:00.000Z\\",\\"endedAt\\":\\"2026-01-01T01:00:00.000Z\\",\\"durationSec\\":3600,\\"plan\\":{\\"preset\\":\\"full\\",\\"includedExerciseIndices\\":[0,1,2,3,4,5],\\"excludedExerciseIndices\\":[],\\"fullSets\\":20,\\"confirmedSets\\":20,\\"estimatedMin\\":45},\\"sets\\":[{\\"exerciseIndex\\":0,\\"exerciseName\\":\\"Synthetic\\",\\"setIndex\\":0,\\"weightKg\\":22.5,\\"reps\\":8,\\"rir\\":2,\\"done\\":true,\\"unknownSet\\":{\\"preserve\\":[\\"yes\\",1]}}],\\"unknownRecord\\":{\\"nested\\":{\\"untouched\\":true}}},{\\"schema\\":4,\\"release\\":\\"synthetic\\",\\"id\\":\\"legacy-102\\",\\"workoutKey\\":\\"chest\\",\\"workoutName\\":\\"Synthetic <img src=x onerror=alert(1)>\\",\\"startedAt\\":\\"2026-01-01T00:00:00.000Z\\",\\"endedAt\\":\\"2026-01-01T01:00:00.000Z\\",\\"durationSec\\":3600,\\"plan\\":{\\"preset\\":\\"full\\",\\"includedExerciseIndices\\":[0,1,2,3,4,5],\\"excludedExerciseIndices\\":[],\\"fullSets\\":20,\\"confirmedSets\\":20,\\"estimatedMin\\":45},\\"sets\\":[{\\"exerciseIndex\\":0,\\"exerciseName\\":\\"Synthetic\\",\\"setIndex\\":0,\\"weightKg\\":22.5,\\"reps\\":8,\\"rir\\":2,\\"done\\":true,\\"unknownSet\\":{\\"preserve\\":[\\"yes\\",1]}}],\\"unknownRecord\\":{\\"nested\\":{\\"untouched\\":true}}},{\\"schema\\":5,\\"release\\":\\"synthetic\\",\\"id\\":103,\\"workoutKey\\":\\"chest\\",\\"workoutName\\":\\"Synthetic <img src=x onerror=alert(1)>\\",\\"startedAt\\":\\"2026-01-01T00:00:00.000Z\\",\\"endedAt\\":\\"2026-01-01T01:00:00.000Z\\",\\"durationSec\\":3600,\\"plan\\":{\\"preset\\":\\"full\\",\\"includedExerciseIndices\\":[0,1,2,3,4,5],\\"excludedExerciseIndices\\":[],\\"fullSets\\":20,\\"confirmedSets\\":20,\\"estimatedMin\\":45},\\"sets\\":[{\\"exerciseIndex\\":0,\\"exerciseName\\":\\"Synthetic\\",\\"setIndex\\":0,\\"weightKg\\":22.5,\\"reps\\":8,\\"rir\\":2,\\"done\\":true,\\"unknownSet\\":{\\"preserve\\":[\\"yes\\",1]}}],\\"unknownRecord\\":{\\"nested\\":{\\"untouched\\":true}}}]","fv4.active":"{\\"schema\\":6,\\"release\\":\\"synthetic\\",\\"id\\":303,\\"workoutKey\\":\\"chest\\",\\"startedAt\\":\\"2026-01-02T00:00:00.000Z\\",\\"updatedAt\\":\\"2026-01-02T00:05:00.000Z\\",\\"index\\":1,\\"state\\":\\"rest\\",\\"endsAt\\":1767312360000,\\"restOriginal\\":120,\\"last\\":{\\"exerciseIndex\\":0,\\"exerciseName\\":\\"Synthetic\\",\\"setIndex\\":0,\\"weightKg\\":22.5,\\"reps\\":8,\\"rir\\":2,\\"done\\":true,\\"unknownSet\\":{\\"preserve\\":[\\"yes\\",1]}},\\"plan\\":{\\"preset\\":\\"full\\",\\"includedExerciseIndices\\":[0,1,2,3,4,5],\\"excludedExerciseIndices\\":[],\\"fullSets\\":20,\\"confirmedSets\\":20,\\"estimatedMin\\":45},\\"logs\\":{\\"0_0\\":{\\"exerciseIndex\\":0,\\"exerciseName\\":\\"Synthetic\\",\\"setIndex\\":0,\\"weightKg\\":22.5,\\"reps\\":8,\\"rir\\":2,\\"done\\":true,\\"unknownSet\\":{\\"preserve\\":[\\"yes\\",1]}}},\\"drafts\\":{\\"0_1\\":{\\"weightKg\\":21.5,\\"reps\\":9,\\"rir\\":3,\\"reason\\":\\"<svg onload=alert(1)>\\",\\"futureField\\":{\\"keep\\":1}}},\\"futureActive\\":{\\"keep\\":[1,2,3]}}","fv4.unit":"\\"lb\\"","fv4.migrated":"true","fv4.backupExtras.v1":null},"after":{"fv4.history":"[]","fv4.active":null,"fv4.unit":"\\"kg\\"","fv4.migrated":"true","fv4.backupExtras.v1":"{\\"unknownEnvelope\\":{\\"retainInSource\\":true}}"}}}'
+-     null
+    ],
+    [
+      'fv4.recovery.outcome.v1',
+      null
+    ]
+
+N2_BROWSER_PRODUCER {"ready":false,"schema":4,"release":"4.0.0-rc4","values":["2","",2]}
+FAIL | G3_BROWSER N2 actual RC4 mixed history initializes, exports and imports without normalizing RIR | The expression evaluated to a falsy value:
+
+  assert(await p.evaluate(()=>persistence.ready))
+
+G3_BROWSER_TOTAL 0/2 PASS

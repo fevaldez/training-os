@@ -1,0 +1,1 @@
+PASS | exact approved stacked PR target plus additive M5 gate; production release workflow byte-identical. Initial local F7 pin failure corrected without runtime change. Full final durability suite runs in exact-head PR CI.
