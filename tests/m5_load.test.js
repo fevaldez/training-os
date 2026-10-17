@@ -56,7 +56,7 @@ async function setup(unit = 'kg') {
     diagnostics() {}, renderProgram: () => events.push({ op: 'renderProgram-stub' }), renderProgress: () => events.push({ op: 'renderProgress-stub' }),
     alert: message => events.push({ op: 'alert', message }) };
   vm.createContext(context);
-  vm.runInContext(part('const WORKOUTS =', "const RELEASE='") + "const RELEASE='4.0.0-rc6.2.1';\n" +
+  vm.runInContext(part('const WORKOUTS =', "const RELEASE='") + html.match(/const RELEASE='[^']+';/)[0] + "\n" +
     part('// DATA DURABILITY CORE START', '// DATA DURABILITY CORE END'), context);
   context.__durability = context.createDurability(storage, locks, vm.runInContext('WORKOUTS', context));
   vm.runInContext('const durability=__durability;\n' +

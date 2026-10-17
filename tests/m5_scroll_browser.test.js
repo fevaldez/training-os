@@ -5,8 +5,13 @@ const {execFileSync}=require('node:child_process'),{createHash}=require('node:cr
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const BASE='c23f7cdd21b895c0aed3a6da49ea02da27d25aad',baseline=process.argv.includes('--baseline');
 const html=baseline?execFileSync('git',['show',BASE+':index.html'],{encoding:'utf8'}):fs.readFileSync('index.html','utf8');
-// Outside these two presentation routines, every production byte must remain unchanged.
-let preserved=html;const original=execFileSync('git',['show',BASE+':index.html'],{encoding:'utf8'});
+// Only the two presentation routines and five exact release markers may differ from the pin.
+let preserved=html;const originalSource=execFileSync('git',['show',BASE+':index.html'],{encoding:'utf8'});
+const originalRelease=originalSource.match(/const RELEASE='([^']+)'/)[1];
+const release=baseline?originalRelease:JSON.parse(fs.readFileSync('version.json','utf8')).release;
+assert.equal(html.match(/const RELEASE='([^']+)'/)[1],release,'candidate release marker differs from metadata');
+assert.equal(originalSource.split(originalRelease).length-1,5,'pinned metadata-site inventory changed');
+const original=originalSource.replaceAll(originalRelease,release);
 for(const[start,end]of [['function renderRecovery(){','let pendingActive='],['function showPage(id){','function routineReviewInsight(']]){const a=preserved.indexOf(start),b=preserved.indexOf(end,a),oa=original.indexOf(start),ob=original.indexOf(end,oa);assert(a>=0&&b>a&&oa>=0&&ob>oa);preserved=preserved.slice(0,a)+original.slice(oa,ob)+preserved.slice(b)}
 assert.equal(preserved,original,'unexpected runtime change outside recovery presentation/navigation');
 const fixture=JSON.parse(fs.readFileSync('tests/fixtures/storage/mixed-backup.json','utf8'));

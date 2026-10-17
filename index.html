@@ -2,8 +2,8 @@
 <html lang="es"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#f5f5f7"><title>Training OS · FV Hybrid</title>
-<link rel="apple-touch-icon" sizes="180x180" href="./training-os-loop-v1-180.png?v=4.0.0-rc6.2.1">
-<link rel="manifest" href="./manifest.webmanifest?v=4.0.0-rc6.2.1">
+<link rel="apple-touch-icon" sizes="180x180" href="./training-os-loop-v1-180.png?v=4.0.0-rc6.3">
+<link rel="manifest" href="./manifest.webmanifest?v=4.0.0-rc6.3">
 <meta name="application-name" content="Training OS">
 <meta name="apple-mobile-web-app-title" content="Training OS">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -108,7 +108,7 @@ button:disabled{opacity:.45}
 <div class="app">
 <div class="card" id="storageRecovery" role="status" aria-live="polite"></div>
 <section class="page active" id="today">
-<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><div class="eyebrow">T·OS · 4.0.0-rc6.2.1 · Continuous Loop</div><h1>Hoy</h1><p class="sub" id="todayDate"></p></div><div class="unit"><button data-unit="kg">kg</button><button data-unit="lb">lb</button></div></div>
+<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><div class="eyebrow">T·OS · 4.0.0-rc6.3 · Continuous Loop</div><h1>Hoy</h1><p class="sub" id="todayDate"></p></div><div class="unit"><button data-unit="kg">kg</button><button data-unit="lb">lb</button></div></div>
 <div class="card resume" id="resumeCard"><div class="eyebrow">Sesión activa</div><h2 id="resumeTitle"></h2><p class="small" id="resumeMeta"></p><button class="btn primary" id="resumeBtn">Reanudar</button><div class="actionrow"><button class="btn secondary" id="finishEarlyBtn">Finalizar y guardar</button><button class="btn danger" id="discardSessionBtn">Descartar sesión</button></div></div>
 <div class="card" id="todayDecisionCard"><div id="todayDecision"></div></div>
 <div class="card" id="weekSnapshotCard"><div id="weekSnapshot"></div></div>
@@ -1157,7 +1157,7 @@ function recommendedWorkoutKeyFromHistory(h=[]){
 }
 
 if(typeof location!=='undefined'&&location.protocol==='http:'&&location.hostname.endsWith('github.io')){location.replace('https://'+location.host+location.pathname+location.search+location.hash)}
-const RELEASE='4.0.0-rc6.2.1';
+const RELEASE='4.0.0-rc6.3';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 // DATA DURABILITY CORE START — extracted verbatim by the synthetic failure suite.
 function createDurability(storage, locks, workouts, options={}){
@@ -1946,6 +1946,6 @@ $('#importFile').onchange=async e=>{
 renderHome();renderProgress();renderUnits();startTicker();bootPersistence();
 window.__FV_QA__={release:RELEASE,storage:store.ok,unit,programs:ORDER.length};
 
-document.documentElement.dataset.release='4.0.0-rc6.2.1';document.documentElement.dataset.boot='ok';
+document.documentElement.dataset.release='4.0.0-rc6.3';document.documentElement.dataset.boot='ok';
 </script>
 </body></html>
