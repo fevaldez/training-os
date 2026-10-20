@@ -3,15 +3,10 @@
 const assert=require('node:assert/strict');
 const {H,A,U,M,E,J,B,O,fixture,copy,source,Storage,Locks,seed,production,historical,realV3,realRC4}=require('./storage_g3_support.cjs');
 function workflowGate(){
- const fs=require('node:fs'),{execFileSync}=require('node:child_process');
- for(const file of ['.github/workflows/validate-pr.yml','.github/workflows/release-pages.yml']){
-  // Owner-authorized RC6.3 release controls: retain exact workflow-byte preservation.
-  if(file.endsWith('/release-pages.yml')){assert.equal(require('node:crypto').createHash('sha256').update(fs.readFileSync(file)).digest('hex'),'9106d53c3e4975acf2ce8e327cc00754fe614127574c2b000d31f6bfee04b9fa');continue;}
-  let expected=execFileSync('git',['show','84d381915f601dd189dc6fb3f96117352eb8bef3:'+file],{encoding:'utf8'});
-  // Only the owner-authorized stack target and additive M5/superset-skip gates may differ.
-  if(file.endsWith('/validate-pr.yml'))expected=expected.replace('branches: [main]','branches: [main, codex/pr-s1-data-durability]')+'\n      - name: M5 explicit-load regression gate\n        run: node tests/m5_load.test.js\n\n      - name: Superset-skip core regression gate\n        run: node tests/superset_skip.test.js\n\n      - name: Release safety controls\n        run: node tests/release_controls.test.js\n';
-  assert.equal(fs.readFileSync(file,'utf8'),expected);
- }
+ const fs=require('node:fs'),{createHash}=require('node:crypto');
+ // Exact authorized PR-A workflow delta. Mutation rejection and manual publication predicates remain tested.
+ const pins={'.github/workflows/validate-pr.yml':'0e7669f2731b77cb089dabe278a7b1f78cca33d9f7158265d9c9012babb3b841','.github/workflows/release-pages.yml':'7be8b03c71d02afb52c488fd3d4cd4b81aaeab625c54963efa3bfd7fcbe870e6'};
+ for(const[file,pin]of Object.entries(pins))assert.equal(createHash('sha256').update(fs.readFileSync(file)).digest('hex'),pin,file);
 }
 async function run({reviewed=false}={}){
  const html=source(reviewed),tests=[];

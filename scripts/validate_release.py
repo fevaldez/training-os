@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 from pathlib import Path
 import json, hashlib, struct, sys
+sys.dont_write_bytecode = True
+from build_offline import build
 
 root = Path(__file__).resolve().parents[1]
 version = json.loads((root/'version.json').read_text(encoding='utf-8'))
@@ -148,6 +150,8 @@ for size in (180,192,512,1024):
 
 digest=hashlib.sha256((root/'index.html').read_bytes()).hexdigest()
 check('index SHA matches version.json', digest==version['index_sha256'])
+check('deterministic integrity-pinned offline worker', (root/'sw.js').read_text()==build())
+check('Pages packages and validates worker', 'manifest.webmanifest sw.js _site/' in workflow and "'sw.js'" in workflow)
 failed=[n for n,ok in checks if not ok]
 print(f'TOTAL {len(checks)-len(failed)}/{len(checks)} PASS')
 sys.exit(1 if failed else 0)

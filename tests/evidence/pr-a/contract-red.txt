@@ -1,0 +1,11 @@
+FAIL | OFFLINE F1 bootstrap retains installed worker and validated cache | ["unregister","delete","delete","unregister","delete","delete"]
+FAIL | OFFLINE F3 update never forces activation or claims an open workout | Expected values to be strictly equal:
+
+1 !== 0
+
+FAIL | OFFLINE F4 Pages packages worker and validates its source bytes | The expression evaluated to a falsy value:
+
+  assert(build.includes('sw.js'))
+
+FAIL | OFFLINE F1 installation verifies complete shell before readiness | legacy addAll not a verified installation
+OFFLINE_TOTAL 0/4 PASS | BASELINE RED

@@ -1,0 +1,23 @@
+PASS | OFFLINE F1 bootstrap retains installed worker and validated cache
+PASS | OFFLINE F3 update never forces activation or claims an open workout
+PASS | OFFLINE F4 Pages packages worker and validates its source bytes
+PASS | OFFLINE F1 installation verifies complete shell before readiness
+PASS | OFFLINE F1 complete install pins exact sizes/types/hashes and returns only pinned shell
+PASS | OFFLINE F1/F2 network install fails atomically and retains previous/legacy/unrelated caches
+PASS | OFFLINE F1/F2 http install fails atomically and retains previous/legacy/unrelated caches
+PASS | OFFLINE F1/F2 hash install fails atomically and retains previous/legacy/unrelated caches
+PASS | OFFLINE F1/F2 portal install fails atomically and retains previous/legacy/unrelated caches
+PASS | OFFLINE F1/F2 size install fails atomically and retains previous/legacy/unrelated caches
+PASS | OFFLINE F1/F2 quota install fails atomically and retains previous/legacy/unrelated caches
+PASS | OFFLINE F1/F2 cache-open install fails atomically and retains previous/legacy/unrelated caches
+PASS | OFFLINE F1/F2 cache-read install fails atomically and retains previous/legacy/unrelated caches
+PASS | OFFLINE F1/F2 redirect install fails atomically and retains previous/legacy/unrelated caches
+PASS | OFFLINE F2 worker rejects broader or foreign registration scope
+PASS | OFFLINE F2 allowlist bypasses remote, other projects, unknown paths, queries and non-GET
+PASS | OFFLINE F2 cache corruption/eviction fails closed offline and repairs exact version online
+PASS | OFFLINE F1 parallel repair requests share one complete pinned installation
+PASS | OFFLINE F1 readiness requires complete readback and exact authorized source
+PASS | OFFLINE F3 re-registration after old cleanup reuses verified cache without download or deletion
+PASS | OFFLINE F2 workout data/prescriptions/storage and PWA identity remain exact baseline bytes
+PASS | OFFLINE F4 deterministic worker/build identity rejects stale asset or runtime metadata
+OFFLINE_TOTAL 22/22 PASS | CURRENT

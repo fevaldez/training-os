@@ -3,8 +3,8 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
 const cp=require('node:child_process'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto');
 const RC='51e1a753c6a7539006d28fc3a1b1b49f2e882f23';
-const hotfixAssets={"index.html": "1038abc5977ec71e655439374b31f34e49b5734416cbabdba59136501f07b99e", "version.json": "8d37cbc7fd7268fcb9ec2004c1fa12ca97d519011b3a7df4adcef375db838ad9"};
-const names=['index.html','version.json','manifest.webmanifest','training-os-loop-v1-180.png','training-os-loop-v1-192.png','training-os-loop-v1-512.png','training-os-loop-v1-1024.png'];
+const mutableAssets=new Set(['index.html','version.json','sw.js']);
+const names=['index.html','version.json','manifest.webmanifest','training-os-loop-v1-180.png','training-os-loop-v1-192.png','training-os-loop-v1-512.png','training-os-loop-v1-1024.png','sw.js'];
 const workflow=fs.readFileSync('.github/workflows/release-pages.yml','utf8');
 const validate=workflow.split('  validate:\n')[1].split('\n  deploy:\n')[0];
 const deploy=workflow.split('\n  deploy:\n')[1];
@@ -54,7 +54,7 @@ try{
   assert(deploy.indexOf('actions/configure-pages')<deploy.indexOf('actions/deploy-pages'));
  });
  test('all mandatory release, durability and M5 gates precede upload without optional skips',()=>{
-  const commands=['python scripts/validate_release.py','node scripts/test_engine.js','node scripts/test_ui_static.js','python3 scripts/test_reliability_rc621.py','node tests/storage_durability.test.js','node tests/m5_load.test.js','node tests/superset_skip.test.js','node tests/release_controls.test.js','node tests/storage_g3_browser.test.js --original-suite','node tests/storage_g3_browser.test.js','node tests/m5_load_browser.test.js','node tests/m5_scroll_browser.test.js','node tests/superset_skip_browser.test.js'];
+  const commands=['python scripts/validate_release.py','node scripts/test_engine.js','node scripts/test_ui_static.js','python3 scripts/test_reliability_rc621.py','node tests/storage_durability.test.js','node tests/m5_load.test.js','node tests/superset_skip.test.js','node tests/release_controls.test.js','node tests/storage_g3_browser.test.js --original-suite','node tests/storage_g3_browser.test.js','node tests/m5_load_browser.test.js','node tests/m5_scroll_browser.test.js','node tests/superset_skip_browser.test.js','python3 scripts/build_offline.py --check','node tests/offline_contract.test.js','node tests/offline_browser.test.js'];
   const upload=validate.indexOf('actions/upload-pages-artifact@v5');assert(upload>0);
   for(const command of commands){const at=validate.indexOf(command);assert(at>=0&&at<upload,command)}
   const prWorkflow=fs.readFileSync('.github/workflows/validate-pr.yml','utf8');
@@ -72,18 +72,20 @@ try{
  test('F7 exact approved workflow bytes and read-only PR workflow pass',()=>gate());
  test('F7 rejects one-byte release-workflow mutation',()=>assert.throws(()=>gate({badRelease:true})));
  test('F7 rejects one-byte PR-workflow mutation',()=>assert.throws(()=>gate({badPR:true})));
- test('exact hotfix assets and the source-bound archive reject extra or altered bytes',()=>{
+ test('eight approved shell assets and source-bound archive reject extra or altered bytes',()=>{
   const old=cp.execFileSync('git',['show',RC+':.github/workflows/release-pages.yml'],{encoding:'utf8'});
-  const build=s=>s.split('      - name: Build deploy artifact\n')[1].split('\n      - name:')[0];assert.equal(build(workflow),build(old));
+  const build=s=>s.split('      - name: Build deploy artifact\n')[1].split('\n      - name:')[0];assert.equal(build(workflow),build(old).replace('manifest.webmanifest _site/','manifest.webmanifest sw.js _site/'));
   const site=path.join(temporary,'site');fs.mkdirSync(site);
-  for(const name of names){const expected=cp.execFileSync('git',['show',RC+':'+name]);if(hotfixAssets[name])assert.equal(crypto.createHash('sha256').update(fs.readFileSync(name)).digest('hex'),hotfixAssets[name],name);else assert.deepEqual(fs.readFileSync(name),expected,name);fs.writeFileSync(path.join(site,name),cp.execFileSync('git',['show','HEAD:'+name]))}
+  require('./offline_scope.cjs').restore(fs.readFileSync('index.html','utf8'));
+  assert.equal(JSON.parse(fs.readFileSync('version.json')).index_sha256,crypto.createHash('sha256').update(fs.readFileSync('index.html')).digest('hex'));
+  for(const name of names){if(!mutableAssets.has(name))assert.deepEqual(fs.readFileSync(name),cp.execFileSync('git',['show',RC+':'+name]),name);fs.writeFileSync(path.join(site,name),cp.execFileSync('git',['show','HEAD:'+name]))}
   const command=validate.split('      - name: Verify the actual Pages archive against the source SHA\n')[1].split('        run: |\n')[1].trimEnd().split('\n').map(l=>l.slice(10)).join('\n');
   const source=cp.execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8'}).trim();
   const archive=()=>cp.execFileSync('tar',['-cf',path.join(temporary,'artifact.tar'),'-C',site,'.'],{env:{...process.env,COPYFILE_DISABLE:'1'}});
   const run=()=>cp.spawnSync('bash',['-e','-c',command],{env:{...process.env,RUNNER_TEMP:temporary,GITHUB_OUTPUT:path.join(temporary,'outputs'),GITHUB_SHA:source},encoding:'utf8'});
-  archive();let r=run();assert.equal(r.status,0,r.stderr);const receipt=JSON.parse(r.stdout);assert.equal(receipt.sourceSha,source);assert.equal(Object.keys(receipt.files).length,7);assert.equal(receipt.artifactSHA256,crypto.createHash('sha256').update(fs.readFileSync(path.join(temporary,'artifact.tar'))).digest('hex'));
+  archive();let r=run();assert.equal(r.status,0,r.stderr);const receipt=JSON.parse(r.stdout);assert.equal(receipt.sourceSha,source);assert.equal(Object.keys(receipt.files).length,8);assert.equal(receipt.artifactSHA256,crypto.createHash('sha256').update(fs.readFileSync(path.join(temporary,'artifact.tar'))).digest('hex'));
   fs.writeFileSync(path.join(site,'unexpected.txt'),'synthetic');archive();assert.notEqual(run().status,0);fs.unlinkSync(path.join(site,'unexpected.txt'));
-  fs.appendFileSync(path.join(site,'index.html'),' ');archive();assert.notEqual(run().status,0);
+  for(const name of names){const p=path.join(site,name),original=fs.readFileSync(p);fs.appendFileSync(p,' ');archive();assert.notEqual(run().status,0,name);fs.writeFileSync(p,original)}
  });
 }finally{fs.rmSync(temporary,{recursive:true,force:true})}
 assert.equal(checks.length,23);console.log('RELEASE_CONTROL_TOTAL 23/23 PASS (offline predicates, permissions, pin and archive; live hold verified separately)');

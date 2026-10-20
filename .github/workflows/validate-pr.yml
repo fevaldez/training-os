@@ -17,12 +17,13 @@ jobs:
   validate:
     name: Validate current suites
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
-      - name: Checkout PR merge revision
+      - name: Checkout PR candidate HEAD
         uses: actions/checkout@v6
         with:
           persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
           # Pinned baseline is executed by the durability regression harness.
           fetch-depth: 0
 
@@ -40,6 +41,11 @@ jobs:
 
       - name: Validate release and static contract
         run: python scripts/validate_release.py
+
+      - name: Offline shell contract
+        run: |
+          python3 scripts/build_offline.py --check
+          node tests/offline_contract.test.js
 
       - name: Test training engine
         run: node scripts/test_engine.js
@@ -61,3 +67,19 @@ jobs:
 
       - name: Release safety controls
         run: node tests/release_controls.test.js
+
+      - name: Install pinned disposable browser tooling
+        run: |
+          npm install --prefix "$RUNNER_TEMP/tos-browser-deps" --no-save --package-lock=false --ignore-scripts --no-audit --no-fund playwright@1.62.1
+          node "$RUNNER_TEMP/tos-browser-deps/node_modules/playwright/cli.js" install --with-deps chromium
+
+      - name: Original, G3/G4.1, M5, superset-skip and offline browser gates
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/tos-browser-deps/node_modules/playwright
+        run: |
+          node tests/storage_g3_browser.test.js --original-suite
+          node tests/storage_g3_browser.test.js
+          node tests/m5_load_browser.test.js
+          node tests/m5_scroll_browser.test.js
+          node tests/superset_skip_browser.test.js
+          node tests/offline_browser.test.js

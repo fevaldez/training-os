@@ -1,0 +1,9 @@
+OFFLINE_BROWSER Chromium 145.0.7632.6 | 8dd621d05ef66baa9773518c4a45ac3bdd7ed5d1 | loopback no-store
+FAIL | OFFLINE_BROWSER F3 complete online installation then closed-tab offline relaunch | page.goto: net::ERR_INTERNET_DISCONNECTED at http://127.0.0.1:58997/training-os/
+Call log:
+[2m  - navigating to "http://127.0.0.1:58997/training-os/", waiting until "load"[22m
+
+    at /private/tmp/training-os-pr-a/tests/offline_browser.test.js:21:75
+    at async test (/private/tmp/training-os-pr-a/tests/offline_browser.test.js:17:35)
+    at async /private/tmp/training-os-pr-a/tests/offline_browser.test.js:20:2
+OFFLINE_BROWSER_TOTAL 0/1 PASS | BASELINE RED

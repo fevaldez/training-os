@@ -17,6 +17,12 @@ on:
       - "index.html"
       - "version.json"
       - "manifest.webmanifest"
+      - "sw.js"
+      - "scripts/sw-runtime.js"
+      - "scripts/build_offline.py"
+      - "scripts/test_reliability_rc621.py"
+      - "tests/**"
+      - ".github/workflows/validate-pr.yml"
       - "training-os-loop-v1-*.png"
       - "scripts/validate_release.py"
       - "scripts/test_engine.js"
@@ -67,6 +73,11 @@ jobs:
       - name: Validate release
         run: python scripts/validate_release.py
 
+      - name: Offline shell contract
+        run: |
+          python3 scripts/build_offline.py --check
+          node tests/offline_contract.test.js
+
       - name: Test training engine
         run: node scripts/test_engine.js
 
@@ -102,12 +113,13 @@ jobs:
           node tests/m5_load_browser.test.js
           node tests/m5_scroll_browser.test.js
           node tests/superset_skip_browser.test.js
+          node tests/offline_browser.test.js
 
       - name: Build deploy artifact
         run: |
           rm -rf _site
           mkdir _site
-          cp index.html version.json manifest.webmanifest _site/
+          cp index.html version.json manifest.webmanifest sw.js _site/
           cp training-os-loop-v1-180.png _site/
           cp training-os-loop-v1-192.png _site/
           cp training-os-loop-v1-512.png _site/
@@ -126,7 +138,7 @@ jobs:
           import hashlib,json,os,subprocess,tarfile
           from pathlib import Path
           source=os.environ['GITHUB_SHA']
-          names=('index.html','version.json','manifest.webmanifest','training-os-loop-v1-180.png','training-os-loop-v1-192.png','training-os-loop-v1-512.png','training-os-loop-v1-1024.png')
+          names=('index.html','version.json','manifest.webmanifest','training-os-loop-v1-180.png','training-os-loop-v1-192.png','training-os-loop-v1-512.png','training-os-loop-v1-1024.png','sw.js')
           expected={n:subprocess.check_output(['git','show',source+':'+n]) for n in names}
           archive=Path(os.environ['RUNNER_TEMP'])/'artifact.tar'
           with tarfile.open(archive) as handle:

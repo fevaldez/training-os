@@ -1,0 +1,13 @@
+OFFLINE_BROWSER Chromium 145.0.7632.6 | CURRENT | loopback no-store
+PASS | OFFLINE_BROWSER F3 complete online installation then closed-tab offline relaunch
+PASS | OFFLINE_BROWSER F1 measured readiness requires controlled client; no-store JS/MIME and shell hashes
+PASS | OFFLINE_BROWSER F2/F3 active state and history survive 10 offline cold-tab launches, set save and synthetic export/restore
+PASS | OFFLINE_BROWSER F3 full browser process restart relaunches cached shell offline with unchanged synthetic storage
+PASS | OFFLINE_BROWSER F3 multi-tab update waits through active writes; closing all tabs adopts complete version
+PASS | OFFLINE_BROWSER F1 failed real browser update retains active worker, cache and workout bytes
+PASS | OFFLINE_BROWSER F1 legacy worker upgrades on same origin without deleting unrelated caches/storage
+PASS | OFFLINE_BROWSER F1 actual old HTML unregisters new worker; new namespace survives and current bootstrap recovers
+PASS | OFFLINE_BROWSER F2 corruption fails closed offline, reports incomplete, preserves data and repairs after reconnection
+PASS | OFFLINE_BROWSER F3 damaged old cache with unavailable old source discovers complete forward update from recovery navigation
+PASS | OFFLINE_BROWSER F2 exact route isolation and external videos stay network-only with zero new cache entries
+OFFLINE_BROWSER_TOTAL 11/11 PASS | CURRENT

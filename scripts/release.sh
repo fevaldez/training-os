@@ -34,7 +34,10 @@ if [[ "$BEHIND" != "0" ]]; then
 fi
 
 python scripts/bump_version.py "$VERSION"
+python3 scripts/build_offline.py
 python scripts/validate_release.py
+python3 scripts/build_offline.py --check
+node tests/offline_contract.test.js
 node scripts/test_engine.js
 node scripts/test_ui_static.js
 python3 scripts/test_reliability_rc621.py
@@ -43,7 +46,7 @@ if [[ -z "$MESSAGE" ]]; then
   MESSAGE="release: Training OS $VERSION"
 fi
 
-git add index.html version.json manifest.webmanifest training-os-loop-v1-*.png \
+git add sw.js scripts/sw-runtime.js scripts/build_offline.py tests/offline* index.html version.json manifest.webmanifest training-os-loop-v1-*.png \
   scripts/bump_version.py scripts/validate_release.py scripts/test_engine.js scripts/test_ui_static.js scripts/release.sh scripts/test_reliability_rc621.py \
   .github/workflows/release-pages.yml
 
@@ -60,4 +63,4 @@ fi
 
 git ls-remote --exit-code --tags origin "refs/tags/v$VERSION" >/dev/null
 
-echo "Release $VERSION verified on origin/main. GitHub Actions will validate and deploy automatically."
+echo "Release $VERSION verified on origin/main. GitHub Actions validates only. Publication still requires manual dispatch for this SHA and owner environment approval."
