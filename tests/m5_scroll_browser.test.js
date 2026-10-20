@@ -37,6 +37,91 @@ const copy=x=>JSON.parse(JSON.stringify(x));
   }
   async function session(x){await x.p.locator('#resumeBtn').click();await x.p.evaluate(async()=>{await pendingActive;await __frames()})}
   async function test(name,fn){try{await fn();results.push(true);console.log('PASS | M5_SCROLL '+name)}catch(e){results.push(false);console.log('FAIL | M5_SCROLL '+name+' | '+e.message.split('\n')[0])}}
+  // Interaction receipts are the contract. Render observations remain diagnostic, not a count gate.
+  const pointerSteps=[
+   {label:'initial:wPlus',selector:'#wPlus',weight:'49',kg:49*0.45359237,reps:9,rir:3,zero:false},
+   {label:'initial:wMinus',selector:'#wMinus',weight:'44',kg:44*0.45359237,reps:9,rir:3,zero:false},
+   {label:'initial:rPlus',selector:'#rPlus',weight:'44',kg:44*0.45359237,reps:10,rir:3,zero:false},
+   {label:'initial:rMinus',selector:'#rMinus',weight:'44',kg:44*0.45359237,reps:9,rir:3,zero:false},
+   {label:'initial:wZero',selector:'#wZero',weight:'0',kg:0,reps:9,rir:3,zero:true},
+   {label:'initial:rir2',selector:'[data-rir="2"]',weight:'0',kg:0,reps:9,rir:2,zero:true},
+   {label:'input:weight',selector:'#wInput',fill:'27.5',weight:'27.5',kg:27.5*0.45359237,reps:9,rir:2,zero:false},
+   {label:'input:reps',selector:'#rInput',fill:'12',weight:'27.5',kg:27.5*0.45359237,reps:12,rir:2,zero:false},
+   {label:'rapid:wPlus',selector:'#wPlus',weight:'32.5',kg:32.5*0.45359237,reps:12,rir:2,zero:false},
+   {label:'rapid:rPlus',selector:'#rPlus',weight:'32.5',kg:32.5*0.45359237,reps:13,rir:2,zero:false},
+   {label:'rapid:rir1',selector:'[data-rir="1"]',weight:'32.5',kg:32.5*0.45359237,reps:13,rir:1,zero:false}
+  ];
+  function expectedSession(initial,step,actual){
+   assert.equal(typeof actual.updatedAt,'string',step.label+' updatedAt');assert(Number.isFinite(Date.parse(actual.updatedAt)),step.label+' updatedAt');
+   const expected=copy(initial);expected.updatedAt=actual.updatedAt;
+   Object.assign(expected.drafts['0_1'],{weightKg:step.kg,reps:step.reps,rir:step.rir});return expected;
+  }
+  function checkStep(initial,step,sample,receipt){
+   assert.equal(sample.weight,step.weight,step.label+' UI weight');assert.equal(sample.reps,String(step.reps),step.label+' UI reps');
+   assert.equal(sample.rir,String(step.rir),step.label+' UI RIR');assert.equal(sample.zero,String(step.zero),step.label+' explicit zero');
+   assert.deepEqual(sample.session,expectedSession(initial,step,sample.session),step.label+' RAM active');
+   assert.equal(receipt.ok,true,step.label+' verified save');assert.equal(receipt.status,'verified',step.label+' verified save');
+   assert.deepEqual(JSON.parse(receipt.raw),sample.session,step.label+' persisted write receipt');
+  }
+  async function pointerContract(x,control={}){
+   await session(x);
+   const initial=await x.p.evaluate(control=>{
+    window.__contractControl=control;window.__contractAction='';window.__recoveryTrace=[];window.__anchorFailures=[];window.__renderCalls=0;window.__renderBatch=null;window.__controlInjected=false;
+    window.__contractSample=()=>{const e=document.activeElement;return {...__sample('contract'),focusToken:e.id||e.getAttribute('data-rir')||e.tagName,weight:document.querySelector('#wInput').value,reps:document.querySelector('#rInput').value,rir:document.querySelector('[data-rir].active')?.dataset.rir,zero:document.querySelector('#wZero').getAttribute('aria-pressed'),session:JSON.parse(JSON.stringify(active()))}};
+    // A legal batched observer delivers once per completed interaction/task group.
+    // Every real render still runs and every anchor/focus comparison is retained, even within a batch.
+    window.__flushRenderBatch=()=>{if(__renderBatch){__recoveryTrace.push(__renderBatch);__renderBatch=null}};
+    const render=renderRecovery;renderRecovery=()=>{
+     const before=__contractSample();render();
+     if(!__controlInjected&&control.anchor){__controlInjected=true;if(control.anchor==='scroll')document.querySelector('#sessionStage').style.transform='translateY(3px)';else document.querySelector('#closeSession').focus({preventScroll:true})}
+     const after=__contractSample(),row={before,after};__renderCalls++;
+     if(Math.abs(after.stage.top-before.stage.top)>=1||after.focusToken!==before.focusToken)__anchorFailures.push(row);
+     if(control.batch)__renderBatch=row;else __recoveryTrace.push(row);
+    };
+    // Deliberate faults are confined to this disposable page; no application bytes change.
+    for(const type of ['click','input'])document.addEventListener(type,event=>{if(control.drop&&__contractAction===control.drop){event.preventDefault();event.stopImmediatePropagation()}},true);
+    return {sample:__contractSample(),unit,history:localStorage.getItem('fv4.history')};
+   },control);
+   assert.equal(initial.unit,'lb');assert.equal(initial.sample.weight,'44');assert.deepEqual(initial.sample.session.drafts['0_1'],{...x.data.active.drafts['0_1'],weightKg:20});
+   const checkpoints=[];
+   for(const step of pointerSteps.slice(0,8)){
+    await x.p.evaluate(label=>{__contractAction=label},step.label);
+    if(step.fill!==undefined)await x.p.locator(step.selector).fill(step.fill);else await x.p.locator(step.selector).click();
+    const result=await x.p.evaluate(async()=>{const receipt=await pendingActive;await __frames();__flushRenderBatch();return {sample:__contractSample(),receipt}});
+    checkStep(initial.sample.session,step,result.sample,result.receipt);assert.equal(result.sample.active,result.sample.ram,step.label+' disk/RAM');checkpoints.push({label:step.label,draft:result.sample.session.drafts['0_1']});
+   }
+   // No await between these dispatches: all three snapshots must independently reach verified storage.
+   const queued=await x.p.evaluate(async steps=>{
+    const pending=[],samples=[];
+    for(const step of steps){__contractAction=step.label;document.querySelector(step.selector).click();samples.push(__contractSample());pending.push(pendingActive)}
+    const receipts=await Promise.all(pending);await __frames();__flushRenderBatch();return {samples,receipts};
+   },pointerSteps.slice(8));
+   for(let i=0;i<3;i++){const step=pointerSteps[8+i];checkStep(initial.sample.session,step,queued.samples[i],queued.receipts[i]);checkpoints.push({label:step.label,draft:queued.samples[i].session.drafts['0_1']})}
+   const final=await x.p.evaluate(control=>{
+    if(control.persist){const a=JSON.parse(localStorage.getItem('fv4.active'));if(control.persist==='session')a.id='synthetic-wrong-session';else a.drafts['0_1'][control.persist]+=1;localStorage.setItem('fv4.active',JSON.stringify(a))}
+    return {sample:__contractSample(),rows:__recoveryTrace,anchorFailures:__anchorFailures,renderCalls:__renderCalls,history:localStorage.getItem('fv4.history')};
+   },control);
+   const last=pointerSteps.at(-1);checkStep(initial.sample.session,last,final.sample,queued.receipts.at(-1));
+   assert.equal(final.sample.active,final.sample.ram,'final persisted active must equal RAM');
+   assert.deepEqual(JSON.parse(final.sample.active),expectedSession(initial.sample.session,last,JSON.parse(final.sample.active)),'final persisted active state');
+   assert.equal(final.history,initial.history,'history bytes unchanged');assert.deepEqual(JSON.parse(final.history),x.data.history);
+   assert.equal(final.anchorFailures.length,0,'unexpected scroll/focus change during render');
+   assert(final.renderCalls>0,'recovery render instrumentation must execute');
+   for(const{before,after}of final.rows){assert(Math.abs(after.stage.top-before.stage.top)<1,'render scroll anchor');assert.equal(after.focusToken,before.focusToken,'render focus')}
+   assert(final.sample.recoveryHidden,'verified recovery state');assert.deepEqual(x.errors,[]);
+   return {checkpoints,renderCalls:final.renderCalls,observations:final.rows.length,rows:final.rows.map(({before:b,after:a})=>({stageDelta:a.stage.top-b.stage.top,overlayDelta:a.overlay-b.overlay,focusBefore:b.focusToken,focusAfter:a.focusToken,pending:!a.recoveryHidden,diskMatchesRAM:a.active===a.ram}))};
+  }
+  if(process.argv.includes('--negative-controls')){
+   let passed=0;
+   const x=await open();try{const t=await pointerContract(x,{batch:true});assert.equal(t.observations,9,'one delivered observation per six buttons, two inputs and queued task');assert(t.renderCalls>t.observations);console.log('PASS | M5_CONTROL A batched observer delivery: '+t.observations+' observations, '+t.renderCalls+' renders, 11 verified interactions; no inference about prior CI batching');passed++}finally{await x.ctx.close()}
+   const controls=[
+    ...['initial:wPlus','rapid:wPlus','rapid:rPlus','rapid:rir1'].map(drop=>({name:'B dropped '+drop,control:{drop},error:new RegExp(drop+' (UI|RAM)')})),
+    ...['weightKg','reps','rir','session'].map(persist=>({name:'C wrong persisted '+persist,control:{persist},error:/final persisted active/})),
+    ...['scroll','focus'].map(anchor=>({name:'D unexpected '+anchor,control:{anchor},error:/unexpected scroll\/focus change/}))
+   ];
+   for(const c of controls){const x=await open();try{await assert.rejects(()=>pointerContract(x,c.control),c.error);console.log('PASS | M5_CONTROL '+c.name+' rejected');passed++}finally{await x.ctx.close()}}
+   console.log('M5_CONTROL_TOTAL '+passed+'/11 PASS');return;
+  }
   await test('same active tab preserves viewport, focused DOM and stored session on all three pages',async()=>{
    const x=await open();try{for(const id of ['today','program','progress']){
     const trace=await x.p.evaluate(async id=>{showPage(id);await __frames();window.scrollTo(0,350);const el=document.querySelector('#'+id+' button');el.focus({preventScroll:true});const before={y:scrollY,focus:el,active:localStorage.getItem('fv4.active')},calls=__scrolls.length;document.querySelector('[data-page="'+id+'"]').click();await __frames();return {id,before:before.y,after:scrollY,focusPreserved:document.activeElement===before.focus&&before.focus.isConnected,scrollCalls:__scrolls.length-calls,activePreserved:before.active===localStorage.getItem('fv4.active')}} ,id);
@@ -56,10 +141,7 @@ const copy=x=>JSON.parse(JSON.stringify(x));
    const x=await open();try{await session(x);for(const[id,value]of [['wInput','25.25'],['rInput','11']]){const t=await x.p.evaluate(async({id,value})=>{const e=document.getElementById(id);e.focus();await __frames();const before=__sample('before');e.value=value;e.dispatchEvent(new Event('input',{bubbles:true}));const pending=__sample('pending');await pendingActive;await __frames();return {before,pending,after:__sample('verified'),sameNode:document.getElementById(id)===e}},{id,value});assert(t.sameNode);for(const r of [t.pending,t.after]){assert.equal(r.focus,id);assert.equal(r.windowY,t.before.windowY);assert(Math.abs(r.stage.top-t.before.stage.top)<1)}assert.equal(t.after.active,t.after.ram)}}finally{await x.ctx.close()}
   });
   await test('real pointer taps, text input and rapid queued autosaves preserve the focused content anchor',async()=>{
-   const x=await open();try{await session(x);await x.p.evaluate(()=>{window.__recoveryTrace=[];const render=renderRecovery;renderRecovery=()=>{const before=__sample('before-render');render();__recoveryTrace.push({before,after:__sample('after-render')})}});
-    for(const selector of ['#wPlus','#wMinus','#rPlus','#rMinus','#wZero','[data-rir="2"]']){await x.p.locator(selector).click();await x.p.evaluate(()=>pendingActive)}await x.p.locator('#wInput').fill('27.5');await x.p.locator('#rInput').fill('12');await x.p.evaluate(async()=>{document.querySelector('#wPlus').click();document.querySelector('#rPlus').click();document.querySelector('[data-rir="1"]').click();await pendingActive;await __frames()});
-    const rows=await x.p.evaluate(()=>__recoveryTrace);console.log('M5_POINTER_TRACE '+JSON.stringify(rows.map(({before:b,after:a})=>({stageDelta:a.stage.top-b.stage.top,overlayDelta:a.overlay-b.overlay,focusBefore:b.focus,focusAfter:a.focus,pending:!a.recoveryHidden,diskMatchesRAM:a.active===a.ram}))));assert(rows.length>=20);for(const{before,after}of rows){assert(Math.abs(after.stage.top-before.stage.top)<1);assert.equal(after.focus,before.focus)}assert(await x.p.evaluate(()=>localStorage.getItem('fv4.active')===JSON.stringify(active())));assert.deepEqual(x.errors,[]);
-   }finally{await x.ctx.close()}
+   const x=await open();try{const trace=await pointerContract(x);console.log('M5_INTERACTION_TRACE '+JSON.stringify(trace.checkpoints));console.log('M5_POINTER_TRACE '+JSON.stringify(trace.rows));console.log('M5_POINTER_CONTRACT 6 buttons + 2 inputs + 3 queued interactions verified; '+trace.observations+' render observations (diagnostic only)');}finally{await x.ctx.close()}
   });
   await test('real pending/failure/dirty states retain Retry and Export; retry verifies exact draft',async()=>{
    const x=await open();try{await session(x);await x.p.evaluate(async()=>{window.__held=navigator.locks.request('training-os-data-v1',()=>new Promise(r=>window.__release=r));while(!window.__release)await new Promise(r=>setTimeout(r,0));document.querySelector('#rInput').value='17';document.querySelector('#rInput').dispatchEvent(new Event('input',{bubbles:true}))});
