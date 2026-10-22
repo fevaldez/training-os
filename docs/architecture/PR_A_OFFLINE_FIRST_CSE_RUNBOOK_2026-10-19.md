@@ -1,9 +1,55 @@
-# PR-A Offline-first — CSE, diseño acotado y run guide ejecutable
+# PR-A Offline-first — cierre LIVE RC6.4.0 y runbook histórico
 
-**Estado:** DISEÑO/PROPUESTA; **NO IMPLEMENTADO**, no autoriza merge ni deployment. Fecha 2026-10-19. Repositorio `fevaldez/training-os`.  
-**Baseline:** `main=ba5e4f7ee405d96c5e9100b297bc5481bf183e80`, `4.0.0-rc6.3.1` LIVE, PR #5 integrado.  
+**Estado vigente (2026-10-21, America/Monterrey):** PR-A ENTREGADO, PR #7 MERGED, `4.0.0-rc6.4.0` LIVE VERIFIED. Este documento no autoriza nuevas acciones. El CSE y los prompts originales del 19-oct se conservan como archivo histórico.
+**Source desplegado:** `5b69389c5a8d0a1257a33c157b4da5488899080c`; candidate `80f09b93b7261a8aada93936431c6c2e2131a6e3`; baseline pre-merge `8dd621d05ef66baa9773518c4a45ac3bdd7ed5d1`.
 **Objetivo verificable:** una instalación/carga **previamente completada** de Training OS puede abrirse de nuevo y ejecutar/guardar una sesión sin conectividad, en Safari y Home Screen compatibles, sin perder historial/datos, con actualización controlada y restauración de funcionamiento al reconectar.  
 **Exclusiones explícitas:** no garantiza primera visita sin conexión, no repara DNS/TLS/red celular al hacer la primera descarga, no promete inmunidad a evicción o borrado del navegador/OS, no proporciona sync cloud/multi-device, no habilita uso de videos remotos offline, no crea SaaS.
+
+## Cierre vigente y uso de este runbook
+
+El [checkpoint canónico actualizado](../../TRAINING_OS_RETOMA_2026-10-19.md) contiene los ocho hashes servidos, incident log reconciliado, lecciones, backlog priorizado y **prompt exacto para retomar en Codex o ChatGPT**. Reutilizar esos resultados; no volver a ejecutar el CSE, M0–M4 ni los prompts H–J por encontrarlos aquí. Si el Draft PR documental sigue sin integrar, leer ambos archivos desde `codex/rc640-live-checkpoint`; después del merge, leerlos desde main y distinguir SHA documental de source desplegado.
+
+### Hitos cerrados y procedencia
+
+| Gate | Resultado registrado | Evidencia |
+|---|---|---|
+| Registro original | COMPLETADO | [PR #6 MERGED](https://github.com/fevaldez/training-os/pull/6) |
+| Implementación/CI PR-A | COMPLETADO | [PR #7 MERGED](https://github.com/fevaldez/training-os/pull/7); [candidate CI #39705646023 SUCCESS](https://github.com/fevaldez/training-os/actions/runs/39705646023) |
+| Runtime tras QA de Preview | Identidad de release únicamente | Parent `ef39ab5acf5cfc38dbd161265b6b1742339b7249` → candidate RC6.4.0: cinco referencias de release del HTML, `version.json`, worker regenerado y assertions de identidad; runtime funcional sin delta nuevo |
+| Merge y CI de main | COMPLETADO | Merge `5b69389c5a8d0a1257a33c157b4da5488899080c`, ancestros conservados; [#39716304405 SUCCESS](https://github.com/fevaldez/training-os/actions/runs/39716304405), job deploy SKIPPED |
+| Publicación protegida | COMPLETADO | Un dispatch [#39716512481 SUCCESS](https://github.com/fevaldez/training-os/actions/runs/39716512481), `approved_sha` exacto y `publish=true`; aprobación humana registrada `fevaldez`; deployment `7242896994` SUCCESS |
+| HTTP/artefacto de producción | PASS técnico | [Producción](https://fevaldez.github.io/training-os/), release RC6.4.0; ocho hashes, tamaños, MIME y ruta correctos; archive exacto al source. Tabla completa en checkpoint canónico |
+| Instalación/control en Pages | PASS técnico | Contexto Chromium nuevo desechable, scope `/training-os/`, build `4647f32b6a4de08888090f212bbdcbbaa77f4999ecb8447b3387ec3c0446b94e`, siete entradas íntegras de Cache API, arranque controlado y cold-tab relaunch offline PASS |
+| Safari y Home Screen físicos | PASS reportado por owner | Respuesta final “Both Safari and Home Screen passed” en este chat: RC6.4.0, historia/sesión intactas, instalación lista y relanzamiento en modo avión. Atestación, no medición remota |
+
+No se afirma un número físico de diez relanzamientos, cinco interrupciones, ni pruebas físicas de cuota/evicción que no figuran en la respuesta del owner. La matriz F original contiene **criterios propuestos**, no resultados completados por inferencia. La QA Vercel aislada no demostró por sí sola migración del origen Pages; el smoke fresco de Pages y la confirmación del propietario son evidencia posterior diferenciada.
+
+### Contrato realmente entregado
+
+- Cache-first de una versión coherente, con siete assets públicos permitidos y `sw.js` como octavo archivo del pipeline; manifest de build con tamaños/SHA-256/MIME y digest de runtime, sin hash circular del worker.
+- Instalación completa validada y readback; parcial falla sin false-ready. Registro/control y cache completo deben coincidir para indicar “Disponible sin conexión”.
+- Scope `/training-os/` y fetch de rutas/URLs exactas; otros caminos, métodos y orígenes usan red. Videos son online-only. La identidad PWA no cambió.
+- Activación normal diferida hasta cerrar clientes controlados; no `skipWaiting`, `clients.claim`, reload forzado ni borrado global. Se conservan caches anteriores/ajenos; un update fallido no elimina la versión activa válida.
+- Las dos rutinas de cleanup se retiraron del HTML nuevo; esto no impide que una pestaña legacy aún abierta ejecute su código anterior. Conservar trabajo y cerrar clientes viejos es parte del cutover.
+- SW no guarda datos personales; `fv4.*`, journals, locks, campos desconocidos y motor/prescripciones se preservaron. No backend, sync cloud/multidispositivo ni SaaS.
+
+### Límites y riesgos que NO se cerraron
+
+1. **Post-boot “Script error”: OPEN/UNKNOWN.** Riesgo residual aceptado para este release; no se declara inocuo. El smoke Chromium no lo reprodujo, lo cual no es RCA ni cierre. Detener release work si aparece crash reproducible, persistencia rota o fallo offline warm-installed.
+2. **Main sin protección: OPEN**, aceptado para esta integración controlada. El hold Pages se verificó con reviewer `fevaldez`, self-review permitido, bypass deshabilitado y main-only; no sustituye branch protection. Cambios de settings requieren aprobación exacta nueva y reviewer elegible sin deadlock.
+3. **Primera carga 5G: OPEN/UNKNOWN.** Warm-install offline no repara primera descarga, DNS/TLS/CDN/ruta ni acredita culpable. Solo investigar en una reproducción con `index.html`/`version.json` y WARP en la misma ventana de fallo; sin nuevo research general.
+4. **Evicción/cuota y rollback de datos:** cache puede desaparecer; conservar restores/exports privados por almacén. Un shell anterior no garantiza compatibilidad con persistencia escrita después. Preferir recuperación/forward-fix compatible; no rollback HTML ciego.
+5. **Almacenes/contextos:** Safari, Home Screen y dispositivos no sincronizan automáticamente. No cache clearing, desinstalación, unregister ni force activation como troubleshooting.
+
+### Próxima misión y recuperación
+
+Prioridad: (1) reproducción causal acotada del Script error, (2) propuesta/aprobación de protección main, (3) RCA 5G solo al reproducirse, (4) compatibilidad/recovery de versiones, (5) una mejora de producto elegida por owner. El checkpoint canónico especifica evidencia, responsable y límites; no se inicia ninguna por leerlo.
+
+Para una incidencia, preservar sesión/historia, backups y señales no sensibles; detener nuevas publicaciones si hay impacto de integridad o disponibilidad demostrable. No subir datos privados. Para retomar normalmente, guardar trabajo, cerrar clientes viejos, reabrir online y medir readiness antes de probar modo avión; un tab viejo no implica deployment fallido.
+
+## Archivo del diseño y run guide original (A–K)
+
+**Las secciones siguientes documentan el razonamiento y la secuencia del 2026-10-19, previos a PR #7.** Sus referencias a cleanup presente, siete assets, PR-A pendiente, matrices vacías y prompts de implementación/revisión son históricas. No son instrucciones vigentes, autorización para nuevas acciones ni evidencia física del release actual. No ejecutar los prompts H–J sin una nueva misión explícita; PR-A ya se implementó y publicó.
 
 ## A. CSE — self-evaluation crítico y contradicciones de diseño
 
