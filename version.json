@@ -1,9 +1,9 @@
 {
   "app": "Training OS",
   "brand": "T·OS",
-  "release": "4.0.0-rc6.3.1",
+  "release": "4.0.0-rc6.4.0",
   "icon": "training-os-loop-v1",
-  "index_sha256": "138cc1a8b4e766b9dd7d651c77a8f2a4c3952d584b9e2515a3b64eb58aeed406",
+  "index_sha256": "e75f576c43868064e3f126956aacfaa5645ae5dbc19e6ac5a913715993ead1e8",
   "deploy_mode": "github-actions-pages",
-  "updated_at": "2026-10-16"
+  "updated_at": "2026-10-21"
 }
