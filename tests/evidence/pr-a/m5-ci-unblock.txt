@@ -1,0 +1,96 @@
+PR-A M5 CI unblock — stopped on unrelated offline-suite failure
+Starting/current remote HEAD: 7747c89053718b9c376a68e41cac2a036de0a12c
+No commit, push, new CI execution, retry, preview or deployment.
+
+RED — existing CI 39387536719:
+tests/m5_scroll_browser.test.js:61 required rows.length >= 20; actual observations: 19.
+All recorded stage deltas were zero; focus unchanged; final disk/RAM matched.
+The historical trace did not verify all interactions. Batching or lost interactions are NOT proven causes.
+
+GREEN — corrected local M5 suite, Chromium 145.0.7632.6:
+M5_INTERACTION_TRACE [{"label":"initial:wPlus","draft":{"weightKg":22.22602613,"reps":9,"rir":3,"reason":"<svg onload=alert(1)>","futureField":{"keep":1}}},{"label":"initial:wMinus","draft":{"weightKg":19.958064280000002,"reps":9,"rir":3,"reason":"<svg onload=alert(1)>","futureField":{"keep":1}}},{"label":"initial:rPlus","draft":{"weightKg":19.958064280000002,"reps":10,"rir":3,"reason":"<svg onload=alert(1)>","futureField":{"keep":1}}},{"label":"initial:rMinus","draft":{"weightKg":19.958064280000002,"reps":9,"rir":3,"reason":"<svg onload=alert(1)>","futureField":{"keep":1}}},{"label":"initial:wZero","draft":{"weightKg":0,"reps":9,"rir":3,"reason":"<svg onload=alert(1)>","futureField":{"keep":1}}},{"label":"initial:rir2","draft":{"weightKg":0,"reps":9,"rir":2,"reason":"<svg onload=alert(1)>","futureField":{"keep":1}}},{"label":"input:weight","draft":{"weightKg":12.473790175000001,"reps":9,"rir":2,"reason":"<svg onload=alert(1)>","futureField":{"keep":1}}},{"label":"input:reps","draft":{"weightKg":12.473790175000001,"reps":12,"rir":2,"reason":"<svg onload=alert(1)>","futureField":{"keep":1}}},{"label":"rapid:wPlus","draft":{"weightKg":14.741752025,"reps":12,"rir":2,"reason":"<svg onload=alert(1)>","futureField":{"keep":1}}},{"label":"rapid:rPlus","draft":{"weightKg":14.741752025,"reps":13,"rir":2,"reason":"<svg onload=alert(1)>","futureField":{"keep":1}}},{"label":"rapid:rir1","draft":{"weightKg":14.741752025,"reps":13,"rir":1,"reason":"<svg onload=alert(1)>","futureField":{"keep":1}}}]
+M5_POINTER_CONTRACT 6 buttons + 2 inputs + 3 queued interactions verified; 20 render observations (diagnostic only)
+M5_SCROLL_TOTAL 9/9 PASS
+P0_SKIP_BROWSER_TOTAL 22/22 PASS
+
+Negative controls — disposable browser contexts only:
+PASS | M5_CONTROL A batched observer delivery: 9 observations, 20 renders, 11 verified interactions; no inference about prior CI batching
+PASS | M5_CONTROL B dropped initial:wPlus rejected
+PASS | M5_CONTROL B dropped rapid:wPlus rejected
+PASS | M5_CONTROL B dropped rapid:rPlus rejected
+PASS | M5_CONTROL B dropped rapid:rir1 rejected
+PASS | M5_CONTROL C wrong persisted weightKg rejected
+PASS | M5_CONTROL C wrong persisted reps rejected
+PASS | M5_CONTROL C wrong persisted rir rejected
+PASS | M5_CONTROL C wrong persisted session rejected
+PASS | M5_CONTROL D unexpected scroll rejected
+PASS | M5_CONTROL D unexpected focus rejected
+M5_CONTROL_TOTAL 11/11 PASS
+
+Unchanged offline browser suite — single local invocation, then STOP:
+OFFLINE_BROWSER Chromium 145.0.7632.6 | CURRENT | loopback no-store
+PASS | OFFLINE_BROWSER F3 complete online installation then closed-tab offline relaunch
+PASS | OFFLINE_BROWSER F1 measured readiness requires controlled client; no-store JS/MIME and shell hashes
+PASS | OFFLINE_BROWSER F2/F3 active state and history survive 10 offline cold-tab launches, set save and synthetic export/restore
+PASS | OFFLINE_BROWSER F3 full browser process restart relaunches cached shell offline with unchanged synthetic storage
+PASS | OFFLINE_BROWSER F3 multi-tab update waits through active writes; closing all tabs adopts complete version
+PASS | OFFLINE_BROWSER F1 failed real browser update retains active worker, cache and workout bytes
+FAIL | OFFLINE_BROWSER F1 legacy worker upgrades on same origin without deleting unrelated caches/storage | page.goto: Timeout 30000ms exceeded.
+Call log:
+[2m  - navigating to "http://127.0.0.1:64188/training-os/", waiting until "load"[22m
+
+    at /private/tmp/training-os-pr-a/tests/offline_browser.test.js:39:927
+    at async test (/private/tmp/training-os-pr-a/tests/offline_browser.test.js:21:112)
+    at async /private/tmp/training-os-pr-a/tests/offline_browser.test.js:39:2
+PASS | OFFLINE_BROWSER F1 actual old HTML unregisters new worker; new namespace survives and current bootstrap recovers
+PASS | OFFLINE_BROWSER F2 corruption fails closed offline, reports incomplete, preserves data and repairs after reconnection
+PASS | OFFLINE_BROWSER F3 damaged old cache with unavailable old source discovers complete forward update from recovery navigation
+PASS | OFFLINE_BROWSER F2 exact route isolation and external videos stay network-only with zero new cache entries
+OFFLINE_BROWSER_TOTAL 10/11 PASS | CURRENT
+
+Failure point: tests/offline_browser.test.js:39:927, the online page.goto(app) for the replacement tab after waiting-worker detection and closing the prior tab. This is BEFORE setOffline(true).
+Observed failure mechanism: navigation did not reach the load event within 30000 ms.
+Underlying cause UNKNOWN: the existing log does not establish worker activation state or which load resource remained pending. No activation/batching/carrier cause is claimed.
+
+Byte preservation: all 37 tracked non-test files match the starting HEAD, including application, service worker, storage source, release helpers and both workflows.
+index.html SHA-256: 138cc1a8b4e766b9dd7d651c77a8f2a4c3952d584b9e2515a3b64eb58aeed406
+sw.js SHA-256: 2aa8cda8b2952eb5b963972d0f110d646e3257bc30e153c8916d5918c37f6d7e
+Uncommitted delta: tests/m5_scroll_browser.test.js; tests/evidence/pr-a/m5-ci-unblock.txt.
+NO-GO for independent PR-A acceptance: requested offline 11/11 and final exact-head CI acceptance have not been achieved.
+
+=== Final test-only continuation — local focused acceptance ===
+Starting local and remote HEAD: 7747c89053718b9c376a68e41cac2a036de0a12c
+Prior M5 correction is preserved byte-for-byte: 77d99b1a24a5d69a2b98e453e915f43324fddaac37ee1335f730425af1f0b471
+All original evidence above is preserved as an unchanged prefix.
+
+One bounded diagnostic REFUTES the missing-assets hypothesis in this loopback fixture: all 10 historical install assets returned 200, including icon-192.png, icon-512.png and apple-touch-icon.png. All ten cache entries had HTTP 200 and nonzero bodies. These files exist in the repository; their exclusion from the current Pages artifact is a different fact.
+Diagnostic asset statuses: [{"asset": "./", "path": "/training-os/", "statuses": [200]}, {"asset": "./index.html", "path": "/training-os/index.html", "statuses": [200]}, {"asset": "./styles.css", "path": "/training-os/styles.css", "statuses": [200]}, {"asset": "./app.mjs", "path": "/training-os/app.mjs", "statuses": [200]}, {"asset": "./engine.mjs", "path": "/training-os/engine.mjs", "statuses": [200]}, {"asset": "./program.mjs", "path": "/training-os/program.mjs", "statuses": [200]}, {"asset": "./manifest.webmanifest", "path": "/training-os/manifest.webmanifest", "statuses": [200]}, {"asset": "./icon-192.png", "path": "/training-os/icon-192.png", "statuses": [200]}, {"asset": "./icon-512.png", "path": "/training-os/icon-512.png", "statuses": [200]}, {"asset": "./apple-touch-icon.png", "path": "/training-os/apple-touch-icon.png", "statuses": [200]}]
+Diagnostic phase/state snapshots: [{"active": "activated", "phase": "historical install and activation", "scope": "http://127.0.0.1:50166/training-os/"}, {"active": "activated", "installing": "installing", "phase": "first current online navigation", "scope": "http://127.0.0.1:50166/training-os/"}, {"active": "activated", "phase": "current persistence ready", "scope": "http://127.0.0.1:50166/training-os/", "waiting": "installed"}, {"active": "activated", "phase": "new worker update and waiting", "scope": "http://127.0.0.1:50166/training-os/", "waiting": "installed"}, {"active": "activated", "phase": "close prior controlled tab", "scope": "http://127.0.0.1:50166/training-os/", "waiting": "installed"}, {"active": "activated", "phase": "replacement online navigation (original failing await)", "scope": "http://127.0.0.1:50166/training-os/"}, {"active": "activated", "phase": "replacement measured offline ready", "scope": "http://127.0.0.1:50166/training-os/"}, {"active": "activated", "phase": "offline relaunch", "scope": "http://127.0.0.1:50166/training-os/"}]
+Diagnostic page errors: []; request failures: []; old activation before migration: verified. Entire diagnostic PASS within per-phase 10-second and overall 40-second deadlines.
+Proven harness ordering gap: after the prior controlled tab closed, the observer still saw waiting=installed and active=activated. The original test immediately navigated a replacement client without awaiting natural cutover. The earlier 30-second timeout was NOT reproduced in this diagnostic; no retrospective runtime root cause is claimed.
+Correction: outside-scope observer arms a statechange listener on the exact waiting worker; close every controlled app client; await natural activation; verify this exact worker is active with no waiting worker; only then navigate. No skipWaiting, clients.claim, lifecycle mock, retry, arbitrary sleep or timeout increase is added.
+Checks strengthened: all historical install HTTP statuses; all ten historical cache entries; legacy installation/activation; exact waiting-to-active worker identity; new build/control/readiness; unrelated cache sentinel bytes; complete fv4 synthetic storage before/after online upgrade and offline relaunch; page errors and failed requests logged.
+
+Focused local results (Chromium 145.0.7632.6):
+M5_SCROLL_TOTAL 9/9 PASS
+P0_SKIP_BROWSER_TOTAL 22/22 PASS
+PASS | M5_CONTROL A batched observer delivery: 9 observations, 20 renders, 11 verified interactions; no inference about prior CI batching
+PASS | M5_CONTROL B dropped initial:wPlus rejected
+PASS | M5_CONTROL B dropped rapid:wPlus rejected
+PASS | M5_CONTROL B dropped rapid:rPlus rejected
+PASS | M5_CONTROL B dropped rapid:rir1 rejected
+PASS | M5_CONTROL C wrong persisted weightKg rejected
+PASS | M5_CONTROL C wrong persisted reps rejected
+PASS | M5_CONTROL C wrong persisted rir rejected
+PASS | M5_CONTROL C wrong persisted session rejected
+PASS | M5_CONTROL D unexpected scroll rejected
+PASS | M5_CONTROL D unexpected focus rejected
+M5_CONTROL_TOTAL 11/11 PASS
+LEGACY_UPGRADE_TRACE {"phases":["legacy installation and activation","first current online navigation","replacement installed and waiting","natural replacement activation with no controlled clients","replacement online navigation after activation","offline relaunch under verified replacement"],"workers":[{"phase":"legacy installation and activation","worker":"legacy","state":"installing"},{"phase":"legacy installation and activation","worker":"legacy","state":"installed"},{"phase":"legacy installation and activation","worker":"legacy","state":"activating"},{"phase":"legacy installation and activation","worker":"legacy","state":"activated"},{"phase":"legacy installation and activation","worker":"legacy","state":"activated"},{"phase":"first current online navigation","worker":"replacement","state":"installing"},{"phase":"replacement installed and waiting","worker":"replacement","state":"installed"},{"phase":"replacement installed and waiting","worker":"replacement","state":"installed"},{"phase":"natural replacement activation with no controlled clients","worker":"legacy","state":"redundant"},{"phase":"natural replacement activation with no controlled clients","worker":"replacement","state":"activating"},{"phase":"natural replacement activation with no controlled clients","worker":"replacement","state":"activating"},{"phase":"natural replacement activation with no controlled clients","worker":"replacement","state":"activated"},{"phase":"natural replacement activation with no controlled clients","worker":"replacement","state":"activated"}],"pageErrors":[],"requestFailures":[],"installAssets":[{"path":"/training-os/","statuses":[200]},{"path":"/training-os/index.html","statuses":[200]},{"path":"/training-os/styles.css","statuses":[200]},{"path":"/training-os/app.mjs","statuses":[200]},{"path":"/training-os/engine.mjs","statuses":[200]},{"path":"/training-os/program.mjs","statuses":[200]},{"path":"/training-os/manifest.webmanifest","statuses":[200]},{"path":"/training-os/icon-192.png","statuses":[200]},{"path":"/training-os/icon-512.png","statuses":[200]},{"path":"/training-os/apple-touch-icon.png","statuses":[200]}],"legacyCache":[{"path":"/training-os/","status":200,"bytes":156666},{"path":"/training-os/index.html","status":200,"bytes":156666},{"path":"/training-os/styles.css","status":200,"bytes":7938},{"path":"/training-os/app.mjs","status":200,"bytes":16132},{"path":"/training-os/engine.mjs","status":200,"bytes":3850},{"path":"/training-os/program.mjs","status":200,"bytes":14301},{"path":"/training-os/manifest.webmanifest","status":200,"bytes":708},{"path":"/training-os/icon-192.png","status":200,"bytes":1608},{"path":"/training-os/icon-512.png","status":200,"bytes":4454},{"path":"/training-os/apple-touch-icon.png","status":200,"bytes":1487}],"activeBuild":{"type":"TOS_OFFLINE_STATUS","ready":true,"build":"f9356ccc91bc9756c116e19984b22387fc8c85d45b8ca839e0fca0af71bf0371","release":"4.0.0-rc6.3.1"}}
+OFFLINE_BROWSER_TOTAL 1/1 PASS | CURRENT
+LEGACY_UPGRADE_TRACE {"phases":["legacy installation and activation","first current online navigation","replacement installed and waiting","natural replacement activation with no controlled clients","replacement online navigation after activation","offline relaunch under verified replacement"],"workers":[{"phase":"legacy installation and activation","worker":"legacy","state":"installing"},{"phase":"legacy installation and activation","worker":"legacy","state":"installed"},{"phase":"legacy installation and activation","worker":"legacy","state":"activating"},{"phase":"legacy installation and activation","worker":"legacy","state":"activated"},{"phase":"legacy installation and activation","worker":"legacy","state":"activated"},{"phase":"first current online navigation","worker":"replacement","state":"installing"},{"phase":"first current online navigation","worker":"replacement","state":"installed"},{"phase":"replacement installed and waiting","worker":"replacement","state":"installed"},{"phase":"natural replacement activation with no controlled clients","worker":"legacy","state":"redundant"},{"phase":"natural replacement activation with no controlled clients","worker":"replacement","state":"activating"},{"phase":"natural replacement activation with no controlled clients","worker":"replacement","state":"activating"},{"phase":"natural replacement activation with no controlled clients","worker":"replacement","state":"activated"},{"phase":"natural replacement activation with no controlled clients","worker":"replacement","state":"activated"}],"pageErrors":[],"requestFailures":[],"installAssets":[{"path":"/training-os/","statuses":[200]},{"path":"/training-os/index.html","statuses":[200]},{"path":"/training-os/styles.css","statuses":[200]},{"path":"/training-os/app.mjs","statuses":[200]},{"path":"/training-os/engine.mjs","statuses":[200]},{"path":"/training-os/program.mjs","statuses":[200]},{"path":"/training-os/manifest.webmanifest","statuses":[200]},{"path":"/training-os/icon-192.png","statuses":[200]},{"path":"/training-os/icon-512.png","statuses":[200]},{"path":"/training-os/apple-touch-icon.png","statuses":[200]}],"legacyCache":[{"path":"/training-os/","status":200,"bytes":156666},{"path":"/training-os/index.html","status":200,"bytes":156666},{"path":"/training-os/styles.css","status":200,"bytes":7938},{"path":"/training-os/app.mjs","status":200,"bytes":16132},{"path":"/training-os/engine.mjs","status":200,"bytes":3850},{"path":"/training-os/program.mjs","status":200,"bytes":14301},{"path":"/training-os/manifest.webmanifest","status":200,"bytes":708},{"path":"/training-os/icon-192.png","status":200,"bytes":1608},{"path":"/training-os/icon-512.png","status":200,"bytes":4454},{"path":"/training-os/apple-touch-icon.png","status":200,"bytes":1487}],"activeBuild":{"type":"TOS_OFFLINE_STATUS","ready":true,"build":"f9356ccc91bc9756c116e19984b22387fc8c85d45b8ca839e0fca0af71bf0371","release":"4.0.0-rc6.3.1"}}
+OFFLINE_BROWSER_TOTAL 11/11 PASS | CURRENT
+
+Scope verification: all 37 tracked non-test files are byte-identical to the starting HEAD, including app, service worker, storage source/schemas, manifest, release metadata, release tooling and workflows.
+Changed-file manifest: tests/m5_scroll_browser.test.js; tests/offline_browser.test.js; tests/evidence/pr-a/m5-ci-unblock.txt.
+One final CI execution will be tied to the committed HEAD; its authoritative conclusion belongs in the existing PR #7 checkpoint. Physical Safari/Home Screen acceptance remains UNKNOWN.

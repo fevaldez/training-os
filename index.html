@@ -2,8 +2,8 @@
 <html lang="es"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
 <meta name="theme-color" content="#f5f5f7"><title>Training OS · FV Hybrid</title>
-<link rel="apple-touch-icon" sizes="180x180" href="./training-os-loop-v1-180.png?v=4.0.0-rc6.3.1">
-<link rel="manifest" href="./manifest.webmanifest?v=4.0.0-rc6.3.1">
+<link rel="apple-touch-icon" sizes="180x180" href="./training-os-loop-v1-180.png?v=4.0.0-rc6.4.0">
+<link rel="manifest" href="./manifest.webmanifest?v=4.0.0-rc6.4.0">
 <meta name="application-name" content="Training OS">
 <meta name="apple-mobile-web-app-title" content="Training OS">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -108,13 +108,13 @@ button:disabled{opacity:.45}
 <div class="app">
 <div class="card" id="storageRecovery" role="status" aria-live="polite"></div>
 <section class="page active" id="today">
-<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><div class="eyebrow">T·OS · 4.0.0-rc6.3.1 · Continuous Loop</div><h1>Hoy</h1><p class="sub" id="todayDate"></p></div><div class="unit"><button data-unit="kg">kg</button><button data-unit="lb">lb</button></div></div>
+<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><div class="eyebrow">T·OS · 4.0.0-rc6.4.0 · Continuous Loop</div><h1>Hoy</h1><p class="sub" id="todayDate"></p></div><div class="unit"><button data-unit="kg">kg</button><button data-unit="lb">lb</button></div></div>
 <div class="card resume" id="resumeCard"><div class="eyebrow">Sesión activa</div><h2 id="resumeTitle"></h2><p class="small" id="resumeMeta"></p><button class="btn primary" id="resumeBtn">Reanudar</button><div class="actionrow"><button class="btn secondary" id="finishEarlyBtn">Finalizar y guardar</button><button class="btn danger" id="discardSessionBtn">Descartar sesión</button></div></div>
 <div class="card" id="todayDecisionCard"><div id="todayDecision"></div></div>
 <div class="card" id="weekSnapshotCard"><div id="weekSnapshot"></div></div>
 </section>
 <section class="page" id="program"><div class="eyebrow">Decision cards</div><h1>Programa</h1><p class="sub">Recencia, cobertura semanal, tiempo y progreso para elegir; el plan de hoy se confirma antes de entrenar.</p><div id="programCards"></div></section>
-<section class="page" id="progress"><div class="eyebrow">Data</div><h1>Progreso</h1><div class="card"><span class="small">Storage</span><div class="health" id="storageHealth">—</div></div><div class="card"><h2 id="stats">0 sesiones</h2><p class="small" id="statsSub"></p></div><div class="card"><h2>Diagnóstico</h2><p class="small" id="diagSummary">Sin eventos.</p></div><div class="card"><h2>Backup</h2><button class="btn secondary" id="exportBtn">Exportar JSON</button> <label class="btn ghost" style="display:inline-flex;align-items:center;cursor:pointer">Importar<input type="file" id="importFile" accept=".json,application/json" hidden></label></div><div class="card"><h2>Historial</h2><div id="history"></div></div></section>
+<section class="page" id="progress"><div class="eyebrow">Data</div><h1>Progreso</h1><div class="card"><span class="small">Storage</span><div class="health" id="storageHealth">—</div></div><div class="card"><h2 id="stats">0 sesiones</h2><p class="small" id="statsSub"></p></div><div class="card" id="offlineCard"><h2>Sin conexión</h2><p class="small" id="offlineStatus" role="status">Conecta para preparar el inicio sin conexión.</p></div><div class="card"><h2>Diagnóstico</h2><p class="small" id="diagSummary">Sin eventos.</p></div><div class="card"><h2>Backup</h2><button class="btn secondary" id="exportBtn">Exportar JSON</button> <label class="btn ghost" style="display:inline-flex;align-items:center;cursor:pointer">Importar<input type="file" id="importFile" accept=".json,application/json" hidden></label></div><div class="card"><h2>Historial</h2><div id="history"></div></div></section>
 </div>
 <nav class="bottom"><button class="active" data-page="today">Hoy</button><button data-page="program">Programa</button><button data-page="progress">Progreso</button></nav>
 <div class="overlay" id="sessionOverlay"><div class="session"><div class="sessionbar"><button class="circle" id="closeSession">‹</button><div class="meta"><div class="title" id="sessionTitle"></div><div class="progress" id="sessionProgress"></div></div><div class="unit"><button data-unit="kg">kg</button><button data-unit="lb">lb</button></div></div><div class="card" id="completionRecovery" role="status" aria-live="polite" hidden></div><div id="sessionStage"></div></div></div>
@@ -132,12 +132,50 @@ window.addEventListener('error',e=>{try{const el=document.getElementById('fatalB
  addEventListener('pageshow',e=>write('pageshow',{persisted:!!e.persisted}));
  addEventListener('pagehide',e=>write('pagehide',{persisted:!!e.persisted}));
  document.addEventListener('visibilitychange',()=>write('visibility'));
- // RC6.2.1 migration: remove only legacy Training OS workers/caches; preserve localStorage/session history.
- try{if('serviceWorker'in navigator)navigator.serviceWorker.getRegistrations().then(rs=>Promise.all(rs.filter(r=>String(r.scope||'').includes('/training-os/')).map(async r=>{const ok=await r.unregister();write('sw:unregister',{scope:r.scope,ok})}))).catch(e=>write('sw:error',{message:String(e)}))}catch(_){}
- try{if('caches'in window)caches.keys().then(keys=>Promise.all(keys.filter(k=>/training-os|fv-training-os/i.test(k)).map(async k=>{const ok=await caches.delete(k);write('cache:delete',{name:k,ok})}))).catch(e=>write('cache:error',{message:String(e)}))}catch(_){}
 })();
 
-(async()=>{try{if('serviceWorker'in navigator){const regs=await navigator.serviceWorker.getRegistrations();await Promise.all(regs.filter(r=>String(r.scope||'').includes('/training-os/')).map(r=>r.unregister()));}if('caches'in window){const keys=await caches.keys();await Promise.all(keys.filter(k=>/training-os|fv-training-os/i.test(k)).map(k=>caches.delete(k)));}document.documentElement.dataset.swCleanup='done';}catch(e){document.documentElement.dataset.swCleanup='warn';}})();
+// PR-A OFFLINE BOOTSTRAP START
+(function tosOfflineBootstrap(){
+ const BASE='/training-os/';
+ if(![BASE,BASE+'index.html'].includes(location.pathname))return;
+ const label=document.getElementById('offlineStatus');
+ let registration=null,checking=false;
+ const show=(state,text)=>{document.documentElement.dataset.offline=state;if(label)label.textContent=text};
+ const unavailable=()=>show('unavailable','Sin conexión no disponible. Conecta para completar o reparar la instalación. Conserva tu respaldo; el navegador puede eliminar la copia local.');
+ if(!('serviceWorker'in navigator)){unavailable();return}
+ const status=worker=>new Promise(resolve=>{
+  const channel=new MessageChannel(),timer=setTimeout(()=>{channel.port1.close();resolve(null)},4000);
+  channel.port1.onmessage=e=>{clearTimeout(timer);channel.port1.close();resolve(e.data)};
+  try{worker.postMessage({type:'TOS_OFFLINE_STATUS'},[channel.port2])}catch(_){clearTimeout(timer);channel.port1.close();resolve(null)}
+ });
+ async function inspect(){
+  if(checking)return;checking=true;
+  try{
+   const current=await navigator.serviceWorker.getRegistration(BASE),controller=navigator.serviceWorker.controller;
+   if(!current?.active){unavailable();return}
+   const result=await status(current.active);
+   if(result?.type!=='TOS_OFFLINE_STATUS'||!result.ready){unavailable();return}
+   if(!controller||controller!==current.active){show('installed','Instalación completa. Guarda tu sesión, cierra las pestañas de Training OS y vuelve a abrir para habilitar el inicio sin conexión.');return}
+   if(current.waiting){show('ready','Disponible sin conexión · Actualización preparada. Guarda y cierra todas las pestañas de Training OS para aplicarla al volver a abrir.');return}
+   show('ready','Disponible sin conexión · Videos requieren internet. Conserva un respaldo; el navegador puede eliminar la copia local.');
+  }catch(_){unavailable()}finally{checking=false}
+ }
+ async function install(){
+  try{
+   registration=await navigator.serviceWorker.register(BASE+'sw.js',{scope:BASE,updateViaCache:'none'});
+   const watch=worker=>worker?.addEventListener('statechange',()=>{inspect()});
+   watch(registration.installing);registration.addEventListener('updatefound',()=>watch(registration.installing));
+   await inspect();
+  }catch(_){unavailable()}
+ }
+ show('installing','Preparando inicio sin conexión…');
+ navigator.serviceWorker.addEventListener('controllerchange',inspect);
+ addEventListener('pageshow',()=>{install()});
+ addEventListener('online',()=>{install()});
+ document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){inspect();registration?.update().catch(()=>{})}});
+ install();
+})();
+// PR-A OFFLINE BOOTSTRAP END
 const WORKOUTS = {
   "chest": {
     "name": "Pecho + Tríceps",
@@ -1157,7 +1195,7 @@ function recommendedWorkoutKeyFromHistory(h=[]){
 }
 
 if(typeof location!=='undefined'&&location.protocol==='http:'&&location.hostname.endsWith('github.io')){location.replace('https://'+location.host+location.pathname+location.search+location.hash)}
-const RELEASE='4.0.0-rc6.3.1';
+const RELEASE='4.0.0-rc6.4.0';
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 // DATA DURABILITY CORE START — extracted verbatim by the synthetic failure suite.
 function createDurability(storage, locks, workouts, options={}){
@@ -1952,6 +1990,6 @@ $('#importFile').onchange=async e=>{
 renderHome();renderProgress();renderUnits();startTicker();bootPersistence();
 window.__FV_QA__={release:RELEASE,storage:store.ok,unit,programs:ORDER.length};
 
-document.documentElement.dataset.release='4.0.0-rc6.3.1';document.documentElement.dataset.boot='ok';
+document.documentElement.dataset.release='4.0.0-rc6.4.0';document.documentElement.dataset.boot='ok';
 </script>
 </body></html>
