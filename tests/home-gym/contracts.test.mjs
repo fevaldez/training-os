@@ -1,3 +1,4 @@
+import { createRestStore, REST_KEY, restDuration, remainingMs, restState, restTime } from '../../apps/home-gym/rest.mjs';
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
 import { createHash, webcrypto } from 'node:crypto';
@@ -114,14 +115,14 @@ await test('4 emergency replaces one strength session and cannot become a fourth
  await assert.rejects(()=>h.store.start(s.raw,1,'B'),/already-completed/);assert.equal(s.data.history.length,1);
 });
 await test('4 complete offline install, scoped pins and safe lifecycle',async()=>{
- const w=worker();await w.event('install');await w.event('activate');const {BUILD,CACHE}=w.meta();assert.equal(w.store.get(CACHE).size,11);
+ const w=worker();await w.event('install');await w.event('activate');const {BUILD,CACHE}=w.meta();assert.equal(w.store.get(CACHE).size,12);
  assert(!w.calls.some(x=>['skipWaiting','claim'].includes(x[0])));
  const r=await w.event('fetch',{request:{url:scope,method:'GET',mode:'navigate'}});assert.equal(await r.text(),read(root+'index.html').toString());
  for(const [url,method,mode]of [[scope+'other/','GET','navigate'],['https://else.invalid/','GET','cors'],[scope,'POST','navigate']])assert.equal(await w.event('fetch',{request:{url,method,mode}}),undefined);
  for(const registrationScope of ['https://synthetic.invalid/foreign/','https://foreign.invalid/']){const bad=worker({registrationScope});await assert.rejects(()=>bad.event('install'));assert.equal(bad.store.size,0)}
  let replies=[];await w.event('message',{data:{type:'HOME_GYM_OFFLINE_STATUS'},source:{url:scope},ports:[{postMessage:x=>replies.push(x)}]});assert.equal(replies.at(-1).ready,true);
  const before=replies.length;await w.event('message',{data:{type:'HOME_GYM_OFFLINE_STATUS'},source:{url:scope+'foreign/'},ports:[{postMessage:x=>replies.push(x)}]});assert.equal(replies.length,before);
- assert.equal(BUILD.assets.length,11);
+ assert.equal(BUILD.assets.length,12);
 });
 for(const fault of ['network','http','hash','portal','size','quota','cache-open','cache-read','redirect']) await test('4 failed offline installation: '+fault+' retains previous and unrelated caches',async()=>{
  const store=new Map([['home-gym-shell-v1-previous',new Map()],['tos-shell-v1-sentinel',new Map()],['unrelated',new Map()]]);
@@ -135,7 +136,7 @@ await test('4 corrupted cache fails closed offline and repairs only its own vers
 await test('6 deterministic allowlist, independent artifact and mandatory read-only PR CI',()=>{
  execFileSync('python3',[root+'build.py','--check']);
  const artifact=JSON.parse(read(root+'artifact.json'));
- assert.equal(Object.keys(artifact.files).length,12);
+ assert.equal(Object.keys(artifact.files).length,13);
  for(const[n,pin]of Object.entries(artifact.files)){assert.equal(read(root+n).length,pin.size);assert.equal(sha(read(root+n)),pin.sha256)}
  const code=`import importlib.util; s=importlib.util.spec_from_file_location('b','${root}build.py'); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); import sys; sys.stdout.buffer.write(m.archive(m.build()))`;
  const first=execFileSync('python3',['-B','-c',code]);assert.deepEqual(first,execFileSync('python3',['-B','-c',code]));
@@ -162,7 +163,7 @@ await test('V3 B numeric kg/lb canonical anchors round-trip 1000 times without c
   for(let i=0;i<1000;i++){record=switchLoad(record,'lb');record=switchLoad(record,'kg');}
   assert.equal(record.weightKg,original.weightKg);assert.equal(record.enteredWeight,original.enteredWeight);assert.equal(record.enteredUnit,original.enteredUnit);assert.deepEqual(record.future,{keep:true});assert.equal(record.loadBasis,'per-dumbbell');
  }
- assert.equal(parseLoad('20 lb').weightKg,20*KG_PER_LB);assert.equal(parseLoad('27,5 kg').weightKg,27.5);assert.equal(adjustment('kg'),0.5);assert.equal(adjustment('lb'),1);
+ assert.equal(parseLoad('20 lb').weightKg,20*KG_PER_LB);assert.equal(parseLoad('27,5 kg').weightKg,27.5);assert.equal(adjustment('kg'),5);assert.equal(adjustment('lb'),5);
 });
 await test('V3 B/C legacy, unknown, duration and historical zero remain literal; invalid values never acquire fake units',()=>{
  for(const weight of ['20 lb','27,5 kg','0','0 kg','sin carga','6/lado','20 s/lado','2 × 10','veinte','10 stones']){
@@ -252,6 +253,52 @@ await test('V4 honest alternative metadata covers all source definitions with re
  }
  assert.equal(movements(prescription(1,'C').exercises[0]).length,1);assert.equal(movements(emergency(1,'A').exercises[0]).length,1);
  assert.equal(coverage().EXACT,6);assert.equal(coverage().RELATED,5);assert.equal(coverage().UNVERIFIED,4);
+});
+await test('V4.1 S rest parser preserves source ranges and refuses invented manual durations',()=>{
+ for(const text of ['90–120 s','90-120s','90 – 120 s',' 90—120 s '])assert.deepEqual(restDuration(text),{minMs:90000,maxMs:120000});
+ assert.deepEqual(restDuration('45 s'),{minMs:45000,maxMs:45000});
+ for(const text of ['Lo necesario','','según necesidad','120–90 s','0 s','45 min'])assert.equal(restDuration(text),null);
+});
+async function timerHarness(rest='90–120 s'){
+ const locks=new Locks(),h=harness(new Storage(),locks);let s=await h.store.start(null,1,'A');
+ if(rest!==s.data.active.plan.exercises[0].rest){const data=JSON.parse(s.raw);data.active.plan.exercises[0].rest=rest;h.storage.map.set(KEY,JSON.stringify(data));s=h.store.read();}
+ s=await h.store.log(s.raw,s.data.active.id,'asq:1',{...log,confirmedAt:'2030-01-01T00:00:00Z'});
+ let clock=1000000;const timer=createRestStore(h.storage,locks,{now:()=>clock});
+ return {...h,timer,sessionId:s.data.active.id,clock:()=>clock,jump:ms=>clock+=ms};
+}
+await test('V4.1 A/C/D/T only confirmed performed sets with a subsequent unresolved set start one clock',async()=>{
+ const h=await timerHarness(),before=h.storage.map.get(KEY);let r=await h.timer.start(h.sessionId,'asq:1');assert.equal(r.record.endsAt,h.clock()+90000);assert.equal(r.record.nextKey,'asq:2');assert.equal(r.record.prescribedRest,'90–120 s');assert.equal(h.storage.map.get(KEY),before);
+ h.jump(30000);const again=await h.timer.start(h.sessionId,'asq:1');assert.equal(again.raw,r.raw);assert.equal(remainingMs(again.record,h.clock()),60000);
+ let s=h.store.read();s=await h.store.log(s.raw,h.sessionId,'asq:2',{...log,status:'skipped',confirmedAt:'skip'});assert.equal((await h.timer.start(h.sessionId,'asq:2')).record,null);assert.equal(h.timer.read().record,null);
+ const last=setKeys(s.data.active.plan).at(-1);s=await h.store.log(s.raw,h.sessionId,last,{...log,confirmedAt:'last'});assert.equal((await h.timer.start(h.sessionId,last)).record,null);
+});
+await test('V4.1 E/F/G/J wall-clock jumps 30/90/180 seconds reconstruct without ticker execution or counter writes',async()=>{
+ for(const elapsed of [30000,90000,180000]){const h=await timerHarness(),r=await h.timer.start(h.sessionId,'asq:1'),raw=r.raw,writes=h.storage.events.filter(e=>e[0]==='set').length;h.jump(elapsed);
+  const restored=h.timer.read();assert.equal(restored.raw,raw);assert.equal(restored.record.endsAt,1000000+90000);assert.equal(remainingMs(restored.record,h.clock()),Math.max(0,90000-elapsed));assert.equal(restState(restored.record,h.clock()),elapsed<90000?'running':'expired');assert.equal(h.storage.events.filter(e=>e[0]==='set').length,writes);
+  if(elapsed>=90000){const expired=await h.timer.change(raw,'expire');assert.equal(expired.record.state,'expired');assert.equal(remainingMs(expired.record,h.clock()),0);await assert.rejects(()=>h.timer.change(raw,'expire'),/stale-timer/);}
+ }
+});
+await test('V4.1 K/L explicit pause, resume, +/-15, zero clamp, reset and skip preserve workout data',async()=>{
+ const h=await timerHarness('45 s'),before=h.storage.map.get(KEY);let r=await h.timer.start(h.sessionId,'asq:1');h.jump(10000);r=await h.timer.change(r.raw,'pause');assert.equal(r.record.remainingMs,35000);h.jump(180000);assert.equal(remainingMs(h.timer.read().record,h.clock()),35000);
+ r=await h.timer.change(r.raw,'adjust',15000);assert.equal(r.record.remainingMs,50000);r=await h.timer.change(r.raw,'resume');assert.equal(r.record.endsAt,h.clock()+50000);
+ r=await h.timer.change(r.raw,'adjust',-15000);assert.equal(remainingMs(r.record,h.clock()),35000);for(let i=0;i<4;i++)r=await h.timer.change(r.raw,'adjust',-15000);assert.equal(remainingMs(r.record,h.clock()),0);assert.equal(r.record.state,'expired');
+ r=await h.timer.change(r.raw,'adjust',15000);assert.equal(remainingMs(r.record,h.clock()),15000);r=await h.timer.change(r.raw,'reset');assert.equal(remainingMs(r.record,h.clock()),45000);
+ r=await h.timer.change(r.raw,'skip');assert.equal(r.record.state,'skipped');assert.equal(h.storage.map.get(KEY),before);assert.equal((await h.timer.start(h.sessionId,'asq:1')).record.state,'skipped');
+ const manual=await timerHarness('Lo necesario');r=await manual.timer.start(manual.sessionId,'asq:1');assert.equal(r.record.state,'manual');assert.equal(r.record.endsAt,null);assert.equal(r.record.prescribedMs,null);assert.equal(r.record.originalDurationMs,null);
+ r=await manual.timer.change(r.raw,'manual',75000);assert.equal(r.record.endsAt,manual.clock()+75000);r=await manual.timer.change(r.raw,'reset');assert.equal(remainingMs(r.record,manual.clock()),75000);assert.equal(r.record.prescribedRest,'Lo necesario');r=await manual.timer.change(r.raw,'pause');for(let i=0;i<5;i++)r=await manual.timer.change(r.raw,'adjust',-15000);assert.equal(r.record.state,'expired');assert.equal(restTime(remainingMs(r.record,manual.clock())),'00:00');
+});
+await test('V4.1 N/O stale timer tabs, source revisions, completed and replaced sessions cannot resurrect rest',async()=>{
+ const h=await timerHarness();let r=await h.timer.start(h.sessionId,'asq:1'),old=r.raw;r=await h.timer.change(r.raw,'adjust',15000);await assert.rejects(()=>h.timer.change(old,'reset'),/stale-timer/);
+ let s=h.store.read();for(const k of setKeys(s.data.active.plan).slice(1))s=await h.store.log(s.raw,h.sessionId,k,{...log,status:'skipped'});s=await h.store.finish(s.raw,h.sessionId);assert.equal(h.timer.read().record,null);await h.timer.invalidate(h.sessionId);assert.equal(JSON.parse(h.storage.map.get(REST_KEY)).state,'skipped');
+ s=await h.store.start(s.raw,2,'A');assert.equal(h.timer.read().record,null);await assert.rejects(()=>h.timer.change(r.raw,'reset'),/stale-timer/);
+ const fresh=await timerHarness();r=await fresh.timer.start(fresh.sessionId,'asq:1');s=fresh.store.read();s=await fresh.store.draft(s.raw,fresh.sessionId,'asq:1',{...log});assert.equal(fresh.timer.read().record,null);
+});
+await test('V4.1 P timer quota/readback failures cannot mutate workout bytes or require timer metadata in backups',async()=>{
+ for(const failure of ['quota','readback']){const h=await timerHarness(),before=h.storage.map.get(KEY),backup=h.store.exportRaw();let wrote=false;
+  h.storage.fault=(op,key)=>{if(key!==REST_KEY)return;if(failure==='quota'&&op==='set')throw Error('synthetic quota');if(failure==='readback'){if(op==='set')wrote=true;if(op==='get'&&wrote)return null;}};
+  await assert.rejects(()=>h.timer.start(h.sessionId,'asq:1'));assert.equal(h.storage.map.get(KEY),before);h.storage.fault=null;
+  const imported=harness();await imported.store.restore(null,backup);assert.deepEqual(imported.store.read().data.active,h.store.read().data.active);assert.equal(imported.storage.map.has(REST_KEY),false);
+ }
 });
 console.log(`HOME_GYM_CONTRACT_TOTAL ${tests.filter(Boolean).length}/${tests.length} PASS`);
 if(tests.some(x=>!x))process.exitCode=1;

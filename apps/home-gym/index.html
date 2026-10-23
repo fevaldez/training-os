@@ -16,7 +16,7 @@
 <header class="app-header"><button class="back-button" data-route="hoy" aria-label="Volver a Hoy">‹ <span>Hoy</span></button><span class="brand">HOME GYM</span><button class="week-badge" data-route="semana" id="weekBadge">Semana 1</button></header>
 <div class="save-banner" id="saveState" role="status" aria-live="polite">Comprobando almacenamiento…</div>
 <button class="btn secondary refresh" id="refresh" hidden>Volver a leer los datos guardados</button>
-<main>
+<p id="restWarning" class="timer-warning" role="status" hidden></p><button id="restMini" class="rest-mini" hidden><span>DESCANSO · <b id="restMiniClock">00:00</b></span><span>Volver al descanso →</span></button><p id="restAnnounce" class="sr-only" role="status" aria-live="polite"></p><main>
 <section class="view" id="hoy" data-view="hoy">
 <div class="page-heading"><p class="eyebrow">Un paso a la vez</p><h1 tabindex="-1">Hoy</h1><p class="subtitle" id="homeSubtitle">Dos días de fuerza. Uno de condición.</p></div>
 <div id="todayCard"></div><div class="progress-brief" id="homeProgress" aria-label="Resumen de progreso local"></div>
@@ -42,6 +42,7 @@
 <p id="sessionAnnouncement" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p><div id="sessionContent"></div><div id="sessionActions"></div><p class="session-progress" id="sessionProgress" role="status"></p>
 <div class="session-dock" id="sessionDock"></div>
 </section>
+<section class="view rest" id="restView" data-view="rest" hidden></section>
 <section class="view" id="equipo" data-view="equipo" hidden>
 <div class="page-heading"><p class="eyebrow">Conoce tus herramientas</p><h1 tabindex="-1">Equipo</h1><p class="subtitle">Lo que necesitas, de un vistazo.</p></div>
 <div class="equipment-grid" id="equipmentGrid"></div>

@@ -45,7 +45,7 @@ export function bumpValue(text, field, delta, displayUnit) {
   const next = Math.max(0, (parsed?.enteredWeight || 0) + delta);
   return formatLoad(next) + (/\s*(?:kg|lbs?)\s*$/i.test(text) ? ' ' + (parsed?.enteredUnit || unit(displayUnit)) : '');
 }
-export const adjustment = displayUnit => displayUnit === 'lb' ? 1 : 0.5;
+export const adjustment = () => 5;
 const order = week => week % 2 ? ['A','C','B'] : ['B','C','A'];
 const validWeek = week => Number.isInteger(week) && week >= 1 && week <= 12;
 const identity = entry => validWeek(entry.week) && ['A','B','C'].includes(entry.session) ? entry.week + ':' + entry.session : null;
