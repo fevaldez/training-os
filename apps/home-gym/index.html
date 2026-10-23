@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#176add">
-<meta name="description" content="Home Gym: calendario de doce semanas, dos sesiones de fuerza y una de condición. Seguimiento local y uso sin conexión tras instalar en línea.">
+<meta name="theme-color" content="#f5f5f7">
+<meta name="description" content="Home Gym: doce semanas, una serie a la vez. Calendario, registro local y uso sin conexión tras instalar en línea.">
 <title>Home Gym · Training OS</title>
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="icon" href="./icon.svg" type="image/svg+xml">
@@ -12,22 +12,42 @@
 <script type="module" src="./app.mjs"></script>
 </head>
 <body>
-<main class="shell">
-<header id="inicio"><div class="eyebrow">Training OS · Home Gym</div><h1>Fuerza que se sostiene.</h1><p class="lead">12 semanas · 2 fuerza + 1 condición · Días movibles.</p></header>
-<div class="status" id="offlineStatus" role="status">Conecta para instalar el programa sin conexión.</div>
-<div class="status" id="saveState" role="status" aria-live="polite">Comprobando almacenamiento…</div>
-<button class="btn outline" id="refresh" hidden>Volver a leer los datos guardados</button>
-<section id="semana" style="margin-top:18px"><div class="toolbar"><h2>Tu semana</h2><div class="weekcontrol"><button class="btn outline" id="prevWeek" aria-label="Semana anterior">‹</button><select id="weekSelect" aria-label="Seleccionar semana"></select><button class="btn outline" id="nextWeek" aria-label="Semana siguiente">›</button></div></div>
-<div class="card"><div class="toolbar"><div><div class="eyebrow" id="phaseTag"></div><h3 id="weekHeadline"></h3><div class="small" id="weekSubtitle"></div></div><div><div class="cap">Sesiones hechas</div><div class="metric" id="weeklyCount">0/3</div></div></div>
-<div class="calendar" id="calendar" aria-label="Días de la semana"></div><div class="roadmap" id="roadmap" aria-label="Progreso de las doce semanas"></div>
-<p class="small" id="missed"></p><details style="margin-top:12px"><summary>Mover los días de esta semana</summary><p class="small">Los días son sugeridos. Si eliges un día ocupado, las dos sesiones intercambian lugar.</p><div id="moveDays"></div></details></div></section>
-<section id="sesiones"><div class="toolbar"><h2>La sesión de hoy</h2><div class="segmented" role="tablist" aria-label="Ver sesión"><button data-session="A" role="tab">Fuerza A</button><button data-session="C" role="tab">Condición</button><button data-session="B" role="tab">Fuerza B</button></div></div>
-<div class="card"><div class="eyebrow" id="sessionEyebrow"></div><h3 id="sessionTitle" style="font-size:25px;margin-top:8px"></h3><p id="sessionIntro" class="small"></p><div id="sessionContent"></div><div id="sessionActions" class="chiprow"></div><p class="small" id="sessionProgress"></p><p class="small"><b>Tempo E–P–C–P:</b> segundos bajando, pausa abajo, subiendo y pausa arriba. <b>RIR:</b> repeticiones que todavía podrías completar con técnica correcta. Descansar más está permitido si pierdes calidad.</p></div></section>
-<section id="guia"><h2>Progresar con control</h2><div class="cols2"><div class="card"><h3>Regla de progresión</h3><p id="progression"></p><h3>Recuperación</h3><p class="small" id="recovery"></p></div><div class="card"><h3>Plan B · 15–20 minutos</h3><p id="emergency"></p><div class="callout" id="emergencyRule"></div><p class="small">Abre Fuerza A o B y elige Plan B antes de comenzar. Reemplaza esa sesión en el calendario.</p></div></div><details style="margin-top:15px"><summary>Seguridad, equipo y horario</summary><p class="callout stop" id="safety"></p><p id="nutrition" class="small"></p><p id="scope" class="small"></p><p id="equipmentSafety" class="small"></p><p id="equipment" class="small"></p><p id="evening" class="small"></p><p id="breaks" class="small"></p></details></section>
-<section id="progreso"><h2>Tu seguimiento</h2><div class="card"><div class="metric" id="totalCount">0/36</div><p class="small">Sesiones guardadas. Las semanas sin registros siguen disponibles; no son fracasos.</p><div id="history"></div><div class="chiprow"><button class="btn outline" id="exportProgress">Exportar respaldo</button><label class="btn outline" for="importFile">Restaurar en un navegador vacío</label><input id="importFile" type="file" accept="application/json,.json" style="max-width:100%"></div><p class="small">Los datos se quedan en este navegador. Safari y la app de pantalla de inicio pueden tener registros distintos. Exporta un respaldo; no hay cuentas ni sincronización.</p></div></section>
-<section id="preguntas"><h2>Observaciones del piloto</h2><div class="card"><p class="small">Opcional y local. Ejercicios incómodos, energía, pesos utilizados o preferencias. Estas notas no cambian el programa automáticamente.</p><label class="field" for="feedback">Observaciones<textarea id="feedback" maxlength="5000" placeholder="Escribe una observación"></textarea></label><button class="btn outline" id="saveFeedback" style="margin-top:12px">Guardar observaciones</button></div></section>
-<footer class="footer" id="version"></footer>
-<noscript>Activa JavaScript para abrir el calendario y guardar sesiones.</noscript>
+<div class="app-shell">
+<header class="app-header"><button class="back-button" data-route="hoy" aria-label="Volver a Hoy">‹ <span>Hoy</span></button><span class="brand">HOME GYM</span><button class="week-badge" data-route="semana" id="weekBadge">Semana 1</button></header>
+<div class="save-banner" id="saveState" role="status" aria-live="polite">Comprobando almacenamiento…</div>
+<button class="btn secondary refresh" id="refresh" hidden>Volver a leer los datos guardados</button>
+<main>
+<section class="view" id="hoy" data-view="hoy">
+<div class="page-heading"><p class="eyebrow">Un paso a la vez</p><h1 tabindex="-1">Hoy</h1><p class="subtitle" id="homeSubtitle">Dos días de fuerza. Uno de condición.</p></div>
+<div id="todayCard"></div>
+<div class="section-heading"><h2>Tus sesiones</h2><button class="text-button" data-route="semana">Ver semana →</button></div>
+<div class="session-choices" id="sessionChoices"></div>
+<details class="disclosure" id="prepareGuide"><summary>Antes y después de entrenar</summary><h3>Calentamiento</h3><p id="warmup"></p><p id="duration"></p><h3>Recuperación</h3><p id="recovery"></p><h3>Progresión</h3><p id="progression"></p><h3>Si tienes poco tiempo</h3><p id="emergency"></p><p id="emergencyRule"></p><h3>Si se mueve tu semana</h3><p id="missed"></p></details>
+<details class="disclosure" id="safetyGuide"><summary>Seguridad y hábitos</summary><p id="safety"></p><p id="equipmentSafety"></p><p id="cardioAlternatives"></p><p id="cardioEarly"></p><p id="cardioLater"></p><p id="cardioTalk"></p><p id="nutrition"></p><p id="scope"></p><p id="evening"></p><p id="breaks"></p></details>
+<details class="disclosure" id="progressPanel"><summary>Tu seguimiento y respaldo <span id="totalCount">0/36</span></summary><div id="history"></div><div class="backup-actions"><button class="btn secondary" id="exportProgress">Exportar respaldo</button><label class="btn secondary file-label" for="importFile">Restaurar respaldo<input id="importFile" type="file" accept="application/json,.json"></label></div><p class="secondary-copy">Restaura solo en un navegador sin progreso. Safari y Home Screen pueden guardar registros distintos. No hay cuentas ni sincronización.</p><details class="nested-disclosure"><summary>Observaciones del piloto</summary><label for="feedback">Opcional · solo en este navegador</label><textarea id="feedback" maxlength="5000" placeholder="Cómo te sentiste, sin cambiar el programa"></textarea><button class="btn secondary" id="saveFeedback">Guardar observaciones</button></details></details>
+<details class="disclosure offline-card"><summary>Uso sin conexión <span id="offlineBadge">Preparando</span></summary><p id="offlineStatus" role="status">Conecta para instalar el programa sin conexión.</p><p class="secondary-copy">Conserva un respaldo. El navegador puede eliminar la copia local. Completa la instalación por separado en Safari y Home Screen.</p></details>
+<footer id="version"></footer>
+</section>
+<section class="view" id="semana" data-view="semana" hidden>
+<div class="page-heading"><p class="eyebrow">Tu programa · 12 semanas</p><h1 tabindex="-1">Semana</h1></div>
+<div class="week-control"><button class="icon-button" id="prevWeek" aria-label="Semana anterior">‹</button><label for="weekSelect" class="sr-only">Seleccionar semana</label><select id="weekSelect"></select><button class="icon-button" id="nextWeek" aria-label="Semana siguiente">›</button></div>
+<div class="card week-summary"><p class="eyebrow" id="phaseTag"></p><div class="section-heading"><h2 id="weekHeadline"></h2><span class="count" id="weeklyCount">0/3</span></div><p class="secondary-copy" id="weekSubtitle"></p><div class="calendar" id="calendar" aria-label="Días de la semana"></div></div>
+<div id="weekSessions" class="session-choices"></div>
+<details class="disclosure"><summary>Mover los días</summary><p class="secondary-copy">Son sugeridos. Si eliges un día ocupado, las sesiones intercambian lugar.</p><div id="moveDays"></div></details>
+<div class="section-heading"><h2>Las doce semanas</h2></div><div class="roadmap" id="roadmap"></div>
+</section>
+<section class="view workout-view" id="sesiones" data-view="workout" hidden>
+<div class="workout-heading"><p class="eyebrow" id="sessionEyebrow"></p><h1 id="sessionTitle" tabindex="-1">Fuerza A</h1><div class="session-tabs" role="tablist" aria-label="Elegir sesión"><button data-session="A" role="tab">Fuerza A</button><button data-session="B" role="tab">Fuerza B</button><button data-session="C" role="tab">Condición</button></div></div>
+<div id="sessionContent"></div><div id="sessionActions"></div><p class="session-progress" id="sessionProgress" role="status"></p>
+<div class="session-dock" id="sessionDock"></div>
+</section>
+<section class="view" id="equipo" data-view="equipo" hidden>
+<div class="page-heading"><p class="eyebrow">Conoce tus herramientas</p><h1 tabindex="-1">Equipo</h1><p class="subtitle">Lo que necesitas, de un vistazo.</p></div>
+<div class="equipment-grid" id="equipmentGrid"></div>
+<details class="disclosure"><summary>Inventario completo y seguridad</summary><p id="equipment"></p><p id="equipmentSafetyCopy"></p><p class="secondary-copy">Ilustraciones de referencia, sin fotografías privadas. No se confirma el rango total de cargas ni todos los anclajes.</p></details>
+</section>
 </main>
-<nav class="floating" aria-label="Navegación principal"><button data-go="semana">Semana</button><button data-go="sesiones">Sesión</button><button data-go="guia">Guía</button><button data-go="progreso">Progreso</button></nav>
+</div>
+<nav class="tab-bar" aria-label="Navegación principal"><button data-route="hoy" aria-current="page"><span aria-hidden="true">⌂</span>Hoy</button><button data-route="semana"><span aria-hidden="true">▦</span>Semana</button><button data-route="equipo"><span aria-hidden="true">▥</span>Equipo</button></nav>
+<noscript>Activa JavaScript para abrir el calendario y guardar sesiones.</noscript>
 </body></html>

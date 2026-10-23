@@ -33,71 +33,91 @@ let app,fv;
 const raw=p=>p.evaluate(k=>localStorage.getItem(k),key);
 const data=async p=>JSON.parse(await raw(p));
 async function ready(p){await p.waitForFunction(()=>document.documentElement.dataset.boot==='ready')}
-async function warm(ctx){let p=await ctx.newPage();await p.goto(app);await ready(p);await p.evaluate(()=>navigator.serviceWorker.ready);await p.close();p=await ctx.newPage();await p.goto(app);await ready(p);await p.waitForFunction(()=>document.documentElement.dataset.offline==='ready');return p}
+async function warm(ctx){let p=await ctx.newPage();await p.goto(app);await ready(p);await p.evaluate(()=>navigator.serviceWorker.ready);await p.close();p=await ctx.newPage();await p.goto(app);await ready(p);await p.waitForFunction(()=>document.documentElement.dataset.offline==='ready');await p.locator('#sessionChoices [data-route="fuerza-a"]').click();return p}
 async function click(p,selector){await p.locator(selector).click();}
+async function openProgress(p){if(await p.locator('.back-button').isVisible())await p.locator('.back-button').click();if(!await p.locator('#progressPanel').evaluate(el=>el.open))await p.locator('#progressPanel > summary').click();}
 async function saveRow(p,index=0,status='done'){
- const row=p.locator('.setrow').nth(index);
- if(status==='done')await row.locator('[data-field="reps"]').fill('8');
+ const row=p.locator('.setrow');if(status==='done')await row.locator('[data-field="reps"]').fill('8');
+ if(!await row.locator('.set-note').evaluate(el=>el.open))await row.locator('.set-note summary').click();
  await row.locator('[data-field="note"]').fill('Synthetic local note');
- const setKey=await row.getAttribute('data-key');
- await row.locator(`[data-log-action="${status}"]`).click();
+ const setKey=await row.getAttribute('data-key');await p.locator(status==='done'?'#saveSet':'#skipSet').click();
  await p.waitForFunction(([k,setKey,status])=>{const a=JSON.parse(localStorage.getItem(k))?.active;return a?.logs?.[setKey]?.status===status&&!a?.drafts?.[setKey]},[key,setKey,status]);
 }
 async function complete(p){
+ if(await p.locator('#homeResume').isVisible())await p.locator('#homeResume').click();
  while(await p.locator('.setrow[data-status="pending"]').count()){
-  const rows=p.locator('.setrow');const count=await rows.count();let index;
-  for(let i=0;i<count;i++)if(await rows.nth(i).getAttribute('data-status')==='pending'){index=i;break}
-  await saveRow(p,index,index===1?'skipped':'done');
+  const k=await p.locator('.setrow').getAttribute('data-key');await saveRow(p,0,k.endsWith(':2')?'skipped':'done');
  }
  const id=(await data(p)).active.id;
- await click(p,'#finishSession');await p.waitForFunction(k=>JSON.parse(localStorage.getItem(k)).active===null,key);
- return id;
+ await click(p,'#finishSession');await p.waitForFunction(k=>JSON.parse(localStorage.getItem(k)).active===null,key);return id;
 }
-async function test(name,fn){try{await fn();results.push(true);console.log('PASS | HOME_GYM_BROWSER '+name)}catch(e){results.push(false);console.error('FAIL | HOME_GYM_BROWSER '+name+' | '+e.stack)}}
+async function test(name,fn){if(process.env.HOME_GYM_CASE&&!name.includes(process.env.HOME_GYM_CASE))return;try{await fn();results.push(true);console.log('PASS | HOME_GYM_BROWSER '+name)}catch(e){results.push(false);console.error('FAIL | HOME_GYM_BROWSER '+name+' | '+e.stack)}}
 (async()=>{
  await Promise.all([new Promise(r=>server.listen(0,'127.0.0.1',r)),new Promise(r=>foreign.listen(0,'127.0.0.1',r))]);
  app='http://127.0.0.1:'+server.address().port+'/';fv='http://127.0.0.1:'+foreign.address().port+'/';
  try{
  browser=await chromium.launch(launch);console.log('HOME_GYM_BROWSER Chromium '+browser.version()+' | 390x844 | loopback synthetic');
- await test('1/5 all 12 weeks, source-specific prescriptions, movable alternating calendar, no page overflow',async()=>{
+ await test('1/5 six destinations, source details across 12 weeks, visuals and mobile layout',async()=>{
   mode='current';const ctx=await browser.newContext(mobile);try{
    const p=await warm(ctx),pageErrors=[];p.on('pageerror',e=>pageErrors.push(e.message));
-   assert.equal(await p.locator('.weekdot').count(),12);
-   const box=await p.locator('#semana').boundingBox();assert(box.y<500);
+   const expected=await p.evaluate(async()=>(await import('./program.mjs')).PROGRAM);
    for(let week=1;week<=12;week++){
-    await p.locator('#weekSelect').selectOption(String(week));
-    assert((await p.locator('#weekHeadline').textContent()).includes('Semana '+week));
-    assert.equal(await p.locator('.day.session').count(),2);assert.equal(await p.locator('.day.interval').count(),1);
-    assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
-    await p.locator('[data-session="A"]').click();assert.equal(await p.locator('.exercise').count(),5);
-    if(week===1)assert((await p.locator('.exercise').last().textContent()).includes('1 series'));
-    if(week===6)assert((await p.locator('.exercise').nth(2).textContent()).includes('1 series'));
-    await p.locator('[data-session="C"]').click();
-    if(week===6)assert((await p.locator('#sessionContent').textContent()).includes('Sin intervalos'));
-    if(week===9)assert((await p.locator('#sessionContent').textContent()).includes('6 ciclos de 30 s a RPE 7–8 + 90 s suave'));
+    await p.locator('.back-button').click();await p.locator('.tab-bar [data-route="semana"]').click();await p.locator('#weekSelect').selectOption(String(week));
+    assert((await p.locator('#weekHeadline').textContent()).includes('Semana '+week));assert.equal(await p.locator('.weekdot').count(),12);
+    assert.deepEqual(await p.locator('.day').evaluateAll(els=>els.map(e=>e.dataset.daySession).filter(Boolean)),week%2?['A','C','B']:['B','C','A']);
+    for(const session of ['A','B']){
+     await p.locator('#weekSessions [data-route="'+(session==='A'?'fuerza-a':'fuerza-b')+'"]').click();
+     const plan=await p.evaluate(async({week,session})=>(await import('./engine.mjs')).prescription(week,session),{week,session});
+     for(let i=0;i<5;i++){
+      if(i)await p.locator('#nextExercise').click();assert.equal(await p.locator('.exercise:visible').count(),1);const e=plan.exercises[i];
+      assert.equal(await p.locator('.exercise-title').textContent(),e.name);assert((await p.locator('.exercise-equipment').textContent()).includes(e.gear));
+      const prescription=await p.locator('.prescription').textContent();assert(prescription.includes(e.sets+' × '+e.reps));assert(prescription.includes(e.rir));assert(prescription.includes(e.rest));
+      assert.equal(await p.locator('#technique').evaluate(el=>el.open),false);await p.locator('#technique summary').click();const details=await p.locator('#technique').textContent();for(const field of ['tempo','cue','alt'])assert(details.includes(e[field]));
+      assert(await p.locator('.exercise-equipment svg').isVisible());assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+     }
+     await p.locator('.back-button').click();await p.locator('.tab-bar [data-route="semana"]').click();
+    }
+    await p.locator('#weekSessions [data-route="condicion"]').click();assert.equal(await p.locator('.interval-block').count(),week===6?1:3);const protocol=await p.evaluate(async w=>(await import('./engine.mjs')).prescription(w,'C').protocol,week);assert((await p.locator('.technique').textContent()).includes(protocol));
    }
-   await p.locator('#weekSelect').selectOption('2');assert((await p.locator('.day').first().textContent()).includes('Fuerza B'));
-   await p.locator('#weekSelect').selectOption('1');
-   await p.locator('#moveDays').locator('..').locator('summary').click();
-   await p.locator('[data-move="A"]').selectOption('1');await p.waitForFunction(k=>JSON.parse(localStorage.getItem(k))?.calendar?.['1']?.A===1,key);
-   await p.reload();await ready(p);assert((await p.locator('.day').nth(1).textContent()).includes('Fuerza A'));
-   await p.evaluate(()=>scrollTo(0,0));await p.screenshot({path:path.join(evidence,'mobile-calendar.png'),fullPage:false});
-   assert.deepEqual(pageErrors,[]);
+   await p.locator('.back-button').click();await p.locator('.tab-bar [data-route="equipo"]').click();assert.equal(await p.locator('.equipment-card').count(),10);assert.equal(await p.locator('.equipment-card svg').count(),10);assert.equal(await p.locator('img').count(),0);
+   for(const item of expected.equipment)assert((await p.locator('#equipment').textContent()).includes(item));
+   await p.screenshot({path:path.join(evidence,'mobile-equipment.png'),fullPage:false});
+   await p.locator('.tab-bar [data-route="semana"]').click();await p.locator('#weekSelect').selectOption('1');await p.locator('#moveDays').locator('..').locator('summary').click();await p.locator('[data-move="A"]').selectOption('1');await p.waitForFunction(k=>JSON.parse(localStorage.getItem(k))?.calendar?.['1']?.A===1,key);await p.reload();await ready(p);assert.equal(await p.locator('.day').nth(1).getAttribute('data-day-session'),'A');
+   await p.screenshot({path:path.join(evidence,'mobile-calendar.png'),fullPage:false});assert.deepEqual(pageErrors,[]);
+  }finally{await ctx.close()}
+ });
+ await test('UX steppers/RIR preserve drafts, units, focus, scroll and unknown fields; all critical targets >=44',async()=>{
+  const ctx=await browser.newContext(mobile);try{const p=await warm(ctx);await click(p,'#startSession');await p.waitForSelector('.setrow');
+   assert.equal(await p.locator('#weightInput').inputValue(),'');assert.equal(await p.locator('#repsInput').inputValue(),'');await click(p,'#saveSet');assert.equal(Object.keys((await data(p)).active.logs).length,0);assert.equal(await p.locator('#weightInput').inputValue(),'');
+   await p.locator('#weightInput').fill('20 lb');await p.locator('#repsInput').fill('8');await p.locator('#rirInput').selectOption('3');await p.waitForFunction(k=>JSON.parse(localStorage.getItem(k))?.active?.drafts?.['asq:1']?.rir==='3',key);
+   const id=(await data(p)).active.id;await p.evaluate(k=>{const d=JSON.parse(localStorage.getItem(k));d.future={keep:true};d.active.drafts['asq:1'].futureSet={keep:true};localStorage.setItem(k,JSON.stringify(d))},key);await p.reload();await ready(p);
+   assert.equal(await p.locator('#weightInput').inputValue(),'20 lb');assert.equal(await p.locator('#rirInput').inputValue(),'3');
+   for(const selector of ['[data-bump="weight:1"]','[data-bump="weight:-1"]','[data-bump="reps:1"]','[data-bump="reps:-1"]','#rirInput','#saveSet','#skipSet']){const box=await p.locator(selector).boundingBox();assert(box.width>=44&&box.height>=44,selector+' target')}
+   await p.locator('[data-bump="weight:1"]').scrollIntoViewIfNeeded();await p.locator('[data-bump="weight:1"]').focus();
+   const before=await p.locator('.exercise').boundingBox();await p.locator('[data-bump="weight:1"]').click();await p.waitForFunction(k=>JSON.parse(localStorage.getItem(k))?.active?.drafts?.['asq:1']?.weight==='21 lb',key);const after=await p.locator('.exercise').boundingBox();assert(Math.abs(before.y-after.y)<1);assert.equal(await p.locator('[data-bump="weight:1"]').evaluate(el=>document.activeElement===el),true);
+   await p.evaluate(()=>{document.querySelector('[data-bump="reps:1"]').click();document.querySelector('[data-bump="reps:1"]').click();document.querySelector('[data-bump="weight:-1"]').click()});await p.waitForFunction(k=>{const d=JSON.parse(localStorage.getItem(k)).active.drafts['asq:1'];return d.weight==='20 lb'&&d.reps==='10'},key);
+   assert.equal((await data(p)).active.id,id);assert.deepEqual((await data(p)).active.drafts['asq:1'].futureSet,{keep:true});
+   await click(p,'#zeroWeight');await p.waitForFunction(k=>JSON.parse(localStorage.getItem(k)).active.drafts['asq:1'].weight==='0',key);await click(p,'#saveSet');await p.waitForFunction(k=>JSON.parse(localStorage.getItem(k)).active.logs['asq:1']?.status==='done',key);const saved=await data(p);assert.equal(saved.active.logs['asq:1'].weight,'0');assert.equal(saved.active.logs['asq:1'].rir,'3');assert.deepEqual(saved.active.logs['asq:1'].futureSet,{keep:true});assert.deepEqual(saved.future,{keep:true});assert.equal(await p.locator('.setrow').getAttribute('data-key'),'asq:2');
+   await p.screenshot({path:path.join(evidence,'mobile-session.png'),fullPage:false});
+   await p.setViewportSize({width:320,height:740});assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await p.locator('.back-button').click();assert.equal(await p.locator('#hoy').isVisible(),true);await p.locator('#homeResume').click();
+   while(await p.locator('.setrow[data-status="pending"]').count())await saveRow(p);
+   assert(await p.locator('#finishSession').isVisible());await p.locator('#rirInput').selectOption('2');await p.waitForFunction(k=>Object.keys(JSON.parse(localStorage.getItem(k)).active.drafts).length===1,key);assert.equal(await p.locator('#finishSession').count(),0);assert(await p.locator('#saveSet').isVisible());
+   await p.reload();await ready(p);assert.equal(await p.locator('#rirInput').inputValue(),'2');assert.equal(await p.locator('#finishSession').count(),0);await p.locator('#saveSet').click();await p.waitForSelector('#finishSession');await p.locator('#finishSession').click();await p.waitForFunction(k=>JSON.parse(localStorage.getItem(k)).history.length===1,key);const finished=await data(p);assert.deepEqual(finished.future,{keep:true});assert.deepEqual(finished.history[0].logs['asq:1'].futureSet,{keep:true});assert(Object.values(finished.history[0].logs).some(v=>v.rir==='2'));
   }finally{await ctx.close()}
  });
  await test('4/5 save, explicit skip, immutable completion, feedback and emergency replacement',async()=>{
   const ctx=await browser.newContext(mobile);try{const p=await warm(ctx);
    await click(p,'#startSession');await p.waitForSelector('.setrow');
-   await p.locator('.setrow').first().locator('[data-field="weight"]').fill('25 lb');await p.waitForFunction(k=>JSON.parse(localStorage.getItem(k))?.active?.drafts?.['asq:1']?.weight==='25 lb',key);await p.reload();await ready(p);assert.equal(await p.locator('.setrow').first().locator('[data-field="weight"]').inputValue(),'25 lb');assert.equal(await p.locator('#finishSession').isDisabled(),true);
+   await p.locator('.setrow').first().locator('[data-field="weight"]').fill('25 lb');await p.waitForFunction(k=>JSON.parse(localStorage.getItem(k))?.active?.drafts?.['asq:1']?.weight==='25 lb',key);await p.reload();await ready(p);assert.equal(await p.locator('.setrow').first().locator('[data-field="weight"]').inputValue(),'25 lb');assert.equal(await p.locator('#finishSession').count(),0);assert.equal(await p.locator('#saveSet').isVisible(),true);
    await saveRow(p,0);assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await p.locator('#sessionTitle').scrollIntoViewIfNeeded();await p.screenshot({path:path.join(evidence,'mobile-session.png'),fullPage:false});
    await p.reload();await ready(p);assert.equal(Object.keys((await data(p)).active.logs).length,1);
    const id=await complete(p),saved=await data(p);assert.equal(saved.history.length,1);assert.equal(saved.history[0].id,id);assert(Object.values(saved.history[0].logs).some(x=>x.status==='skipped'));
    await p.reload();await ready(p);assert.equal((await data(p)).history.length,1);assert((await p.locator('#weeklyCount').textContent()).startsWith('1/3'));
-   await p.locator('[data-session="B"]').click();await click(p,'#startEmergency');await p.waitForSelector('.setrow');assert((await data(p)).active.plan.emergency);
-   await complete(p);assert.equal((await data(p)).history.length,2);assert.equal(await p.locator('#startSession').count(),0);
-   await p.locator('#feedback').fill('<img src=x onerror=alert(1)> synthetic');await click(p,'#saveFeedback');await p.waitForFunction(k=>JSON.parse(localStorage.getItem(k)).feedback.includes('synthetic'),key);
+   await p.locator('#sessionChoices [data-route="fuerza-b"]').click();await p.locator('.workout-options summary').click();await click(p,'#startEmergency');await p.waitForSelector('.setrow');assert((await data(p)).active.plan.emergency);
+   await complete(p);assert.equal((await data(p)).history.length,2);assert.equal((await data(p)).active,null);
+   await openProgress(p);await p.locator('#progressPanel .nested-disclosure summary').click();await p.locator('#feedback').fill('<img src=x onerror=alert(1)> synthetic');await click(p,'#saveFeedback');await p.waitForFunction(k=>JSON.parse(localStorage.getItem(k)).feedback.includes('synthetic'),key);
    const downloadPromise=p.waitForEvent('download');await click(p,'#exportProgress');const download=await downloadPromise;const exported=JSON.parse(fs.readFileSync(await download.path()));assert.equal(exported.programId,'tactical-mass-hybrid-home-gym');assert.equal(JSON.parse(exported.raw).history.length,2);
-   const next=await browser.newContext(mobile);try{const q=await warm(next);q.on('dialog',d=>d.accept());await q.locator('#importFile').setInputFiles({name:'synthetic.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(exported))});await q.waitForFunction(k=>JSON.parse(localStorage.getItem(k))?.history.length===2,key);assert.equal((await data(q)).feedback,JSON.parse(exported.raw).feedback);assert.equal(await q.locator('#feedback img').count(),0)}finally{await next.close()}
+   const next=await browser.newContext(mobile);try{const q=await warm(next);await openProgress(q);q.on('dialog',d=>d.accept());await q.locator('#importFile').setInputFiles({name:'synthetic.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(exported))});await q.waitForFunction(k=>JSON.parse(localStorage.getItem(k))?.history.length===2,key);assert.equal((await data(q)).feedback,JSON.parse(exported.raw).feedback);assert.equal(await q.locator('#feedback img').count(),0)}finally{await next.close()}
   }finally{await ctx.close()}
  });
  await test('3 distinct origins isolate synthetic FV records; pilot uses only its namespace',async()=>{

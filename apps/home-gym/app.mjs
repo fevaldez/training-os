@@ -1,115 +1,81 @@
 import { PROGRAM } from './program.mjs';
 import { createStore, KEY, prescription, emergency, schedule, setKeys } from './engine.mjs';
-const $ = s => document.querySelector(s);
-const all = s => [...document.querySelectorAll(s)];
-const h = x => String(x ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const days = ['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
-const base = new URL('./', import.meta.url);
-let snapshot, store, stale = false, selectedWeek = 1, selectedSession = 'A';
-let writes = Promise.resolve();
-const memoryDrafts = new Map();
-function status(text, error = false) { $('#saveState').textContent = text; $('#saveState').classList.toggle('error', error); }
-function go(id) { document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'}); }
-const errors = {
- 'stale-tab':'Otra pestaña cambió tus datos. Vuelve a leerlos antes de continuar.',
- 'resolve-every-set':'Registra u omite explícitamente cada serie antes de terminar.',
- 'lock-unavailable':'Este navegador no permite guardar con seguridad. Usa un navegador compatible y conserva tu respaldo.',
- 'restore-requires-empty-store':'La restauración requiere un navegador sin progreso. Tus registros siguen intactos.',
- 'wrong-backup':'Este archivo no es un respaldo de Home Gym.',
- 'active-session-exists':'Termina la sesión activa antes de comenzar otra.'
+const $=s=>document.querySelector(s),all=s=>[...document.querySelectorAll(s)];
+const h=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const days=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'],base=new URL('./',import.meta.url);
+let snapshot,store,stale=false,selectedWeek=1,selectedSession='A',exerciseIndex=0,setIndex=0,view='hoy';
+let writes=Promise.resolve();const memoryDrafts=new Map();
+// Original pictograms: no private photographs, icon font, external assets or inferred equipment specs.
+const art={
+ rack:'<path d="M15 53V12h5v41m24 0V12h5v41M18 17h28M10 29h44M14 25v8m36-8v8M9 54h16m14 0h16"/>',
+ bench:'<rect x="10" y="24" width="44" height="10" rx="3"/><path d="m18 35-5 18m32-18 6 18M10 53h12m23 0h11"/>',
+ bar:'<path d="M5 32h54M14 20v24m6-28v32m24-32v32m6-28v24"/>',
+ dumbbell:'<path d="M23 32h18M10 23v18m7-23v28m30-28v28m7-23v18M10 23h7m-7 18h7m30-18h7m-7 18h7"/>',
+ kettlebell:'<path d="M23 24v-5a9 9 0 0 1 18 0v5m-14-1v-4a5 5 0 0 1 10 0v4"/><path d="M20 28c-13 23 0 27 12 27s25-4 12-27c-4-7-20-7-24 0Z"/>',
+ box:'<path d="m10 23 22-12 22 12v29H10Zm0 0h44M32 11v12M16 30v15m32-15v15"/>',
+ treadmill:'<path d="M9 48h45l-3 7H8Zm35 0-5-29h12M34 16h16v7H36M20 46l13-16m-8 0h13"/>',
+ rower:'<circle cx="13" cy="40" r="10"/><path d="M24 40h33M31 35h12v5M51 40v13M18 30l7-12m-4-2h12M7 52h16m23 1h13"/>',
+ ski:'<path d="M18 54V10h28v44M25 11v16l-7 14m21-30v16l7 14M12 54h40M15 41l7 4m20 0 7-4"/>',
+ roller:'<ellipse cx="20" cy="32" rx="8" ry="19"/><path d="M20 13h25c10 0 10 38 0 38H20m4-31h20m-18 9h20m-20 9h20m-22 8h20"/>',
+ floor:'<path d="M9 49h46M13 45l8-12 10 4 7-15 10 5m-17 10 11 9"/><circle cx="15" cy="25" r="5"/>'
 };
-function fail(e) {
- status(errors[e.message] || 'No se confirmó el guardado. Conserva esta pantalla, exporta un respaldo y vuelve a leer los datos antes de reintentar.', true);
- $('#refresh').hidden = false;
- $('#saveState').scrollIntoView({behavior:'instant',block:'center'});
- stale = true;
+const equipment=[
+ ['rack','Rack','rack','Verifica estabilidad y safeties.'],['bench','Banco','banco','Apoyo para Fuerza A y B.'],
+ ['bar','Barra y discos','barra y discos','No se prescriben al inicio.'],['dumbbell','Mancuernas','mancuernas','Fuerza y alternativas del programa.'],
+ ['kettlebell','Kettlebell','kettlebell','Bisagra desde apoyo firme.'],['box','Cajón','cajón','Sin saltos en esta fase.'],
+ ['treadmill','Caminadora','caminadora','Caminata e intervalos controlados.'],['rower','Remo','remo','Alternativa si dominas la técnica.'],
+ ['ski','SkiErg','SkiErg','Alternativa si dominas la técnica.'],['roller','Roller y accesorios','foam roller y accesorios','Inventario disponible; sin rutina añadida.']
+];
+function visual(id,label){return `<span class="equipment-visual"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="${h(label)}">${art[id]||art.dumbbell}</svg></span>`}
+const gearIcon=e=>e.id==='condition'?'treadmill':e.id==='acore'?'floor':e.id==='bhinge'?'kettlebell':e.id==='bpush'||e.id==='bsq'?'bench':'dumbbell';
+const routeFor=s=>s==='A'?'fuerza-a':s==='B'?'fuerza-b':'condicion';
+const nameFor=s=>s==='C'?'Condición':'Fuerza '+s;
+const completed=(w,s)=>snapshot.data.history.some(x=>x.week===w&&x.session===s);
+function status(text,error=false){$('#saveState').textContent=text;$('#saveState').classList.toggle('error',error)}
+const errors={'stale-tab':'Otra pestaña cambió tus datos. Vuelve a leerlos antes de continuar.','resolve-every-set':'Registra u omite explícitamente cada serie antes de terminar.','lock-unavailable':'Este navegador no permite guardar con seguridad. Conserva tu respaldo.','restore-requires-empty-store':'La restauración requiere un navegador sin progreso. Tus registros siguen intactos.','wrong-backup':'Este archivo no es un respaldo de Home Gym.','active-session-exists':'Termina la sesión activa antes de comenzar otra.'};
+function fail(e){status(errors[e.message]||'No se confirmó el guardado. Conserva esta pantalla y exporta un respaldo antes de reintentar.',true);$('#refresh').hidden=false;stale=true}
+function mutate(fn,message='Guardado en este navegador.',renderUI=true){const action=writes.then(async()=>{if(stale)return false;try{snapshot=await fn(snapshot.raw);if(renderUI)render();status(message);return true}catch(e){fail(e);return false}});writes=action.catch(()=>false);return action}
+function applyView(){const workout=['fuerza-a','fuerza-b','condicion'].includes(view);all('[data-view]').forEach(el=>el.hidden=el.dataset.view!==(workout?'workout':view));document.body.classList.toggle('workout-mode',workout);document.body.classList.toggle('executing',workout&&!!snapshot?.data.active);all('.tab-bar [data-route]').forEach(b=>{if(b.dataset.route===view)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')})}
+function navigate(next,{scroll=true}={}){if(!['hoy','semana','equipo','fuerza-a','fuerza-b','condicion'].includes(next))next='hoy';const s={'fuerza-a':'A','fuerza-b':'B','condicion':'C'}[next];if(s&&s!==selectedSession){selectedSession=s;exerciseIndex=0;setIndex=0}view=next;history.replaceState(null,'','#'+next);render();if(scroll){scrollTo({top:0,behavior:'instant'});$('.view:not([hidden]) h1')?.focus({preventScroll:true})}}
+function sessionChoice(s,w=selectedWeek){const done=completed(w,s),icon=s==='C'?'treadmill':s==='A'?'dumbbell':'kettlebell';return `<button class="session-choice ${s==='C'?'condition':''}" data-route="${routeFor(s)}">${visual(icon,nameFor(s))}<span><strong>${nameFor(s)}</strong><small>${done?'Completada ✓':s==='C'?'15–25 min · bajo impacto':'35–45 min · cinco ejercicios'}</small></span><span class="chevron" aria-hidden="true">›</span></button>`}
+function renderHome(){const a=snapshot.data.active,next=a?.session||Object.keys(schedule(selectedWeek)).find(s=>!completed(selectedWeek,s));$('#homeSubtitle').textContent='Semana '+selectedWeek+' · '+PROGRAM.plan[selectedWeek-1].phase;$('#todayCard').innerHTML=next?`<div class="hero-card"><div class="hero-top"><div><p class="eyebrow">${a?'Sesión en curso':'Tu siguiente paso'}</p><h2>${a?h(a.plan.title):nameFor(next)}</h2></div>${visual(next==='C'?'treadmill':'dumbbell',nameFor(next))}</div><p class="hero-note">${a?'Tu progreso está aquí. Continúa donde lo dejaste.':'Sin prisa. Una serie bien hecha a la vez.'}</p><button class="btn" ${a?'id="homeResume"':`data-route="${routeFor(next)}"`}>${a?'Continuar sesión':'Ver sesión'} <span aria-hidden="true">→</span></button></div>`:'<div class="complete-card"><h2>Semana completada</h2><p>Tu seguimiento está guardado.</p><button class="text-button" data-route="semana">Ver las doce semanas →</button></div>';$('#sessionChoices').innerHTML=['A','B','C'].map(s=>sessionChoice(s)).join('');if($('#homeResume'))$('#homeResume').onclick=resume}
+function renderCalendar(){const w=selectedWeek,p=PROGRAM.plan[w-1],map=snapshot.data.calendar[w]||schedule(w);$('#phaseTag').textContent=p.phase;$('#weekHeadline').textContent='Semana '+w;$('#weekSubtitle').textContent=w===6?'Semana ligera · menos series, cardio suave.':'Fuerza: RIR '+p.rir+' · Condición: '+p.effort;$('#weekSelect').value=w;$('#weekBadge').textContent='Semana '+w;$('#prevWeek').disabled=w===1;$('#nextWeek').disabled=w===12;$('#weeklyCount').textContent=['A','B','C'].filter(s=>completed(w,s)).length+'/3';$('#calendar').innerHTML=days.map((d,i)=>{const s=Object.keys(map).find(s=>map[s]===i);return `<button class="day ${s?s==='C'?'interval':'session':''} ${s&&completed(w,s)?'done':''}" data-day-session="${s||''}" ${s?`data-route="${routeFor(s)}"`:''} aria-label="${d}: ${s?nameFor(s):'Descanso o micro-pausas'}"><span class="name">${d}</span><strong>${s||'—'}</strong></button>`}).join('');$('#weekSessions').innerHTML=Object.keys(map).sort((a,b)=>map[a]-map[b]).map(s=>sessionChoice(s)).join('');$('#roadmap').innerHTML=PROGRAM.plan.map(p=>{const n=['A','B','C'].filter(s=>completed(p.week,s)).length;return `<button class="weekdot ${p.week===w?'selected':''} ${n===3?'done':''}" data-week="${p.week}" aria-label="Semana ${p.week}, ${n} de 3 sesiones" aria-current="${p.week===w?'true':'false'}">${p.week}<span class="micro">${n}/3</span></button>`}).join('');$('#moveDays').innerHTML=['A','C','B'].map(s=>`<label class="plan-row">${nameFor(s)}<select data-move="${s}" aria-label="Mover ${nameFor(s)}">${days.map((d,i)=>`<option value="${i}" ${map[s]===i?'selected':''}>${d}</option>`).join('')}</select></label>`).join('');all('[data-move]').forEach(el=>el.onchange=()=>mutate(raw=>store.move(raw,w,el.dataset.move,Number(el.value))))}
+function resume(){const a=snapshot.data.active;if(!a)return;selectedWeek=a.week;selectedSession=a.session;focusNext(a);navigate(routeFor(a.session))}
+function focusNext(a){for(let i=0;i<a.plan.exercises.length;i++){const e=a.plan.exercises[i];for(let n=0;n<e.sets;n++){const k=e.id+':'+(n+1);if(!a.logs[k]||a.drafts?.[k]||memoryDrafts.get(k)?.id===a.id){exerciseIndex=i;setIndex=n;return}}}}
+function conditioning(plan){const p=PROGRAM.plan[selectedWeek-1];return `<div class="condition-target">${h(p.effort)} · ${h(p.phase)}</div><div class="block-list">${selectedWeek===6?'<div class="interval-block"><span class="block-number">1</span><div><strong>15–20 min</strong><small>Caminata muy suave · ritmo conversacional</small><small>Sin intervalos</small></div></div>':`<div class="interval-block"><span class="block-number">1</span><div><strong>5 min suave</strong><small>Entrada en calor</small></div></div><div class="interval-block"><span class="block-number">2</span><div><strong>${p.intervals} ciclos</strong><div class="interval-pair"><span><b>${p.hard} s</b>${h(p.effort)}</span><span><b>${p.easy} s</b>Suave</span></div></div></div><div class="interval-block"><span class="block-number">3</span><div><strong>3–5 min</strong><small>Cierre muy suave</small></div></div>`}</div><details class="technique"><summary>Protocolo y alternativas</summary><p>${h(plan.protocol)}</p><p>${h(plan.exercises[0].cue)}</p><p>${h(plan.exercises[0].alt)}</p><p>${h(PROGRAM.guidance[selectedWeek>=7?'cardioLater':'cardioEarly'])}</p></details>`}
+function logger(a,e){const key=e.id+':'+(setIndex+1),log=a.logs[key],pending=memoryDrafts.get(key),d=(pending?.id===a.id?pending.value:null)||a.drafts?.[key]||log||{},strength=selectedSession!=='C'&&!a.plan.emergency;const actualRir=String(d.rir??''),rirOptions=['','0','1','2','3','4','5+','técnica'];if(actualRir&&!rirOptions.includes(actualRir))rirOptions.push(actualRir);return `<div class="set-pills"><span>${strength?'Serie':'Registro'} ${setIndex+1} de ${e.sets}</span>${Array.from({length:e.sets},(_,i)=>{const k=e.id+':'+(i+1),state=a.drafts?.[k]?'pending':a.logs[k]?.status||'pending';return `<button class="set-pill" data-set="${i}" data-status="${state}" aria-pressed="${i===setIndex}" aria-label="Serie ${i+1}: ${state==='done'?'guardada':state==='skipped'?'omitida':'pendiente'}">${state==='done'?'✓':state==='skipped'?'−':i+1}</button>`}).join('')}</div><div class="setrow" data-key="${key}" data-status="${a.drafts?.[key]?'pending':log?.status||'pending'}">${strength?`<div class="logger-controls"><div class="control"><label for="weightInput">Peso · kg / lb</label><div class="stepper"><button data-bump="weight:-1" aria-label="Disminuir peso">−</button><input id="weightInput" data-field="weight" inputmode="decimal" maxlength="100" value="${h(d.weight)}" placeholder="—" aria-label="Peso, kg o lb"><button data-bump="weight:1" aria-label="Aumentar peso">+</button></div><button class="zero-button" id="zeroWeight" aria-pressed="${d.weight==='0'}">Sin carga externa · 0</button></div><div class="control"><label for="repsInput">Repeticiones</label><div class="stepper"><button data-bump="reps:-1" aria-label="Disminuir repeticiones">−</button><input id="repsInput" data-field="reps" inputmode="numeric" maxlength="100" value="${h(d.reps)}" placeholder="—" aria-label="Repeticiones"><button data-bump="reps:1" aria-label="Aumentar repeticiones">+</button></div></div></div><div class="control control-rir"><label for="rirInput">RIR real · objetivo ${h(e.rir)}</label><select id="rirInput" data-field="rir" aria-label="RIR real">${rirOptions.map(v=>`<option value="${h(v)}" ${v===actualRir?'selected':''}>${v===''?'Sin registrar':v==='técnica'?'Técnica':v}</option>`).join('')}</select></div>`:`<div class="control"><label for="repsInput">Resultado o duración</label><input class="result-input" id="repsInput" data-field="reps" value="${h(d.reps)}" maxlength="100" placeholder="${h(e.reps)}"></div>`}<details class="set-note"><summary>Nota de esta ${strength?'serie':'sesión'}</summary><label class="field">Nota o alternativa usada<input data-field="note" maxlength="2000" value="${h(d.note)}"></label></details><p class="set-state">${a.drafts?.[key]?'Borrador guardado · confirma u omite':log?.status==='done'?'Serie guardada ✓':log?.status==='skipped'?'Omitida explícitamente':'Sin registrar'}</p></div>`}
+function renderSession(){const a=snapshot.data.active,visible=a&&a.week===selectedWeek&&a.session===selectedSession,plan=visible?a.plan:prescription(selectedWeek,selectedSession);exerciseIndex=Math.min(exerciseIndex,plan.exercises.length-1);const e=plan.exercises[exerciseIndex];setIndex=Math.min(setIndex,e.sets-1);$('#sessionEyebrow').textContent='Semana '+selectedWeek+' · '+PROGRAM.plan[selectedWeek-1].phase;$('#sessionTitle').textContent=plan.title;all('[data-session]').forEach(b=>{const yes=b.dataset.session===selectedSession;b.classList.toggle('active',yes);b.setAttribute('aria-selected',String(yes))});let html='';
+ if(selectedSession==='C')html=conditioning(plan);
+ const firstCue=e.cue.match(/^.*?[.!?](?:\s|$)/)?.[0].trim()||e.cue;
+ html+=`<article class="exercise" data-exercise-id="${h(e.id)}"><div class="exercise-topline"><span class="exercise-position">${selectedSession==='C'?'Tu registro':plan.emergency?'Plan B':'Ejercicio '+(exerciseIndex+1)+' de '+plan.exercises.length}</span><div class="exercise-arrows" ${plan.exercises.length===1?'hidden':''}><button id="prevExercise" aria-label="Ejercicio anterior" ${exerciseIndex===0?'disabled':''}>‹</button><button id="nextExercise" aria-label="Ejercicio siguiente" ${exerciseIndex===plan.exercises.length-1?'disabled':''}>›</button></div></div><h2 class="exercise-title">${h(e.name)}</h2><div class="exercise-equipment">${visual(gearIcon(e),e.gear)}<span>${h(e.gear)}</span></div>${selectedSession==='C'?'':`<dl class="prescription"><div><dt>Series × reps</dt><dd>${e.sets} × ${h(e.reps)}</dd></div><div><dt>RIR</dt><dd>${h(e.rir)}</dd></div><div><dt>Descanso</dt><dd>${h(e.rest)}</dd></div></dl><p class="cue">${h(firstCue)}</p><details class="technique" id="technique"><summary>Técnica y alternativa</summary><p><b>Tempo:</b> ${h(e.tempo)} · E–P–C–P: bajada, pausa, subida, pausa.</p><p>${h(e.cue)}</p><p><b>Alternativa:</b> ${h(e.alt)}</p></details>`}${visible?logger(a,e):''}</article>`;
+ if(plan.exercises.length>1)html+=`<details class="exercise-menu"><summary>Ver los ${plan.exercises.length} ejercicios</summary><div class="exercise-list">${plan.exercises.map((e,i)=>`<button class="exercise-link" data-exercise="${i}" aria-pressed="${i===exerciseIndex}">${i+1}. ${h(e.name)}</button>`).join('')}</div></details>`;
+ $('#sessionContent').innerHTML=html;if(visible&&$('#technique'))$('.exercise').append($('#technique'));$('#sessionActions').innerHTML='';let dock='';
+ if(visible){const complete=setKeys(a.plan).every(k=>a.logs[k]&&!a.drafts?.[k]&&memoryDrafts.get(k)?.id!==a.id);dock=complete?'<button class="btn primary" id="finishSession">Guardar sesión completa</button>':'<button class="btn quiet" id="skipSet" data-log-action="skipped">Omitir</button><button class="btn primary" id="saveSet" data-log-action="done">Guardar '+(selectedSession==='C'||plan.emergency?'registro':'serie')+' →</button>';$('#sessionProgress').textContent=setKeys(a.plan).filter(k=>a.logs[k]&&!a.drafts?.[k]).length+'/'+setKeys(a.plan).length+' registros resueltos. Omitir no cuenta como realizado.'}
+ else if(a){dock='<button class="btn primary" id="resumeSession">Continuar sesión activa</button>';$('#sessionProgress').textContent='Hay una sesión en curso: '+a.plan.title+'.'}
+ else if(completed(selectedWeek,selectedSession)){dock='<button class="btn primary" id="showHistory">Ver sesión guardada</button>';$('#sessionProgress').textContent='Sesión completada ✓'}
+ else {dock='<button class="btn primary" id="startSession">Comenzar sesión</button>';$('#sessionProgress').textContent='';if(selectedSession!=='C')$('#sessionActions').innerHTML='<details class="workout-options"><summary>¿Hoy tienes poco tiempo?</summary><button class="btn secondary" id="startEmergency">Usar Plan B en lugar de esta fuerza</button><p class="secondary-copy">Reemplaza esta sesión; no añade una cuarta.</p></details>'}
+ $('#sessionDock').innerHTML=dock;bindSession(a,e,visible);
 }
-function mutate(fn, message = 'Guardado en este navegador.', renderUI = true) {
- const action = writes.then(async () => {
-  if (stale) return false;
-  try { snapshot = await fn(snapshot.raw); if(renderUI) render(); status(message); return true; }
-  catch (e) { fail(e); return false; }
- });
- writes = action.catch(()=>false);
- return action;
+function bindSession(a,e,visible){all('[data-exercise]').forEach(b=>b.onclick=()=>{exerciseIndex=Number(b.dataset.exercise);setIndex=0;renderSession()});all('[data-set]').forEach(b=>b.onclick=()=>{setIndex=Number(b.dataset.set);renderSession()});if($('#prevExercise'))$('#prevExercise').onclick=()=>{exerciseIndex--;setIndex=0;renderSession()};if($('#nextExercise'))$('#nextExercise').onclick=()=>{exerciseIndex++;setIndex=0;renderSession()};
+ const start=isEmergency=>mutate(raw=>store.start(raw,selectedWeek,selectedSession,isEmergency),'Sesión lista.',false).then(ok=>{if(ok){focusNext(snapshot.data.active);render()}});
+ if($('#startSession'))$('#startSession').onclick=()=>start(false);if($('#startEmergency'))$('#startEmergency').onclick=()=>start(true);if($('#resumeSession'))$('#resumeSession').onclick=resume;if($('#showHistory'))$('#showHistory').onclick=()=>{navigate('hoy');$('#progressPanel').open=true;$('#progressPanel').scrollIntoView({block:'start'})};
+ if($('#finishSession'))$('#finishSession').onclick=()=>{const b=$('#finishSession');b.disabled=true;mutate(raw=>store.finish(raw,a.id),'Sesión guardada. Buen trabajo.',false).then(ok=>{if(ok){navigate('hoy');$('#progressPanel').open=true}else b.disabled=false})};
+ if(!visible)return;const key=e.id+':'+(setIndex+1);
+ // Keep legacy free-text fields and optional/unknown log fields intact when hidden in this view.
+ const value=()=>{const previous=(memoryDrafts.get(key)?.id===a.id?memoryDrafts.get(key).value:null)||snapshot.data.active?.drafts?.[key]||snapshot.data.active?.logs?.[key]||{};return {...previous,weight:previous.weight||'',reps:previous.reps||'',note:previous.note||'',...Object.fromEntries(all('.setrow [data-field]').map(i=>[i.dataset.field,i.value]))}};
+ const draft=()=>{const pending={id:a.id,value:value()};memoryDrafts.set(key,pending);$('.set-state').textContent='Guardando borrador…';if($('#finishSession')){$('#sessionDock').innerHTML='<button class="btn quiet" id="skipSet" data-log-action="skipped">Omitir</button><button class="btn primary" id="saveSet" data-log-action="done">Guardar serie →</button>';$('#saveSet').onclick=()=>save('done');$('#skipSet').onclick=()=>save('skipped')}mutate(raw=>store.draft(raw,a.id,key,pending.value),'Borrador guardado.',false).then(ok=>{if(ok&&memoryDrafts.get(key)===pending){memoryDrafts.delete(key);const row=$('.setrow');if(row?.dataset.key===key)$('.set-state').textContent='Borrador guardado · confirma u omite'}})};
+ all('.setrow [data-field]').forEach(i=>{i.addEventListener(i.tagName==='SELECT'?'change':'input',draft)});
+ all('[data-bump]').forEach(b=>b.onclick=()=>{const[field,delta]=b.dataset.bump.split(':'),input=$('[data-field="'+field+'"]'),text=input.value.trim(),match=text.match(/^(\d+(?:[.,]\d+)?)(.*)$/);if(text&&(!match||(field==='reps'&&!/^\d+$/.test(text)))){status('Tu texto se conserva. Escribe un número para usar + o −.',true);return}if(!text&&Number(delta)<0)return;const number=Math.max(0,Math.round(((match?Number(match[1].replace(',','.')):0)+Number(delta))*100)/100);input.value=String(number)+(match?match[2]:'');draft();if($('#zeroWeight'))$('#zeroWeight').setAttribute('aria-pressed',String($('#weightInput').value==='0'))});
+ if($('#zeroWeight'))$('#zeroWeight').onclick=()=>{$('#weightInput').value='0';$('#zeroWeight').setAttribute('aria-pressed','true');draft()};
+ const save=outcome=>{const record={...value(),status:outcome};if(outcome==='done'&&!record.reps.trim()){status('Anota repeticiones, duración o resultado antes de guardar.',true);$('#repsInput').focus({preventScroll:true});return}all('[data-log-action]').forEach(b=>b.disabled=true);mutate(raw=>store.log(raw,a.id,key,record),'Serie '+(outcome==='skipped'?'omitida explícitamente.':'guardada.'),false).then(ok=>{if(ok){memoryDrafts.delete(key);focusNext(snapshot.data.active);render()}else all('[data-log-action]').forEach(b=>b.disabled=false)})};
+ if($('#saveSet'))$('#saveSet').onclick=()=>save('done');if($('#skipSet'))$('#skipSet').onclick=()=>save('skipped');
 }
-const completed = (w, s) => snapshot.data.history.some(x => x.week === w && x.session === s);
-function renderCalendar() {
- const w = selectedWeek, p = PROGRAM.plan[w-1], map = snapshot.data.calendar[w] || schedule(w);
- $('#phaseTag').textContent = p.phase;
- $('#weekHeadline').textContent = 'Semana ' + w + ' · ' + (w === 1 ? 'empezar fácil' : w === 2 ? 'repetir mejor' : w === 6 ? 'reducir fatiga' : w === 12 ? 'evaluar progreso' : 'progresar con control');
- $('#weekSubtitle').textContent = w === 6 ? 'Semana ligera: menos series y solo cardio suave.' : `Fuerza: RIR ${p.rir} · Condición: ${p.effort}.`;
- $('#weekSelect').value = w; $('#prevWeek').disabled = w === 1; $('#nextWeek').disabled = w === 12;
- $('#weeklyCount').textContent = ['A','B','C'].filter(s => completed(w,s)).length + '/3';
- $('#calendar').innerHTML = days.map((day,i) => {
-  const s = Object.keys(map).find(k=>map[k]===i), done = s && completed(w,s);
-  return `<button class="day ${s ? s === 'C' ? 'interval' : 'session' : ''} ${done ? 'done' : ''}" data-day-session="${s||''}" aria-label="${day}: ${s ? s==='C'?'Condición':'Fuerza '+s : 'Descanso o micro-pausas'}"><span class="name">${day}</span><strong>${s ? s==='C'?'Condición':'Fuerza '+s : i===6?'Descanso':'Micro-pausas'}</strong><small>${s ? s==='C'?'15–25 min':'35–45 min' : i===6?'Libre':'2–5 min'}</small><span class="check">${s ? done?'✓ Completado':'Abrir →' : ''}</span></button>`;
- }).join('');
- $('#roadmap').innerHTML = PROGRAM.plan.map(p => {const n=['A','B','C'].filter(s=>completed(p.week,s)).length;return `<button class="weekdot ${p.week===w?'selected':''} ${n===3?'done':''}" data-week="${p.week}" aria-label="Semana ${p.week}, ${n} de 3 sesiones" aria-current="${p.week===w?'true':'false'}"><span>${p.week}</span><span class="micro">${n}/3</span></button>`}).join('');
- $('#moveDays').innerHTML = ['A','C','B'].map(s => `<label class="plan-row">${s==='C'?'Condición':'Fuerza '+s}<select data-move="${s}" aria-label="Mover ${s==='C'?'Condición':'Fuerza '+s}">${days.map((d,i)=>`<option value="${i}" ${map[s]===i?'selected':''}>${d}</option>`).join('')}</select></label>`).join('');
- all('[data-day-session]').forEach(b=>b.onclick=()=>{if(b.dataset.daySession){selectedSession=b.dataset.daySession;renderSession();go('sesiones')}});
- all('[data-week]').forEach(b=>b.onclick=()=>{selectedWeek=Number(b.dataset.week);render()});
- all('[data-move]').forEach(select=>select.onchange=()=>mutate(raw=>store.move(raw,w,select.dataset.move,Number(select.value))));
-}
-function renderSession() {
- if(!snapshot)return;
- const a = snapshot.data.active, visible = a && a.week===selectedWeek && a.session===selectedSession;
- const done = completed(selectedWeek, selectedSession);
- const plan = visible ? a.plan : prescription(selectedWeek,selectedSession);
- all('[data-session]').forEach(b=>{b.classList.toggle('active',b.dataset.session===selectedSession);b.setAttribute('aria-selected',String(b.dataset.session===selectedSession))});
- $('#sessionEyebrow').textContent = 'Semana '+selectedWeek+' · '+PROGRAM.plan[selectedWeek-1].phase;
- $('#sessionTitle').textContent = plan.title;
- $('#sessionIntro').textContent = selectedSession==='C' ? 'Acondicionamiento de bajo impacto; los intervalos intensos se activan solo si hay tolerancia.' : PROGRAM.guidance.warmup+' '+PROGRAM.guidance.duration;
- let html = plan.protocol ? `<div class="callout">${h(plan.protocol)}</div>` : '';
- if(selectedSession==='C') html += `<p class="callout warn">${h(PROGRAM.guidance[selectedWeek>=7?'cardioLater':'cardioEarly'])}</p>`;
- html += plan.exercises.map(e=>`<article class="exercise" style="margin-top:12px"><h3>${h(e.name)}</h3><div class="meta">${h(e.gear)} · <b>${e.sets} ${selectedSession==='C'||plan.emergency?'registro':'series'}</b> × ${h(e.reps)}${e.rir?' · RIR '+h(e.rir):''}${e.tempo?' · Tempo '+h(e.tempo):''}${e.rest?' · Descanso '+h(e.rest):''}</div><p class="ex-tip">${h(e.cue)}<br><b>Alternativa:</b> ${h(e.alt)}</p>${visible?Array.from({length:e.sets},(_,i)=>{
- const key=e.id+':'+(i+1),log=a.logs[key],draft=(memoryDrafts.get(key)?.id===a.id?memoryDrafts.get(key).value:null)||a.drafts?.[key],value=draft||log;
- return `<div class="setrow" data-key="${key}" data-status="${draft?'pending':log?.status||'pending'}"><label class="field">${selectedSession==='C'||plan.emergency?'Registro':'Serie '+(i+1)+' · peso (unidad libre)'}<input data-field="weight" aria-label="${h(e.name)} ${i+1} peso" maxlength="100" value="${h(value?.weight)}" placeholder="Ej. 20 lb"></label><label class="field">${selectedSession==='C'||plan.emergency?'Resultado / duración':'Repeticiones'}<input data-field="reps" aria-label="${h(e.name)} ${i+1} resultado" maxlength="100" value="${h(value?.reps)}" placeholder="${h(e.reps)}"></label><label class="field" style="grid-column:1/-1">Nota / alternativa usada<input data-field="note" aria-label="${h(e.name)} ${i+1} nota" maxlength="2000" value="${h(value?.note)}"></label><div class="actions"><button class="btn primary" data-log-action="done">${log?.status==='done'?'✓ Guardada':'Guardar '+(selectedSession==='C'||plan.emergency?'registro':'serie')}</button><button class="btn outline" data-log-action="skipped">${log?.status==='skipped'?'Omitida ✓':'Omitir'}</button><span class="pill">${draft?'Borrador guardado · confirma la serie':log?'Guardado':'Pendiente'}</span></div></div>`;
- }).join(''):''}</article>`).join('');
- $('#sessionContent').innerHTML = html;
- let buttons='';
- if(visible) buttons=`<button class="btn primary" id="finishSession" ${setKeys(a.plan).every(k=>a.logs[k]&&!a.drafts?.[k]&&memoryDrafts.get(k)?.id!==a.id)?'':'disabled'}>Terminar y guardar sesión</button>`;
- else if(a) buttons=`<p class="callout">Hay una sesión en curso: semana ${a.week}, ${h(a.plan.title)}.</p><button class="btn primary" id="resumeSession">Continuar sesión activa</button>`;
- else if(done) buttons='<p class="callout">✓ Esta sesión ya está guardada. Puedes verla en tu seguimiento.</p>';
- else buttons='<button class="btn primary" id="startSession">Comenzar sesión</button>'+(selectedSession!=='C'?'<button class="btn outline" id="startEmergency">Usar Plan B en lugar de esta fuerza</button>':'');
- $('#sessionActions').innerHTML=buttons;
- $('#sessionProgress').textContent=visible?`${setKeys(a.plan).filter(k=>a.logs[k]&&!a.drafts?.[k]&&memoryDrafts.get(k)?.id!==a.id).length}/${setKeys(a.plan).length} registros resueltos. Puedes omitir una serie; no se registra como realizada.`:'';
- if($('#startSession')) $('#startSession').onclick=()=>mutate(raw=>store.start(raw,selectedWeek,selectedSession));
- if($('#startEmergency')) $('#startEmergency').onclick=()=>mutate(raw=>store.start(raw,selectedWeek,selectedSession,true));
- if($('#resumeSession')) $('#resumeSession').onclick=()=>{selectedWeek=a.week;selectedSession=a.session;render();go('sesiones')};
- if($('#finishSession')) $('#finishSession').onclick=()=>mutate(raw=>store.finish(raw,a.id),'Sesión guardada. Tu seguimiento está actualizado.');
- all('.setrow [data-field]').forEach(input=>input.oninput=()=>{
-  const row=input.closest('[data-key]'), key=row.dataset.key;
-  const value=Object.fromEntries([...row.querySelectorAll('[data-field]')].map(i=>[i.dataset.field,i.value]));
-  const pending={id:a.id,value};memoryDrafts.set(key,pending);
-  row.dataset.status='pending';$('#finishSession').disabled=true;
-  row.querySelector('.pill').textContent='Guardando borrador…';
-  mutate(raw=>store.draft(raw,a.id,key,value),'Borrador guardado. Confirma u omite la serie.',false).then(ok=>{
-   if(ok&&memoryDrafts.get(key)===pending){memoryDrafts.delete(key);row.querySelector('.pill').textContent='Borrador guardado · confirma la serie';}
-  });
- });
- all('[data-log-action]').forEach(b=>b.onclick=()=>{
-  const row=b.closest('[data-key]');
-  const value=Object.fromEntries([...row.querySelectorAll('[data-field]')].map(i=>[i.dataset.field,i.value]));
-  value.status=b.dataset.logAction;
-  if(value.status==='done'&&!value.reps.trim()){status('Anota las repeticiones, duración o resultado antes de guardar.',true);return}
-  const scroll=window.scrollY;
-  mutate(raw=>store.log(raw,a.id,row.dataset.key,value)).then(ok=>{if(ok)window.scrollTo({top:scroll,behavior:'instant'})});
- });
-}
-function renderHistory() {
- $('#totalCount').textContent=snapshot.data.history.length+'/36';
- $('#history').innerHTML=[...snapshot.data.history].reverse().map(entry=>`<details class="log"><summary>Semana ${entry.week} · ${h(entry.plan.title)} · ${Object.values(entry.logs).filter(s=>s.status==='done').length} realizados / ${Object.values(entry.logs).filter(s=>s.status==='skipped').length} omitidos</summary><p class="tiny">${h(entry.endedAt)} · Programa ${h(entry.programVersion)}</p>${entry.plan.exercises.map(e=>`<p class="small"><b>${h(e.name)}</b> · ${e.sets} × ${h(e.reps)} · RIR ${h(e.rir)} · Tempo ${h(e.tempo)} · Descanso ${h(e.rest)}</p>`).join('')}${Object.entries(entry.logs).map(([k,v])=>`<p class="small">${h(k)} · ${v.status==='done'?'Realizada':'Omitida'} · ${h(v.weight)} · ${h(v.reps)} · ${h(v.note)}</p>`).join('')}</details>`).join('');
- if(document.activeElement!==$('#feedback')) $('#feedback').value=snapshot.data.feedback;
-}
-function render() {if(snapshot){renderCalendar();renderSession();renderHistory()}}
-function download(data) {
- const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
- const a=document.createElement('a');a.href=url;a.download='home-gym-respaldo.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
-}
+function renderHistory(){$('#totalCount').textContent=snapshot.data.history.length+'/36';$('#history').innerHTML=[...snapshot.data.history].reverse().map(entry=>`<details class="log"><summary>Semana ${entry.week} · ${h(entry.plan.title)} · ${Object.values(entry.logs).filter(s=>s.status==='done').length} realizadas / ${Object.values(entry.logs).filter(s=>s.status==='skipped').length} omitidas</summary>${entry.plan.exercises.map(e=>`<p><b>${h(e.name)}</b> · ${e.sets} × ${h(e.reps)} · RIR ${h(e.rir)} · Tempo ${h(e.tempo)} · Descanso ${h(e.rest)}</p>`).join('')}${Object.entries(entry.logs).map(([k,v])=>`<p>${h(k)} · ${v.status==='done'?'Realizada':'Omitida'} · ${h(v.weight)} · ${h(v.reps)}${v.rir?' · RIR real '+h(v.rir):''} · ${h(v.note)}</p>`).join('')}</details>`).join('');if(document.activeElement!==$('#feedback'))$('#feedback').value=snapshot.data.feedback}
+function render(){if(!snapshot)return;renderHome();renderCalendar();renderSession();renderHistory();applyView()}
+function download(data){const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='home-gym-respaldo.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
 async function offline() {
  if(!('serviceWorker' in navigator)){ $('#offlineStatus').textContent='Este navegador no permite instalar sin conexión.';return; }
- const statusOffline=text=>$('#offlineStatus').textContent=text;
+ const statusOffline=text=>{$('#offlineStatus').textContent=text;$('#offlineBadge').textContent=document.documentElement.dataset.offline==='ready'?'Lista':document.documentElement.dataset.offline==='installed'?'Reabrir':'Preparando'};
  try {
   const r=await navigator.serviceWorker.register(new URL('sw.js',base),{scope:base.pathname,updateViaCache:'none'});
   const showUpdate=()=>{if(r.waiting)statusOffline('Actualización lista. Guarda tu sesión y respaldo; cierra todas las pestañas y vuelve a abrir.');};
@@ -125,35 +91,21 @@ async function offline() {
   showUpdate();
  } catch(_) { statusOffline('No se confirmó la instalación. Reconecta y vuelve a abrir; conserva tus datos.'); }
 }
-function boot() {
- // A pathname is not a privacy boundary. Refuse the FV hostname before any storage/SW access.
- if(location.hostname==='fevaldez.github.io'){
-  status('Home Gym requiere un origen independiente. No se permite abrirlo en el origen de FV.',true);
-  $('#offlineStatus').textContent='Instalación bloqueada en el origen FV.';
-  document.documentElement.dataset.boot='blocked-origin';
-  return;
- }
- for(let w=1;w<=12;w++) $('#weekSelect').add(new Option('Semana '+w,w));
- for(const [k,text] of Object.entries(PROGRAM.guidance)) if($('#'+k)) $('#'+k).textContent=text;
- $('#equipment').textContent='Equipo del programa: '+PROGRAM.equipment.join(', ')+'. No se confirma el rango total de cargas ni todos los anclajes.';
+function boot(){
+ if(location.hostname==='fevaldez.github.io'){status('Home Gym requiere un origen independiente. No se permite abrirlo en el origen de FV.',true);$('#offlineStatus').textContent='Instalación bloqueada en el origen FV.';document.documentElement.dataset.boot='blocked-origin';return}
+ for(let w=1;w<=12;w++)$('#weekSelect').add(new Option('Semana '+w,w));
+ for(const[k,text]of Object.entries(PROGRAM.guidance))if($('#'+k))$('#'+k).textContent=text;
+ $('#equipment').textContent='Equipo del programa: '+PROGRAM.equipment.join(', ')+'.';$('#equipmentSafetyCopy').textContent=PROGRAM.guidance.equipmentSafety;
+ $('#equipmentGrid').innerHTML=equipment.map(([id,title,label,note])=>`<article class="equipment-card" data-equipment="${id}">${visual(id,label)}<h2>${title}</h2><p>${note}</p></article>`).join('');
  $('#version').textContent=PROGRAM.title+' · '+PROGRAM.programVersion+' · Plantilla anónima. Inspiración: Tactical Barbell Mass; adaptación propia 2+1, sin reproducir sus plantillas.';
- $('#weekSelect').onchange=e=>{selectedWeek=Number(e.target.value);render()};
- $('#prevWeek').onclick=()=>{selectedWeek=Math.max(1,selectedWeek-1);render()};
- $('#nextWeek').onclick=()=>{selectedWeek=Math.min(12,selectedWeek+1);render()};
- all('[data-session]').forEach(b=>b.onclick=()=>{selectedSession=b.dataset.session;renderSession()});
- all('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
- $('#exportProgress').onclick=()=>{try{const backup=store.exportRaw();if(memoryDrafts.size){backup.unconfirmedDrafts=Object.fromEntries(memoryDrafts);try{const data=JSON.parse(backup.raw);for(const [k,d] of memoryDrafts)if(data.active?.id===d.id)data.active.drafts={...data.active.drafts,[k]:d.value};backup.raw=JSON.stringify(data);}catch(_){backup.unconfirmedDrafts=Object.fromEntries(memoryDrafts)} }download(backup);status('Respaldo descargado. Guárdalo en un lugar privado.')}catch(e){fail(e)}};
- $('#importFile').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>4000000)throw Error('wrong-backup');const data=JSON.parse(await file.text());if(confirm('¿Restaurar este respaldo de Home Gym? Solo se admite en un navegador sin progreso.'))await mutate(raw=>store.restore(raw,data));}catch(e){fail(e)}finally{e.target.value=''}};
- $('#saveFeedback').onclick=()=>mutate(raw=>store.feedback(raw,$('#feedback').value));
- $('#refresh').onclick=()=>{try{snapshot=store.read();stale=false;$('#refresh').hidden=true;render();status('Datos guardados leídos. Puedes continuar.')}catch(e){fail(e)}};
- addEventListener('beforeunload',e=>{if(memoryDrafts.size){e.preventDefault();e.returnValue='';}});
- addEventListener('storage',e=>{if(e.key===KEY){stale=true;status('Otra pestaña cambió los datos. Vuelve a leerlos antes de continuar.',true);$('#refresh').hidden=false;}});
- try {
-  store=createStore(localStorage,navigator.locks);snapshot=store.read();
-  if(snapshot.data.active){selectedWeek=snapshot.data.active.week;selectedSession=snapshot.data.active.session;}
-  render();status('Datos locales listos. Guarda cada serie para conservarla.');
-  document.documentElement.dataset.boot='ready';
- } catch(e){fail(e);document.documentElement.dataset.boot='storage-error';}
+ document.addEventListener('click',event=>{const route=event.target.closest('[data-route]');if(route){navigate(route.dataset.route);return}const week=event.target.closest('[data-week]');if(week){selectedWeek=Number(week.dataset.week);exerciseIndex=0;setIndex=0;render()}});
+ $('#weekSelect').onchange=e=>{selectedWeek=Number(e.target.value);exerciseIndex=0;setIndex=0;render()};$('#prevWeek').onclick=()=>{selectedWeek=Math.max(1,selectedWeek-1);exerciseIndex=0;setIndex=0;render()};$('#nextWeek').onclick=()=>{selectedWeek=Math.min(12,selectedWeek+1);exerciseIndex=0;setIndex=0;render()};
+ all('[data-session]').forEach(b=>b.onclick=()=>navigate(routeFor(b.dataset.session)));
+ $('#exportProgress').onclick=()=>{try{const backup=store.exportRaw();if(memoryDrafts.size){backup.unconfirmedDrafts=Object.fromEntries(memoryDrafts);try{const data=JSON.parse(backup.raw);for(const[k,d]of memoryDrafts)if(data.active?.id===d.id)data.active.drafts={...data.active.drafts,[k]:d.value};backup.raw=JSON.stringify(data)}catch(_){backup.unconfirmedDrafts=Object.fromEntries(memoryDrafts)}}download(backup);status('Respaldo descargado. Guárdalo en un lugar privado.')}catch(e){fail(e)}};
+ $('#importFile').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>4000000)throw Error('wrong-backup');const data=JSON.parse(await file.text());if(confirm('¿Restaurar este respaldo de Home Gym? Solo se admite en un navegador sin progreso.'))await mutate(raw=>store.restore(raw,data))}catch(e){fail(e)}finally{e.target.value=''}};
+ $('#saveFeedback').onclick=()=>mutate(raw=>store.feedback(raw,$('#feedback').value));$('#refresh').onclick=()=>{try{snapshot=store.read();stale=false;$('#refresh').hidden=true;render();status('Datos guardados leídos. Puedes continuar.')}catch(e){fail(e)}};
+ addEventListener('beforeunload',e=>{if(memoryDrafts.size){e.preventDefault();e.returnValue=''}});addEventListener('storage',e=>{if(e.key===KEY){stale=true;status('Otra pestaña cambió los datos. Vuelve a leerlos antes de continuar.',true);$('#refresh').hidden=false}});addEventListener('hashchange',()=>navigate(location.hash.slice(1)));
+ try{store=createStore(localStorage,navigator.locks);snapshot=store.read();if(snapshot.data.active){selectedWeek=snapshot.data.active.week;selectedSession=snapshot.data.active.session;focusNext(snapshot.data.active)}view=['hoy','semana','equipo','fuerza-a','fuerza-b','condicion'].includes(location.hash.slice(1))?location.hash.slice(1):'hoy';const s={'fuerza-a':'A','fuerza-b':'B','condicion':'C'}[view];if(s)selectedSession=s;render();status('Datos locales listos.');document.documentElement.dataset.boot='ready'}catch(e){fail(e);document.documentElement.dataset.boot='storage-error'}
  offline();
 }
 boot();
