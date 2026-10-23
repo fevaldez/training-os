@@ -34,3 +34,24 @@ export const COACHING = {
 export function coverage() {
   return Object.values(RESOURCES).reduce((counts,r)=>(counts[r.status]++,counts),{EXACT:0,RELATED:0,UNVERIFIED:0});
 }
+
+// Only alternatives already named by the approved source. IDs are scoped to the primary exercise.
+export const ALTERNATIVES = {
+ asq:[{id:'sitstand-unloaded',name:'Sentarse y levantarse del banco sin peso',gear:'Banco · sin carga externa',icons:['bench'],basis:'external-total',unloaded:true,kind:'Variante de apoyo/equipo',difference:'Se retira la mancuerna; se conserva el banco.'}],
+ apress:[{id:'floorpress',name:'Floor press con mancuernas',gear:'Piso + mancuernas',icons:['floor','dumbbell'],basis:'per-dumbbell',loaded:true,kind:'Variante de apoyo/equipo',difference:'El piso sustituye al banco y limita la bajada de los codos.'}],
+ arow:[{id:'firm-support',name:'Remo apoyado con la otra mano en un soporte firme',gear:'Soporte firme + mancuerna',icons:['dumbbell'],basis:'single-implement',loaded:true,kind:'Variante de apoyo/equipo',difference:'Cambia el apoyo al soporte firme; sigue siendo un remo con mancuerna. No es otro patrón de movimiento.'}],
+ ardl:[{id:'hinge-unloaded',name:'Bisagra sin peso',gear:'De pie · sin pesas',icons:['floor'],basis:'external-total',unloaded:true,kind:'Variante de apoyo/equipo',difference:'Se practica la bisagra sin las dos mancuernas.'},{id:'bridge',name:'Puente de glúteo en el piso',gear:'Piso · sin pesas',icons:['floor'],basis:'external-total',unloaded:true,kind:'Alternativa',difference:'El movimiento se realiza acostado en el piso, en lugar de la bisagra de pie.'}],
+ acore:[{id:'birddog',name:'Bird dog apoyado en el piso',gear:'Piso · cuatro apoyos',icons:['floor'],basis:'external-total',kind:'Alternativa',difference:'Cuatro apoyos en el piso, en lugar de estar boca arriba en dead bug.'}],
+ bhinge:[{id:'standing-rdl',name:'Peso muerto rumano con mancuernas, desde posición de pie',gear:'Dos mancuernas · de pie',icons:['dumbbell'],basis:'per-dumbbell',loaded:true,kind:'Variante de apoyo/equipo',difference:'Dos mancuernas desde de pie; no una pesa elevada sobre un apoyo.'}],
+ bpush:[{id:'floorpress',name:'Floor press con mancuernas',gear:'Piso + mancuernas',icons:['floor','dumbbell'],basis:'per-dumbbell',loaded:true,kind:'Alternativa',difference:'Se empujan mancuernas desde el piso, en lugar de elevar el cuerpo sobre el banco o la barra.'}],
+ brow:[{id:'incline-two-arm',name:'Remo con ambos brazos apoyado en banco inclinado',gear:'Banco inclinado + dos mancuernas',icons:['bench','dumbbell'],basis:'per-dumbbell',loaded:true,kind:'Variante de apoyo/equipo',difference:'Pecho apoyado en banco inclinado y ambos brazos, en lugar de un remo unilateral con apoyo.'}],
+ bsq:[{id:'goblet',name:'Sentadilla goblet a banco',gear:'Banco + mancuerna al pecho',icons:['bench','dumbbell'],basis:'single-implement',loaded:true,kind:'Variante de apoyo/equipo',difference:'La mancuerna al pecho pasa a formar parte del movimiento; en el principal es opcional.'}],
+ bcarry:[{id:'sideplank-knees',name:'Plancha lateral con rodillas apoyadas',gear:'Piso · rodillas apoyadas',icons:['floor'],basis:'external-total',kind:'Alternativa',difference:'Apoyo lateral en el piso sin sostener una mancuerna al costado.'}]
+};
+export function movements(e) {
+ return [{id:'primary',name:e.name,gear:e.gear,basis:COACHING[e.id]?.basis||'unknown'},...(ALTERNATIVES[e.id]||[])];
+}
+export function movementIdentity(e,id='primary') {
+ const m=movements(e).find(m=>m.id===id);
+ return m ? {exerciseId:e.id,variantId:m.id,name:m.name,gear:m.gear,basis:m.basis} : null;
+}

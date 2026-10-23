@@ -4,8 +4,8 @@ import { createHash, webcrypto } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { PROGRAM } from '../../apps/home-gym/program.mjs';
-import { KG_PER_LB, parseLoad, editLoad, switchLoad, knownLoad, bumpValue, adjustment, progress, meaningfulWeek } from '../../apps/home-gym/experience.mjs';
-import { COACHING, RESOURCES, coverage } from '../../apps/home-gym/coaching.mjs';
+import { KG_PER_LB, parseLoad, editLoad, switchLoad, knownLoad, bumpValue, adjustment, progress, meaningfulWeek, lastConfirmed } from '../../apps/home-gym/experience.mjs';
+import { COACHING, RESOURCES, coverage, movements, movementIdentity } from '../../apps/home-gym/coaching.mjs';
 import { createStore, KEY, prescription, emergency, schedule, setKeys } from '../../apps/home-gym/engine.mjs';
 const require=createRequire(import.meta.url), {worker,scope}=require('./worker-support.cjs');
 const root='apps/home-gym/', base='5b69389c5a8d0a1257a33c157b4da5488899080c';
@@ -208,6 +208,50 @@ await test('V3 F context honors active, manual preference, first unresolved week
  const restored=harness();const imported=await restored.store.restore(null,h.store.exportRaw());assert.equal(meaningfulWeek(imported.data),7);assert.equal(imported.data.preferences.displayUnit,'lb');assert.equal(JSON.stringify(s.data.history),beforeHistory);
  const old=h.store.read();s=await h.store.preference(s.raw,{selectedWeek:8});await assert.rejects(()=>h.store.preference(old.raw,{displayUnit:'kg'}),/stale-tab/);
  await assert.rejects(()=>h.store.preference(s.raw,{selectedWeek:13}),/invalid-preference/);
+});
+await test('V4 confirmed recall is read-only, chronological and excludes skips, drafts and incompatible movement/basis',()=>{
+ const e=prescription(2,'A').exercises[0],plan=prescription(1,'A');
+ const record=(weight,reps='8',extra={})=>({...editLoad({},weight,'kg','single-implement'),reps,note:'synthetic',status:'done',variantId:'primary',movement:movementIdentity(e),...extra});
+ const entry={id:'closed',programId:PROGRAM.programId,endedAt:'2026-01-01',week:1,plan,logs:Object.fromEntries(setKeys(plan).map(k=>[k,{weight:'',reps:'',note:'',status:'skipped'}]))};
+ entry.logs['asq:1']=record('10');entry.logs['asq:2']=record('12','6/lado');
+ const active={id:'active',programId:PROGRAM.programId,week:2,plan:prescription(2,'A'),logs:{},drafts:{}},data={history:[entry]};
+ const before=JSON.stringify(data);assert.equal(lastConfirmed(data,active,e,'asq:1').fields.weight,'12');assert.equal(lastConfirmed(data,active,e,'asq:1').fields.reps,'6/lado');
+ active.logs['asq:1']=record('14','9',{confirmedAt:'2026-02-01T01:00:00Z',rir:'4'});active.logs['asq:2']=record('16','7',{confirmedAt:'2026-02-01T00:00:00Z'});
+ let result=lastConfirmed(data,active,e,'asq:3');assert.equal(result.source,'active');assert.equal(result.fields.weight,'14');assert.equal(result.fields.rir,undefined);
+ active.drafts['asq:1']={weight:'20'};assert.equal(lastConfirmed(data,active,e,'asq:3').fields.weight,'16');
+ active.logs['asq:2'].status='skipped';assert.equal(lastConfirmed(data,active,e,'asq:3').source,'history');
+ assert.equal(lastConfirmed(data,active,e,'asq:3','sitstand-unloaded'),null);
+ entry.logs['asq:2'].loadBasis='per-dumbbell';assert.equal(lastConfirmed(data,active,e,'asq:3').fields.weight,'10');
+ entry.logs['asq:1'].movement.gear='unproven equipment';assert.equal(lastConfirmed(data,active,e,'asq:3'),null);
+ // Stable identity is mandatory: the same movement name under B is never treated as A.
+ assert.equal(lastConfirmed({history:[entry]},active,prescription(2,'B').exercises[3],'bsq:1'),null);
+ entry.logs['asq:1']=record('10');entry.logs['asq:2']=record('12','6/lado');assert.equal(JSON.stringify(data),before);
+});
+await test('V4 compatible alternative recall keeps zero, unloaded intent, canonical units and exact legacy text',()=>{
+ const e=prescription(2,'A').exercises[0],active={id:'active',programId:PROGRAM.programId,week:2,plan:prescription(2,'A'),logs:{},drafts:{}};
+ const zero={...editLoad({},'0','kg','single-implement'),reps:'8',note:'',status:'done',loadIntent:'zero'};active.logs['asq:1']=zero;
+ assert.equal(lastConfirmed({history:[]},active,e,'asq:2').fields.loadIntent,'zero');
+ active.logs['asq:1']={...zero,weight:'',weightKg:undefined,loadIntent:'unloaded-alternative',loadBasis:'external-total',variantId:'sitstand-unloaded',movement:movementIdentity(e,'sitstand-unloaded')};
+ assert.equal(lastConfirmed({history:[]},active,e,'asq:2'),null);assert.equal(lastConfirmed({history:[]},active,e,'asq:2','sitstand-unloaded').fields.loadIntent,'unloaded-alternative');
+ const text={weight:'20 piedras',reps:'6–8/lado',note:'private source note',status:'done',future:{keep:true}};active.logs['asq:1']=text;
+ const before=JSON.stringify(active),copy=lastConfirmed({history:[]},active,e,'asq:2','primary','lb');assert.equal(copy.fields.weight,text.weight);assert.equal(copy.fields.reps,text.reps);assert.equal(copy.fields.loadBasis,'unknown');assert.equal(copy.fields.note,undefined);assert.equal(copy.fields.future,undefined);assert.equal(JSON.stringify(active),before);
+ const numeric={...zero,...editLoad({},'10','kg','single-implement')};active.logs['asq:1']=numeric;
+ const pounds=lastConfirmed({history:[]},active,e,'asq:2','primary','lb').fields;assert.equal(pounds.weightKg,10);assert.equal(pounds.enteredUnit,'kg');assert.equal(pounds.enteredWeight,10);assert.equal(pounds.displayUnit,'lb');assert.equal(switchLoad(pounds,'kg').weight,'10');
+});
+await test('V4 completed history required; malformed identity, incomplete and unconfirmed sources fail closed',()=>{
+ const e=prescription(2,'A').exercises[0],active={id:'a',programId:PROGRAM.programId,week:2,plan:prescription(2,'A'),logs:{},drafts:{}};
+ const old={...active,id:'old',endedAt:'2026-01-01',logs:{'asq:1':{weight:'10',reps:'8',note:'',status:'done'}}};
+ assert.equal(lastConfirmed({history:[old]},active,e,'asq:1'),null);
+ old.logs=Object.fromEntries(setKeys(old.plan).map(k=>[k,{weight:'10',reps:'8',note:'',status:'done'}]));assert(lastConfirmed({history:[old]},active,e,'asq:1'));
+ old.drafts={'asq:2':old.logs['asq:2']};assert.equal(lastConfirmed({history:[old]},active,e,'asq:1'),null);
+});
+await test('V4 honest alternative metadata covers all source definitions with real equipment/support differences',()=>{
+ for(const session of ['A','B'])for(const e of PROGRAM.exercise[session]){
+  const choices=movements(e);assert(choices.length>=2,e.id);assert.equal(choices[0].name,e.name);assert.equal(choices[0].gear,e.gear);
+  for(const m of choices.slice(1)){assert(e.alt.toLowerCase().includes(m.name.toLowerCase()),m.name+' must come from source');assert(m.difference.length>25);assert.notEqual(m.gear,e.gear);assert(m.icons.length>0);assert(['Alternativa','Variante de apoyo/equipo'].includes(m.kind));assert(movementIdentity(e,m.id));}
+ }
+ assert.equal(movements(prescription(1,'C').exercises[0]).length,1);assert.equal(movements(emergency(1,'A').exercises[0]).length,1);
+ assert.equal(coverage().EXACT,6);assert.equal(coverage().RELATED,5);assert.equal(coverage().UNVERIFIED,4);
 });
 console.log(`HOME_GYM_CONTRACT_TOTAL ${tests.filter(Boolean).length}/${tests.length} PASS`);
 if(tests.some(x=>!x))process.exitCode=1;

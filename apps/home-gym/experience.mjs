@@ -1,3 +1,4 @@
+import { movementIdentity } from './coaching.mjs';
 // Presentation math only. No elapsed-time inference, prescription changes or schema migration.
 export const KG_PER_LB = 0.45359237;
 export const unit = value => value === 'lb' ? 'lb' : 'kg';
@@ -88,4 +89,37 @@ export function meaningfulWeek(data) {
   if (validWeek(data.active?.week)) return data.active.week;
   if (validWeek(data.preferences?.selectedWeek)) return data.preferences.selectedWeek;
   return progress(data,1).next?.week || 12;
+}
+
+// A displayed baseline is never persisted here. Only confirmed, compatible records qualify.
+const loadFields=['weight','reps','weightKg','enteredWeight','enteredUnit','displayUnit','loadBasis','loadIntent'];
+export function baselineFields(record,displayUnit) {
+ const result=Object.fromEntries(loadFields.filter(k=>Object.hasOwn(record,k)).map(k=>[k,record[k]]));
+ // Missing legacy basis stays visibly unconfirmed, never inferred from equipment.
+ if(result.weight && !result.loadBasis)result.loadBasis='unknown';
+ return switchLoad(result,displayUnit)||result;
+}
+export function lastConfirmed(data,active,e,key,variantId='primary',displayUnit='kg') {
+ const target=movementIdentity(e,variantId);if(!target)return null;
+ const compatible=(entry,k,r)=>{
+  if(k===key && entry.id===active.id || r?.status!=='done' || entry.drafts?.[k])return false;
+  const source=entry.plan?.exercises?.find(x=>x.id===e.id);
+  if(!source || source.name!==e.name || source.gear!==e.gear || source.alt!==e.alt || !k.startsWith(e.id+':'))return false;
+  const id=r.variantId||'primary';
+  if(id!==variantId || (!r.variantId&&r.loadIntent==='unloaded-alternative'))return false;
+  const expected=movementIdentity(source,id);if(!expected)return false;
+  if(r.movement && ['exerciseId','variantId','name','gear','basis'].some(k=>r.movement[k]!==target[k]))return false;
+  // An alternative requires explicit identity; a legacy primary text remains exact and unconverted.
+  if(id!=='primary'&&!r.movement)return false;
+  if(r.loadBasis && r.loadBasis!=='unknown' && r.loadBasis!==target.basis)return false;
+  return true;
+ };
+ const latest=entry=>Object.entries(entry.logs||{}).filter(([k,r])=>compatible(entry,k,r))
+  .sort(([,a],[,b])=>String(a.confirmedAt||'').localeCompare(String(b.confirmedAt||''))).at(-1);
+ const candidate=latest(active);
+ if(candidate)return {fields:baselineFields(candidate[1],displayUnit),source:'active',week:active.week,key:candidate[0]};
+ const history=[...(data.history||[])].filter(s=>typeof s.endedAt==='string'&&s.programId===active.programId&&!Object.keys(s.drafts||{}).length&&s.plan?.exercises?.every(x=>Array.from({length:x.sets},(_,i)=>x.id+':'+(i+1)).every(k=>['done','skipped'].includes(s.logs?.[k]?.status))))
+  .sort((a,b)=>a.endedAt.localeCompare(b.endedAt));
+ for(const entry of history.reverse()) {const found=latest(entry);if(found)return {fields:baselineFields(found[1],displayUnit),source:'history',week:entry.week,key:found[0]};}
+ return null;
 }
