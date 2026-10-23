@@ -37,7 +37,7 @@ async function warm(ctx){let p=await ctx.newPage();await p.goto(app);await ready
 async function click(p,selector){await p.locator(selector).click();}
 async function openProgress(p){if(await p.locator('.back-button').isVisible())await p.locator('.back-button').click();if(!await p.locator('#progressPanel').evaluate(el=>el.open))await p.locator('#progressPanel > summary').click();}
 async function saveRow(p,index=0,status='done'){
- const row=p.locator('.setrow');if(status==='done')await row.locator('[data-field="reps"]').fill('8');
+ const row=p.locator('.setrow');if(status==='done'){await row.locator('[data-field="reps"]').fill('8');if(await row.getAttribute('data-load-required')==='true'&&!await row.locator('[data-field="weight"]').inputValue())await row.locator('[data-field="weight"]').fill('10 kg')}
  if(!await row.locator('.set-note').evaluate(el=>el.open))await row.locator('.set-note summary').click();
  await row.locator('[data-field="note"]').fill('Synthetic local note');
  const setKey=await row.getAttribute('data-key');await p.locator(status==='done'?'#saveSet':'#skipSet').click();
@@ -57,6 +57,33 @@ async function test(name,fn){if(process.env.HOME_GYM_CASE&&!name.includes(proces
  app='http://127.0.0.1:'+server.address().port+'/';fv='http://127.0.0.1:'+foreign.address().port+'/';
  try{
  browser=await chromium.launch(launch);console.log('HOME_GYM_BROWSER Chromium '+browser.version()+' | 390x844 | loopback synthetic');
+ await test('HARDEN A missing-load, intentional zero, free-text history, bodyweight and conditioning',async()=>{
+  const ctx=await browser.newContext(mobile);try{const p=await warm(ctx);await click(p,'#startSession');await p.waitForSelector('.setrow');await p.locator('#repsInput').fill('8');await click(p,'#saveSet');assert.equal(Object.keys((await data(p)).active.logs).length,0);assert.equal(await p.locator('#weightInput').getAttribute('aria-invalid'),'true');assert((await p.locator('#weightError').textContent()).includes('peso'));assert.equal(await p.locator('#weightInput').inputValue(),'');
+   await p.locator('#weightInput').fill('0');await click(p,'#saveSet');assert.equal(Object.keys((await data(p)).active.logs).length,0);await click(p,'#zeroWeight');await click(p,'#saveSet');await p.waitForFunction(k=>JSON.parse(localStorage.getItem(k)).active.logs['asq:1']?.status==='done',key);assert.equal((await data(p)).active.logs['asq:1'].weight,'0');assert.equal((await data(p)).active.logs['asq:1'].loadIntent,'zero');
+   await p.locator('#weightInput').fill('27,5 kg');await p.locator('#repsInput').fill('9');await click(p,'#saveSet');await p.waitForFunction(k=>JSON.parse(localStorage.getItem(k)).active.logs['asq:2']?.status==='done',key);assert.equal((await data(p)).active.logs['asq:2'].weight,'27,5 kg');
+   await p.evaluate(k=>{const d=JSON.parse(localStorage.getItem(k));d.future={keep:true};d.active.logs['asq:2'].legacy={unit:'do not convert'};localStorage.setItem(k,JSON.stringify(d))},key);const historical=await raw(p);await p.reload();await ready(p);assert.equal(await raw(p),historical);
+   for(let i=0;i<3;i++)await p.locator('#nextExercise').click();assert.equal(await p.locator('.exercise-title').textContent(),'Dead bug');await p.locator('#repsInput').fill('6/lado');await click(p,'#saveSet');await p.waitForFunction(k=>JSON.parse(localStorage.getItem(k)).active.logs['acore:1']?.status==='done',key);assert.equal((await data(p)).active.logs['acore:1'].weight,'');
+   // The approved goblet alternative is explicitly without weight; record the choice, not an invented zero load.
+   await p.locator('.exercise-menu > summary').click();await p.locator('[data-exercise="0"]').click();await p.locator('[data-set="0"]').click();await click(p,'#alternativeNoLoad');await p.locator('#repsInput').fill('8');await click(p,'#saveSet');await p.waitForFunction(k=>JSON.parse(localStorage.getItem(k)).active.logs['asq:1']?.loadIntent==='unloaded-alternative',key);assert.equal((await data(p)).active.logs['asq:1'].weight,'');assert.deepEqual((await data(p)).active.logs['asq:2'].legacy,{unit:'do not convert'});assert.deepEqual((await data(p)).future,{keep:true});
+  }finally{await ctx.close()}
+  for(const [session,exercise,answer]of [['B',1,'8'],['B',4,'20 s/lado'],['C',0,'15 min suave']]){const ctx=await browser.newContext(mobile);try{const p=await warm(ctx);await p.locator('[data-session="'+session+'"]').click();await click(p,'#startSession');for(let i=0;i<exercise;i++)await p.locator('#nextExercise').click();const setKey=await p.locator('.setrow').getAttribute('data-key');await p.locator('#repsInput').fill(answer);await click(p,'#saveSet');await p.waitForFunction(([k,s])=>JSON.parse(localStorage.getItem(k)).active.logs[s]?.status==='done',[key,setKey]);assert.equal((await data(p)).active.logs[setKey].weight,'')}finally{await ctx.close()}}
+ });
+ await test('HARDEN B equipment from the full prescription, required supports versus alternatives',async()=>{
+  const ctx=await browser.newContext(mobile);try{const p=await warm(ctx);
+   assert.equal(await p.locator('.gear-chip[data-role="required"][data-gear="dumbbell"]').count(),1);assert.equal(await p.locator('.gear-chip[data-role="required"][data-gear="bench"]').count(),1);
+   await p.locator('[data-session="B"]').click();assert.equal(await p.locator('.gear-chip[data-role="required"][data-gear="kettlebell"]').count(),1);assert((await p.locator('.gear-required').textContent()).includes('apoyo firme'));assert.equal(await p.locator('.gear-chip[data-role="alternative"][data-gear="dumbbell"]').count(),1);
+   await p.locator('#nextExercise').click();assert.equal(await p.locator('.gear-chip[data-role="required"][data-gear="bench"]').count(),1);assert.equal(await p.locator('.gear-chip[data-role="required"][data-gear="bar"]').count(),0);assert.equal(await p.locator('.gear-chip[data-role="alternative"][data-gear="bar"]').count(),1);assert.equal(await p.locator('.gear-chip[data-role="alternative"][data-gear="rack"]').count(),1);
+   await p.locator('#nextExercise').click();await p.locator('#nextExercise').click();assert.equal(await p.locator('.gear-chip[data-role="required"][data-gear="bench"]').count(),1);assert.equal(await p.locator('.gear-chip[data-role="optional"][data-gear="dumbbell"]').count(),1);
+   await p.locator('.back-button').click();await p.locator('.tab-bar [data-route="equipo"]').click();assert.equal(await p.locator('.equipment-card svg').count(),10);
+  }finally{await ctx.close()}
+ });
+ await test('HARDEN C unresolved readiness is bounded and manual retry recovers without reset/reload',async()=>{
+  const ctx=await browser.newContext(mobile);try{await ctx.addInitScript(()=>{Object.defineProperty(navigator.serviceWorker,'ready',{configurable:true,get:()=>new Promise(()=>{})})});const p=await ctx.newPage();await p.goto(app);await ready(p);const started=Date.now();await p.waitForFunction(()=>document.documentElement.dataset.offline==='unavailable',{},{timeout:13000});assert(Date.now()-started<12500);assert((await p.locator('#offlineStatus').textContent()).includes('Reconecta'));assert.equal(await raw(p),null);const url=p.url();await p.locator('.offline-card > summary').click();assert(await p.locator('#retryOffline').isVisible());
+   await p.evaluate(()=>{delete navigator.serviceWorker.ready});await click(p,'#retryOffline');await p.waitForFunction(()=>['installed','ready'].includes(document.documentElement.dataset.offline));assert.equal(p.url(),url);assert.equal(await raw(p),null);await p.close();const q=await ctx.newPage();await q.goto(app);await ready(q);
+   // The init script deliberately masks ready on each new page; restore it before this page's explicit retry.
+   await q.evaluate(()=>{delete navigator.serviceWorker.ready});await q.locator('.offline-card > summary').click();await q.waitForFunction(()=>document.documentElement.dataset.offline==='unavailable',{},{timeout:13000});await click(q,'#retryOffline');await q.waitForFunction(()=>document.documentElement.dataset.offline==='ready');assert.equal(await raw(q),null);
+  }finally{await ctx.close()}
+ });
  await test('1/5 six destinations, source details across 12 weeks, visuals and mobile layout',async()=>{
   mode='current';const ctx=await browser.newContext(mobile);try{
    const p=await warm(ctx),pageErrors=[];p.on('pageerror',e=>pageErrors.push(e.message));
@@ -73,7 +100,7 @@ async function test(name,fn){if(process.env.HOME_GYM_CASE&&!name.includes(proces
       assert.equal(await p.locator('.exercise-title').textContent(),e.name);assert((await p.locator('.exercise-equipment').textContent()).includes(e.gear));
       const prescription=await p.locator('.prescription').textContent();assert(prescription.includes(e.sets+' × '+e.reps));assert(prescription.includes(e.rir));assert(prescription.includes(e.rest));
       assert.equal(await p.locator('#technique').evaluate(el=>el.open),false);await p.locator('#technique summary').click();const details=await p.locator('#technique').textContent();for(const field of ['tempo','cue','alt'])assert(details.includes(e[field]));
-      assert(await p.locator('.exercise-equipment svg').isVisible());assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+      assert(await p.locator('.gear-required svg').evaluateAll(els=>els.length>0&&els.every(el=>el.getBoundingClientRect().height>0)));assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
      }
      await p.locator('.back-button').click();await p.locator('.tab-bar [data-route="semana"]').click();
     }
@@ -157,10 +184,8 @@ async function test(name,fn){if(process.env.HOME_GYM_CASE&&!name.includes(proces
  });
  await test('4 failed initial installation cannot advertise readiness; later complete online install works',async()=>{
   mode='first-failure';const ctx=await browser.newContext(mobile);try{const p=await ctx.newPage();await p.goto(app);await ready(p);
-   await p.evaluate(async()=>{const r=await navigator.serviceWorker.register('./sw.js',{scope:'./'});const w=r.installing;if(w)await new Promise(resolve=>{if(w.state==='redundant')return resolve();w.addEventListener('statechange',()=>{if(w.state==='redundant')resolve()})})});
-   assert.notEqual(await p.evaluate(()=>document.documentElement.dataset.offline),'ready');assert.deepEqual(await p.evaluate(()=>caches.keys()),[]);
-   mode='current';await p.evaluate(async()=>{const r=await navigator.serviceWorker.getRegistration();if(r)await r.update();else await navigator.serviceWorker.register('./sw.js',{scope:'./'})});
-   await p.evaluate(()=>navigator.serviceWorker.ready);await p.close();const q=await ctx.newPage();await q.goto(app);await ready(q);await q.waitForFunction(()=>document.documentElement.dataset.offline==='ready');
+   await p.waitForFunction(()=>document.documentElement.dataset.offline==='unavailable',{},{timeout:13000});assert((await p.locator('#offlineStatus').textContent()).includes('Reconecta'));assert.deepEqual(await p.evaluate(()=>caches.keys()),[]);assert.equal(await raw(p),null);
+   mode='current';await p.locator('.offline-card > summary').click();await click(p,'#retryOffline');await p.waitForFunction(()=>document.documentElement.dataset.offline==='installed');assert.equal(await raw(p),null);await p.close();const q=await ctx.newPage();await q.goto(app);await ready(q);await q.waitForFunction(()=>document.documentElement.dataset.offline==='ready');
   }finally{mode='current';await ctx.close()}
  });
  await test('4/6 failed update retains active release; valid update waits, preserves logs and unrelated caches',async()=>{
