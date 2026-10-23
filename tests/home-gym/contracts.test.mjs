@@ -4,6 +4,8 @@ import { createHash, webcrypto } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { PROGRAM } from '../../apps/home-gym/program.mjs';
+import { KG_PER_LB, parseLoad, editLoad, switchLoad, knownLoad, bumpValue, adjustment, progress, meaningfulWeek } from '../../apps/home-gym/experience.mjs';
+import { COACHING, RESOURCES, coverage } from '../../apps/home-gym/coaching.mjs';
 import { createStore, KEY, prescription, emergency, schedule, setKeys } from '../../apps/home-gym/engine.mjs';
 const require=createRequire(import.meta.url), {worker,scope}=require('./worker-support.cjs');
 const root='apps/home-gym/', base='5b69389c5a8d0a1257a33c157b4da5488899080c';
@@ -39,7 +41,8 @@ await test('2 FV eight public assets, runtime, build and Pages workflow remain b
 await test('3 no private source payload, external asset requests, FV keys or data migration',()=>{
  const manifest=JSON.parse(read(root+'artifact.json'));
  const text=Object.keys(manifest.files).map(n=>read(root+n).toString()).join('\n');
- assert(!/data:image|base64,|103\s*kg|1\.76|defaultAnswers|thm_form_|fv4\.|tos_v3|https?:\/\//.test(text.replace('http://www.w3.org/2000/svg','')));
+ assert(!/data:image|base64,|103\s*kg|1\.76|defaultAnswers|thm_form_|fv4\.|tos_v3/.test(text.replace('http://www.w3.org/2000/svg','')));
+ assert(!/https?:\/\//.test(Object.keys(manifest.files).filter(n=>n!=='coaching.mjs').map(n=>read(root+n).toString()).join('\n').replace('http://www.w3.org/2000/svg','')));
  assert.equal(PROGRAM.privacyClass,'public-template');
  assert(text.includes("location.hostname==='fevaldez.github.io'"));
  assert(text.indexOf("location.hostname==='fevaldez.github.io'")<text.indexOf('store=createStore(localStorage'));
@@ -111,14 +114,14 @@ await test('4 emergency replaces one strength session and cannot become a fourth
  await assert.rejects(()=>h.store.start(s.raw,1,'B'),/already-completed/);assert.equal(s.data.history.length,1);
 });
 await test('4 complete offline install, scoped pins and safe lifecycle',async()=>{
- const w=worker();await w.event('install');await w.event('activate');const {BUILD,CACHE}=w.meta();assert.equal(w.store.get(CACHE).size,9);
+ const w=worker();await w.event('install');await w.event('activate');const {BUILD,CACHE}=w.meta();assert.equal(w.store.get(CACHE).size,11);
  assert(!w.calls.some(x=>['skipWaiting','claim'].includes(x[0])));
  const r=await w.event('fetch',{request:{url:scope,method:'GET',mode:'navigate'}});assert.equal(await r.text(),read(root+'index.html').toString());
  for(const [url,method,mode]of [[scope+'other/','GET','navigate'],['https://else.invalid/','GET','cors'],[scope,'POST','navigate']])assert.equal(await w.event('fetch',{request:{url,method,mode}}),undefined);
  for(const registrationScope of ['https://synthetic.invalid/foreign/','https://foreign.invalid/']){const bad=worker({registrationScope});await assert.rejects(()=>bad.event('install'));assert.equal(bad.store.size,0)}
  let replies=[];await w.event('message',{data:{type:'HOME_GYM_OFFLINE_STATUS'},source:{url:scope},ports:[{postMessage:x=>replies.push(x)}]});assert.equal(replies.at(-1).ready,true);
  const before=replies.length;await w.event('message',{data:{type:'HOME_GYM_OFFLINE_STATUS'},source:{url:scope+'foreign/'},ports:[{postMessage:x=>replies.push(x)}]});assert.equal(replies.length,before);
- assert.equal(BUILD.assets.length,9);
+ assert.equal(BUILD.assets.length,11);
 });
 for(const fault of ['network','http','hash','portal','size','quota','cache-open','cache-read','redirect']) await test('4 failed offline installation: '+fault+' retains previous and unrelated caches',async()=>{
  const store=new Map([['home-gym-shell-v1-previous',new Map()],['tos-shell-v1-sentinel',new Map()],['unrelated',new Map()]]);
@@ -132,7 +135,7 @@ await test('4 corrupted cache fails closed offline and repairs only its own vers
 await test('6 deterministic allowlist, independent artifact and mandatory read-only PR CI',()=>{
  execFileSync('python3',[root+'build.py','--check']);
  const artifact=JSON.parse(read(root+'artifact.json'));
- assert.equal(Object.keys(artifact.files).length,10);
+ assert.equal(Object.keys(artifact.files).length,12);
  for(const[n,pin]of Object.entries(artifact.files)){assert.equal(read(root+n).length,pin.size);assert.equal(sha(read(root+n)),pin.sha256)}
  const code=`import importlib.util; s=importlib.util.spec_from_file_location('b','${root}build.py'); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); import sys; sys.stdout.buffer.write(m.archive(m.build()))`;
  const first=execFileSync('python3',['-B','-c',code]);assert.deepEqual(first,execFileSync('python3',['-B','-c',code]));
@@ -144,6 +147,67 @@ await test('6 deterministic allowlist, independent artifact and mandatory read-o
  assert(ci.includes('ref: ${{ github.event.pull_request.head.sha }}'));
  const pages=read('.github/workflows/release-pages.yml').toString().split('      - name: Build deploy artifact\n')[1].split('      - name:')[0];assert(!pages.includes('home-gym'));
  assert(!fs.existsSync('vercel.json'));assert(!fs.existsSync('.vercel'));
+});
+
+await test('V3 A coaching maps stable IDs, conditioning, Plan B and materially different alternatives',()=>{
+ for(const e of [...PROGRAM.exercise.A,...PROGRAM.exercise.B]){
+  const c=COACHING[e.id];assert(c);assert(c.tip.split(/\s+/).length>=12);assert(c.tip.split(/\s+/).length<=26);assert(c.technique);assert(RESOURCES[c.resource]);assert(c.alternatives.length);
+  for(const a of c.alternatives){assert(a.tip);assert(RESOURCES[a.resource])}
+ }
+ assert(COACHING.condition.tip);assert(COACHING.emergency.tip);assert.equal(RESOURCES.hold.status,'RELATED');assert(RESOURCES.hold.scope.includes('quieto'));assert(COACHING.bhinge.resourceNote.includes('no demuestra'));
+});
+await test('V3 B numeric kg/lb canonical anchors round-trip 1000 times without cumulative drift',()=>{
+ for(const text of ['20','27,5 kg','0.125 lb','42.333333','0']){
+  const original=editLoad({future:{keep:true}},text,'kg','per-dumbbell');assert(knownLoad(original));let record=original;
+  for(let i=0;i<1000;i++){record=switchLoad(record,'lb');record=switchLoad(record,'kg');}
+  assert.equal(record.weightKg,original.weightKg);assert.equal(record.enteredWeight,original.enteredWeight);assert.equal(record.enteredUnit,original.enteredUnit);assert.deepEqual(record.future,{keep:true});assert.equal(record.loadBasis,'per-dumbbell');
+ }
+ assert.equal(parseLoad('20 lb').weightKg,20*KG_PER_LB);assert.equal(parseLoad('27,5 kg').weightKg,27.5);assert.equal(adjustment('kg'),0.5);assert.equal(adjustment('lb'),1);
+});
+await test('V3 B/C legacy, unknown, duration and historical zero remain literal; invalid values never acquire fake units',()=>{
+ for(const weight of ['20 lb','27,5 kg','0','0 kg','sin carga','6/lado','20 s/lado','2 × 10','veinte','10 stones']){
+  const legacy={weight,reps:'6/lado',note:'keep',future:{keep:true}};assert.equal(switchLoad(legacy,'lb'),null);assert.equal(legacy.weight,weight);
+ }
+ for(const text of ['veinte','10 stones','20 s','2 × 10','Infinity','-5','1e3']){assert.equal(parseLoad(text),null);assert.equal(knownLoad(editLoad({},text,'kg','unknown')),false)}
+ assert.equal(switchLoad({...editLoad({},'10','kg','single-implement'),weight:'10 stones'},'lb'),null);
+ const zero=editLoad({loadIntent:'zero'},'0','kg','external-total');assert.equal(switchLoad(zero,'lb').weightKg,0);
+ const unloaded=editLoad({...zero,loadIntent:'unloaded-alternative'},'','kg','single-implement');assert.equal(knownLoad(unloaded),false);assert.equal(switchLoad(unloaded,'lb'),null);
+ for(const text of ['6/lado','20 s/lado','15 min'])assert.equal(bumpValue(text,'reps',1,'kg'),null);
+ assert.equal(bumpValue('8','reps',1,'kg'),'9');assert.equal(bumpValue('20 lb','weight',1,'kg'),'21 lb');assert.equal(bumpValue('20','weight',0.5,'kg'),'20.5');assert.equal(bumpValue('unknown','weight',1,'kg'),null);
+});
+await test('V3 D resource review is finite, safe HTTPS and classified without live CI network',()=>{
+ const counts=coverage();console.log('HOME_GYM_VIDEO_COVERAGE '+JSON.stringify(counts));
+ assert.equal(counts.EXACT,6);assert.equal(counts.RELATED,5);assert.equal(counts.UNVERIFIED,4);
+ for(const r of Object.values(RESOURCES)){
+  assert(['EXACT','RELATED','UNVERIFIED'].includes(r.status));assert(r.title&&r.scope);
+  if(r.status==='UNVERIFIED')assert.equal(r.url,undefined);
+  else{const u=new URL(r.url);assert.equal(u.protocol,'https:');assert(['www.muscleandstrength.com','www.nhs.uk'].includes(u.hostname));assert(!u.search);assert(!/search|youtube\.com\/results/.test(r.url))}
+ }
+ const app=read(root+'app.mjs').toString();assert(app.includes('rel="noopener noreferrer external"'));assert(app.includes('!navigator.onLine'));assert(!/<iframe|<video|autoplay/.test(app));
+});
+function historyEntry(week,session,status='done',planB=false){
+ const plan=planB?emergency(week,session):prescription(week,session);
+ return {id:crypto.randomUUID(),week,session,programId:PROGRAM.programId,programVersion:PROGRAM.programVersion,plan,logs:Object.fromEntries(setKeys(plan).map(k=>[k,{...log,status}])),startedAt:'2026-01-01',endedAt:'2026-01-01'};
+}
+await test('V3 E progress distinguishes empty, partial, full, skip-only, active, duplicate and emergency replacements',()=>{
+ let d={history:[],active:null,calendar:{}};let p=progress(d,1);assert.equal(p.recorded,0);assert.equal(p.performed,0);assert.deepEqual(p.next,{week:1,session:'A'});assert.equal(p.completeWeeks,0);
+ d.history.push(historyEntry(1,'A'));p=progress(d,1);assert.equal(p.recorded,1);assert.equal(p.weekPerformed,1);assert.equal(p.weekSaved,1);assert.equal(p.completeWeeks,0);assert.deepEqual(p.next,{week:1,session:'C'});
+ d.history.push(historyEntry(1,'C','skipped'));p=progress(d,1);assert.equal(p.recorded,2);assert.equal(p.performed,1);assert.equal(p.whollySkipped,1);assert.equal(p.weekPerformed,1);
+ d.history.push(historyEntry(1,'B','done',true));p=progress(d,1);assert.equal(p.recorded,3);assert.equal(p.weekSaved,3);assert.equal(p.weekPerformed,2);assert.equal(p.completeWeeks,0);assert.deepEqual(p.next,{week:2,session:'B'});
+ d.history.push(historyEntry(1,'A','skipped'));p=progress(d,1);assert.equal(p.recorded,3);assert.equal(p.performed,2);assert.equal(p.sessions.find(x=>x.session==='A').copies,2);assert.equal(p.sessions.find(x=>x.session==='A').actuallyPerformed,true);
+ d.history.push(historyEntry(1,'C'));p=progress(d,1);assert.equal(p.completeWeeks,1);assert.equal(p.weekPerformed,3);assert.equal(p.recorded,3);
+ d.active={week:1,session:'A'};assert(progress(d,1).active);assert.equal(progress(d,1).recorded,3);
+ d.active={week:2,session:'B'};p=progress(d,2);assert(p.active);assert.equal(p.recorded,3);assert.equal(p.weekPerformed,0);
+ const skipped={history:['A','B','C'].map(s=>historyEntry(1,s,'skipped')),active:null};p=progress(skipped,1);assert.equal(p.recorded,3);assert.equal(p.performed,0);assert.equal(p.whollySkipped,3);assert.equal(p.completeWeeks,0);
+ const full={history:Array.from({length:12},(_,i)=>['A','B','C'].map(s=>historyEntry(i+1,s))).flat()};p=progress(full,12);assert.equal(p.recorded,36);assert.equal(p.performed,36);assert.equal(p.completeWeeks,12);assert.equal(p.next,null);
+});
+await test('V3 F context honors active, manual preference, first unresolved week and completed block without dates',async()=>{
+ const d={history:['A','B','C'].map(s=>historyEntry(1,s)),active:null};assert.equal(meaningfulWeek(d),2);
+ d.preferences={selectedWeek:7,displayUnit:'lb',future:{keep:true}};assert.equal(meaningfulWeek(d),7);d.active={week:4,session:'B'};assert.equal(meaningfulWeek(d),4);d.active=null;d.preferences.selectedWeek=99;assert.equal(meaningfulWeek(d),2);
+ const h=harness();let s=await h.store.preference(null,{selectedWeek:7,displayUnit:'lb'});const beforeHistory=JSON.stringify(s.data.history);s=await h.store.start(s.raw,7,'A');s=await h.store.draft(s.raw,s.data.active.id,'asq:1',{...log,...editLoad({},'25','lb','single-implement')});
+ const restored=harness();const imported=await restored.store.restore(null,h.store.exportRaw());assert.equal(meaningfulWeek(imported.data),7);assert.equal(imported.data.preferences.displayUnit,'lb');assert.equal(JSON.stringify(s.data.history),beforeHistory);
+ const old=h.store.read();s=await h.store.preference(s.raw,{selectedWeek:8});await assert.rejects(()=>h.store.preference(old.raw,{displayUnit:'kg'}),/stale-tab/);
+ await assert.rejects(()=>h.store.preference(s.raw,{selectedWeek:13}),/invalid-preference/);
 });
 console.log(`HOME_GYM_CONTRACT_TOTAL ${tests.filter(Boolean).length}/${tests.length} PASS`);
 if(tests.some(x=>!x))process.exitCode=1;

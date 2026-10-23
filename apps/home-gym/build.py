@@ -9,7 +9,7 @@ import tarfile
 
 ROOT = Path(__file__).resolve().parent
 SOURCE = ('index.html', 'styles.css', 'app.mjs', 'engine.mjs', 'program.mjs',
-          'manifest.webmanifest', 'icon.svg', 'source-inventory.json')
+          'manifest.webmanifest', 'icon.svg', 'source-inventory.json', 'coaching.mjs', 'experience.mjs')
 
 def sha(data):
     return hashlib.sha256(data).hexdigest()

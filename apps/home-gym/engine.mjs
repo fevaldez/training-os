@@ -100,6 +100,12 @@ export function createStore(storage, locks, options = {}) {
   }
   return {
     read,
+    preference: (expected, patch) => change(expected, data => {
+      if (Object.keys(patch).some(k => !['displayUnit', 'selectedWeek'].includes(k))
+          || ('displayUnit' in patch && !['kg','lb'].includes(patch.displayUnit))
+          || ('selectedWeek' in patch && !integer(patch.selectedWeek, 1, 12))) throw Error('invalid-preference');
+      data.preferences = { ...data.preferences, ...patch };
+    }),
     move: (expected, week, session, day) => change(expected, data => {
       prescription(week, session);
       if (!integer(day, 0, 6)) throw Error('invalid-day');
