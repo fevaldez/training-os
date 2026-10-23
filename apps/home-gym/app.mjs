@@ -1,0 +1,278 @@
+import { createRestStore, REST_KEY, remainingMs, restState, restTime } from './rest.mjs';
+import { PROGRAM } from './program.mjs';
+import { createStore, KEY, prescription, emergency, schedule, setKeys } from './engine.mjs';
+import { unit, BASES, basisLabels, knownLoad, editLoad, switchLoad, bumpValue, adjustment, progress, meaningfulWeek, lastConfirmed } from './experience.mjs';
+import { COACHING, RESOURCES, movements, movementIdentity } from './coaching.mjs';
+const $=s=>document.querySelector(s),all=s=>[...document.querySelectorAll(s)];
+const h=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const days=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'],base=new URL('./',import.meta.url);
+let snapshot,store,stale=false,selectedWeek=1,selectedSession='A',exerciseIndex=0,setIndex=0,view='hoy';
+let writes=Promise.resolve(),displayUnit='kg',logPending=false,renderRevision=0;const memoryDrafts=new Map();
+let restStore,restSnapshot=null,restSession=null,restTicker=null,restExpiryRaw=null,restBusy=false;
+// Original pictograms: no private photographs, icon font, external assets or inferred equipment specs.
+const art={
+ rack:'<path d="M15 53V12h5v41m24 0V12h5v41M18 17h28M10 29h44M14 25v8m36-8v8M9 54h16m14 0h16"/>',
+ bench:'<rect x="10" y="24" width="44" height="10" rx="3"/><path d="m18 35-5 18m32-18 6 18M10 53h12m23 0h11"/>',
+ bar:'<path d="M5 32h54M14 20v24m6-28v32m24-32v32m6-28v24"/>',
+ dumbbell:'<path d="M23 32h18M10 23v18m7-23v28m30-28v28m7-23v18M10 23h7m-7 18h7m30-18h7m-7 18h7"/>',
+ kettlebell:'<path d="M23 24v-5a9 9 0 0 1 18 0v5m-14-1v-4a5 5 0 0 1 10 0v4"/><path d="M20 28c-13 23 0 27 12 27s25-4 12-27c-4-7-20-7-24 0Z"/>',
+ box:'<path d="m10 23 22-12 22 12v29H10Zm0 0h44M32 11v12M16 30v15m32-15v15"/>',
+ treadmill:'<path d="M9 48h45l-3 7H8Zm35 0-5-29h12M34 16h16v7H36M20 46l13-16m-8 0h13"/>',
+ rower:'<circle cx="13" cy="40" r="10"/><path d="M24 40h33M31 35h12v5M51 40v13M18 30l7-12m-4-2h12M7 52h16m23 1h13"/>',
+ ski:'<path d="M18 54V10h28v44M25 11v16l-7 14m21-30v16l7 14M12 54h40M15 41l7 4m20 0 7-4"/>',
+ roller:'<ellipse cx="20" cy="32" rx="8" ry="19"/><path d="M20 13h25c10 0 10 38 0 38H20m4-31h20m-18 9h20m-20 9h20m-22 8h20"/>',
+ floor:'<path d="M9 49h46M13 45l8-12 10 4 7-15 10 5m-17 10 11 9"/><circle cx="15" cy="25" r="5"/>'
+};
+const equipment=[
+ ['rack','Rack','rack','Verifica estabilidad y safeties.'],['bench','Banco','banco','Apoyo para Fuerza A y B.'],
+ ['bar','Barra y discos','barra y discos','No se prescriben al inicio.'],['dumbbell','Mancuernas','mancuernas','Fuerza y alternativas del programa.'],
+ ['kettlebell','Kettlebell','kettlebell','Bisagra desde apoyo firme.'],['box','Cajón','cajón','Sin saltos en esta fase.'],
+ ['treadmill','Caminadora','caminadora','Caminata e intervalos controlados.'],['rower','Remo','remo','Alternativa si dominas la técnica.'],
+ ['ski','SkiErg','SkiErg','Alternativa si dominas la técnica.'],['roller','Roller y accesorios','foam roller y accesorios','Inventario disponible; sin rutina añadida.']
+];
+function visual(id,label){return `<span class="equipment-visual"><svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="${h(label)}">${art[id]||art.dumbbell}</svg></span>`}
+// Interpret only equipment named in the approved prescription, including shared supports.
+const gearWords=[['dumbbell',/mancuern/i,'Mancuernas'],['bench',/banco/i,'Banco'],['kettlebell',/kettlebell/i,'Kettlebell'],['bar',/barra|discos/i,'Barra y discos'],['rack',/rack/i,'Rack'],['floor',/piso|suelo/i,'Piso'],['treadmill',/caminadora/i,'Caminadora'],['rower',/remo/i,'Remo'],['ski',/skierg/i,'SkiErg'],['box',/cajón/i,'Cajón'],['roller',/roller/i,'Roller']];
+function equipmentFor(e){const items=[],add=(text,role)=>{const matches=gearWords.filter(([,pattern])=>pattern.test(text));for(const[id,,label]of matches)if(!items.some(x=>x.id===id&&x.role===role))items.push({id,label,role});for(const label of ['apoyo firme','área despejada'])if(text.toLowerCase().includes(label)&&!items.some(x=>x.label===label&&x.role===role))items.push({id:'support',label,role})};for(const part of e.gear.split(/\s*\+\s*/)){const options=part.split(/\s+o\s+|\s*\/\s*/i);options.forEach((text,i)=>add(text,/opcional/i.test(text)?'optional':i?'alternative':'required'))}add(e.alt,'alternative');return items}
+function gearMarkup(e){const items=equipmentFor(e),chips=role=>items.filter(x=>x.role===role).map(x=>`<span class="gear-chip" data-gear="${x.id}" data-role="${role}">${x.id==='support'?'':visual(x.id,x.label)}<span>${h(x.label)}</span></span>`).join('');return `<div class="exercise-equipment"><div class="gear-required">${chips('required')}</div><details class="gear-options"><summary>Equipo y opciones</summary><p class="gear-source">${h(e.gear)}</p>${items.some(x=>x.role==='alternative')?`<p class="gear-label">Alternativas del programa</p><div class="gear-group">${chips('alternative')}</div>`:''}${items.some(x=>x.role==='optional')?`<p class="gear-label">Opcional</p><div class="gear-group">${chips('optional')}</div>`:''}</details></div>`}
+const needsLoad=e=>/mancuern|kettlebell/i.test(e.gear)&&!/opcional/i.test(e.gear)&&!/(?:^|[\s–−-])(?:s|min)(?:\b|\/)/i.test(e.reps);
+const loadRequired=(e,id='primary')=>{const m=movements(e).find(m=>m.id===id);return id==='primary'?needsLoad(e):!!m?.loaded};
+const zeroLoad=text=>/^0+(?:[.,]0+)?(?:\s*(?:kg|lbs?))?$/i.test(text.trim());
+const unloadedAlternative=e=>/sin peso|sin carga/i.test(e.alt);
+const routeFor=s=>s==='A'?'fuerza-a':s==='B'?'fuerza-b':'condicion';
+const nameFor=s=>s==='C'?'Condición':'Fuerza '+s;
+const completed=(w,s)=>snapshot.data.history.some(x=>x.week===w&&x.session===s);
+function status(text,error=false){$('#saveState').textContent=text;$('#saveState').classList.toggle('error',error)}
+const errors={'stale-tab':'Otra pestaña cambió tus datos. Vuelve a leerlos antes de continuar.','resolve-every-set':'Registra u omite explícitamente cada serie antes de terminar.','lock-unavailable':'Este navegador no permite guardar con seguridad. Conserva tu respaldo.','restore-requires-empty-store':'La restauración requiere un navegador sin progreso. Tus registros siguen intactos.','wrong-backup':'Este archivo no es un respaldo de Home Gym.','active-session-exists':'Termina la sesión activa antes de comenzar otra.'};
+function fail(e){status(errors[e.message]||'No se confirmó el guardado. Conserva esta pantalla y exporta un respaldo antes de reintentar.',true);$('#refresh').hidden=false;stale=true}
+function mutate(fn,message='Guardado en este navegador.',renderUI=true){const action=writes.then(async()=>{if(stale)return false;try{snapshot=await fn(snapshot.raw);if(renderUI)render();status(message);return true}catch(e){fail(e);return false}});writes=action.catch(()=>false);return action}
+function applyView(){const workout=['fuerza-a','fuerza-b','condicion'].includes(view);all('[data-view]').forEach(el=>el.hidden=el.dataset.view!==(workout?'workout':view==='descanso'?'rest':view));document.body.classList.toggle('workout-mode',workout);document.body.classList.toggle('rest-mode',view==='descanso');document.body.classList.toggle('executing',workout&&!!snapshot?.data.active);all('.tab-bar [data-route]').forEach(b=>{if(b.dataset.route===view)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')})}
+function navigate(next,{scroll=true}={}){if(next==='descanso'&&!restSnapshot?.record)return;if(!['hoy','semana','equipo','fuerza-a','fuerza-b','condicion','descanso'].includes(next))next='hoy';const s={'fuerza-a':'A','fuerza-b':'B','condicion':'C'}[next];if(s&&s!==selectedSession){selectedSession=s;exerciseIndex=0;setIndex=0}view=next;history.replaceState(null,'','#'+next);render();if(scroll){scrollTo({top:0,behavior:'instant'});$('.view:not([hidden]) h1')?.focus({preventScroll:true})}}
+function sessionChoice(s,w=selectedWeek){
+ const saved=progress(snapshot.data,w).sessions.find(x=>x.week===w&&x.session===s),icon=s==='C'?'treadmill':s==='A'?'dumbbell':'kettlebell';
+ const label=saved?(saved.actuallyPerformed?`Guardada · ${saved.performed} realizadas / ${saved.skipped} omitidas`:saved.whollySkipped?'Cerrada · todas las series omitidas':'Guardada · sin series realizadas confirmadas'):s==='C'?'15–25 min · bajo impacto':'35–45 min · cinco ejercicios';
+ return `<button class="session-choice ${s==='C'?'condition':''}" data-route="${routeFor(s)}">${visual(icon,nameFor(s))}<span><strong>${nameFor(s)}</strong><small>${label}</small></span><span class="chevron" aria-hidden="true">›</span></button>`;
+}
+function renderHome(){
+ const p=progress(snapshot.data,selectedWeek),a=p.active,next=a?.session||Object.keys(schedule(selectedWeek)).find(s=>!completed(selectedWeek,s));
+ $('#homeSubtitle').textContent='Semana '+selectedWeek+' · '+PROGRAM.plan[selectedWeek-1].phase;
+ $('#todayCard').innerHTML=next?`<div class="hero-card"><div class="hero-top"><div><p class="eyebrow">${a?'Sesión en curso':'Tu siguiente paso'}</p><h2>${a?h(a.plan.title):nameFor(next)}</h2></div>${visual(next==='C'?'treadmill':'dumbbell',nameFor(next))}</div><p class="hero-note">${a?'Semana '+a.week+' · tus borradores aún no cuentan como sesión guardada.':'Sin prisa. Una serie bien hecha a la vez.'}</p><button class="btn" ${a?'id="homeResume"':`data-route="${routeFor(next)}"`}>${a?'Continuar sesión':'Ver sesión'} <span aria-hidden="true">→</span></button></div>`:`<div class="complete-card"><h2>Semana registrada</h2><p>${p.weekPerformed}/3 sesiones con series realizadas.</p>${p.next?`<button class="text-button" data-next-week="${p.next.week}">Ver semana ${p.next.week} pendiente →</button>`:'<button class="text-button" data-route="semana">Ver las doce semanas →</button>'}</div>`;
+ $('#homeProgress').innerHTML=`<div class="progress-metrics"><span><b>${p.recorded}/36</b> guardadas</span><span><b>${p.weekPerformed}/3</b> realizadas esta semana</span></div><p>${h(p.message)}</p><small>Progreso local a esta instalación de Safari / Home Screen. Sin sincronización.</small>`;
+ $('#sessionChoices').innerHTML=['A','B','C'].map(s=>sessionChoice(s)).join('');if($('#homeResume'))$('#homeResume').onclick=resume;
+}
+function renderCalendar(){
+ const w=selectedWeek,p=PROGRAM.plan[w-1],map=snapshot.data.calendar[w]||schedule(w),summary=progress(snapshot.data,w);
+ $('#phaseTag').textContent=p.phase;$('#weekHeadline').textContent='Semana '+w;
+ $('#weekSubtitle').textContent=(w===6?'Semana ligera · menos series, cardio suave.':'Fuerza: RIR '+p.rir+' · Condición: '+p.effort)+` · ${summary.weekSaved}/3 guardadas; ${summary.weekPerformed}/3 con series realizadas.`;
+ $('#weekSelect').value=w;$('#weekBadge').textContent='Semana '+w;$('#prevWeek').disabled=w===1;$('#nextWeek').disabled=w===12;
+ $('#weeklyCount').textContent=summary.weekPerformed+'/3';$('#weeklyCount').title='Sesiones con al menos una serie realizada';
+ $('#calendar').innerHTML=days.map((d,i)=>{const session=Object.keys(map).find(s=>map[s]===i),saved=summary.sessions.find(x=>x.week===w&&x.session===session);return `<button class="day ${session?session==='C'?'interval':'session':''} ${saved?.actuallyPerformed?'done':''}" data-day-session="${session||''}" ${session?`data-route="${routeFor(session)}"`:''} aria-label="${d}: ${session?nameFor(session):'Descanso o micro-pausas'}${saved?saved.whollySkipped?', guardada, todas las series omitidas':', guardada':''}"><span class="name">${d}</span><strong>${session||'—'}</strong></button>`}).join('');
+ $('#weekSessions').innerHTML=Object.keys(map).sort((a,b)=>map[a]-map[b]).map(s=>sessionChoice(s)).join('');
+ $('#roadmap').innerHTML=PROGRAM.plan.map(p=>{const n=summary.sessions.filter(x=>x.week===p.week&&x.actuallyPerformed).length;return `<button class="weekdot ${p.week===w?'selected':''} ${n===3?'done':''}" data-week="${p.week}" aria-label="Semana ${p.week}, ${n} de 3 sesiones realizadas" aria-current="${p.week===w?'true':'false'}">${p.week}<span class="micro">${n}/3</span></button>`}).join('');
+ $('#moveDays').innerHTML=['A','C','B'].map(s=>`<label class="plan-row">${nameFor(s)}<select data-move="${s}" aria-label="Mover ${nameFor(s)}">${days.map((d,i)=>`<option value="${i}" ${map[s]===i?'selected':''}>${d}</option>`).join('')}</select></label>`).join('');
+ $('#weekProgressDetails').textContent=`${summary.weekSaved}/3 sesiones guardadas · ${summary.weekPerformed}/3 con alguna serie realizada. Una sesión con todas las series omitidas no cuenta como realizada. Plan B ocupa la misma sesión de fuerza.`;
+ all('[data-move]').forEach(el=>el.onchange=()=>mutate(raw=>store.move(raw,w,el.dataset.move,Number(el.value))));
+}
+function rememberWeek(){const week=selectedWeek;if(snapshot&&!stale&&snapshot.data.preferences?.selectedWeek!==week)mutate(raw=>store.preference(raw,{selectedWeek:week}),'Semana guardada.',false)}
+function selectWeek(week){selectedWeek=week;exerciseIndex=0;setIndex=0;render();rememberWeek()}
+function restoreContext(){selectedWeek=meaningfulWeek(snapshot.data);displayUnit=unit(snapshot.data.preferences?.displayUnit);if(snapshot.data.active){selectedSession=snapshot.data.active.session;focusNext(snapshot.data.active)}}
+function resume(){const a=snapshot.data.active;if(!a)return;selectedWeek=a.week;selectedSession=a.session;focusNext(a);navigate(routeFor(a.session));rememberWeek()}
+function focusNext(a){for(let i=0;i<a.plan.exercises.length;i++){const e=a.plan.exercises[i];for(let n=0;n<e.sets;n++){const k=e.id+':'+(n+1);if(!a.logs[k]||a.drafts?.[k]||memoryDrafts.get(k)?.id===a.id){exerciseIndex=i;setIndex=n;return}}}}
+function resourceMarkup(key,note=''){
+ const r=RESOURCES[key];if(!r)return '';
+ return `<p class="resource" data-resource-status="${r.status}">${r.url?`<a href="${h(r.url)}" target="_blank" rel="noopener noreferrer external" data-technique-resource>${r.status==='EXACT'?'Demostración exacta':'Guía relacionada'} · ${h(r.title)} ↗</a>`:`<span>Sin video verificado · ${h(r.title)}</span>`}<small>${h(note||r.scope)}</small></p>`;
+}
+function coachingMarkup(e,variant='primary'){const c=COACHING[e.id];return c?`<p>${h(c.technique)}</p>${c.resource?resourceMarkup(c.resource,c.resourceNote):''}${c.alternatives.map((a,i)=>`<div class="alternative-tip">${movements(e)[i+1]?.id===variant?'':`<p><b>${h(RESOURCES[a.resource].title)}:</b> ${h(a.tip)}</p>`}${resourceMarkup(a.resource)}</div>`).join('')}`:''}
+function conditioning(plan){const p=PROGRAM.plan[selectedWeek-1];return `<div class="condition-target">${h(p.effort)} · ${h(p.phase)}</div><div class="block-list">${selectedWeek===6?'<div class="interval-block"><span class="block-number">1</span><div><strong>15–20 min</strong><small>Caminata muy suave · ritmo conversacional</small><small>Sin intervalos</small></div></div>':`<div class="interval-block"><span class="block-number">1</span><div><strong>5 min suave</strong><small>Entrada en calor</small></div></div><div class="interval-block"><span class="block-number">2</span><div><strong>${p.intervals} ciclos</strong><div class="interval-pair"><span><b>${p.hard} s</b>${h(p.effort)}</span><span><b>${p.easy} s</b>Suave</span></div></div></div><div class="interval-block"><span class="block-number">3</span><div><strong>3–5 min</strong><small>Cierre muy suave</small></div></div>`}</div><details class="technique"><summary>Protocolo y alternativas</summary><p>${h(plan.protocol)}</p><p>${h(plan.exercises[0].cue)}</p><p>${h(plan.exercises[0].alt)}</p><p>${h(PROGRAM.guidance[selectedWeek>=7?'cardioLater':'cardioEarly'])}</p></details>`}
+function proTip(e,variant='primary'){const index=movements(e).findIndex(m=>m.id===variant)-1,tip=index>=0?COACHING[e.id]?.alternatives[index]?.tip:null;return `<aside class="pro-tip" data-pro-tip="${h(e.id)}"><strong>Pro tip 1%</strong><p>${h(tip||COACHING[e.id]?.tip||e.cue)}</p></aside>`}
+function formSelection(a,e,key){
+ const pending=memoryDrafts.get(key),current=(pending?.id===a.id?pending.value:null)||a.drafts?.[key]||a.logs[key];
+ const variant=current?.variantId||'primary',identity=movementIdentity(e,variant);
+ if(current&&!current.recallFields)return {value:{...current},variant,baseline:null};
+ const baseline=lastConfirmed(snapshot.data,a,e,key,variant,displayUnit);
+ return {value:{weight:'',reps:'',note:'',...current,...baseline?.fields,variantId:variant,movement:identity},variant,baseline};
+}
+function alternativeMarkup(e,selected='primary',active=false){
+ const choices=movements(e);
+ if(choices.length===1)return `<div class="movement-limit"><b>Ejercicio principal</b><p>${e.id==='condition'?'La caminata continua reduce intensidad; remo o SkiErg cambian el equipo y requieren técnica conocida. Conserva el protocolo y las alternativas escritas.':'Plan B reemplaza esta fuerza. No hay otra alternativa distinta aprobada para este bloque.'}</p></div>`;
+ const current=choices.find(m=>m.id===selected);
+ return `<details class="movement-options"><summary>${current?.id==='primary'?'Ejercicio principal':current?'Alternativa':'Variante guardada sin identificar'}${current&&current.id!=='primary'?' · '+h(current.name):''} · ver opciones</summary>${choices.map(m=>`<div class="movement-choice" data-movement="${h(m.id)}"><small>${m.id==='primary'?'Ejercicio principal':m.kind==='Alternativa'?'Alternativa':'Alternativa · '+m.kind}</small><b>${h(m.name)}</b><div class="movement-equipment">${(m.icons||equipmentFor(e).filter(x=>x.role==='required'&&x.id!=='support').map(x=>x.id)).map(id=>visual(id,m.gear)).join('')}<span>${h(m.gear)}</span></div><p>${h(m.difference||'Movimiento y equipo principales del programa.')}</p>${active?`<button class="text-button" data-use-movement="${h(m.id)}" aria-pressed="${selected===m.id}">${selected===m.id?'Seleccionado para esta serie':'Usar en esta serie'}</button>`:''}</div>`).join('')}</details>`;
+}
+function logBusy(busy){all('.setrow input').forEach(i=>i.readOnly=busy);all('.setrow select,.setrow button,[data-log-action],[data-use-movement]').forEach(b=>b.disabled=busy)}
+function positionAfterLog(focusedId){
+ const revision=renderRevision,done=!!$('#finishSession'),target=done?$('.completion-state'):$('.exercise-orientation');
+ if(!target)return;
+ const nextInput=!done&&focusedId&&document.getElementById(focusedId);
+ (nextInput||target).focus({preventScroll:true});
+ const e=snapshot.data.active.plan.exercises[exerciseIndex];
+ $('#sessionAnnouncement').textContent=done?'Todas las series resueltas. Guarda la sesión completa.':`${e.name}. ${e.gear}. Serie ${setIndex+1} de ${e.sets}.`;
+ // One positioning operation, after layout. A manual navigation cancels this pending move.
+ requestAnimationFrame(()=>{if(revision!==renderRevision||!target.isConnected||$('#sesiones').hidden)return;
+  const header=$('.app-header'),fixed=['fixed','sticky'].includes(getComputedStyle(header).position)?header.getBoundingClientRect().bottom:0;
+  const inset=parseFloat(getComputedStyle(target).scrollMarginTop)||12,viewport=window.visualViewport;
+  scrollTo({top:Math.max(0,scrollY+target.getBoundingClientRect().top-fixed-inset-(viewport?.offsetTop||0)),behavior:'instant'});
+ });
+}
+function logger(a,e){const key=e.id+':'+(setIndex+1),log=a.logs[key],selection=formSelection(a,e,key),d=selection.value,strength=selectedSession!=='C'&&!a.plan.emergency;const basis=BASES.includes(d.loadBasis)?d.loadBasis:d.weight?'unknown':COACHING[e.id]?.basis||'unknown',shownUnit=knownLoad(d)?d.displayUnit:displayUnit;const actualRir=String(d.rir??''),rirOptions=['','0','1','2','3','4','5+','técnica'];if(actualRir&&!rirOptions.includes(actualRir))rirOptions.push(actualRir);return `${selection.baseline?`<p class="last-time" data-baseline-source="${selection.baseline.source}">Última vez · ${selection.baseline.source==='active'?'esta sesión':'semana '+selection.baseline.week} · ${h(selection.baseline.key)}. Sugerencia editable; aún sin guardar.</p>`:''}<div class="set-pills"><span>${strength?'Serie':'Registro'} ${setIndex+1} de ${e.sets}</span>${Array.from({length:e.sets},(_,i)=>{const k=e.id+':'+(i+1),state=a.drafts?.[k]?'pending':a.logs[k]?.status||'pending';return `<button class="set-pill" data-set="${i}" data-status="${state}" aria-pressed="${i===setIndex}" aria-label="Serie ${i+1}: ${state==='done'?'guardada':state==='skipped'?'omitida':'pendiente'}">${state==='done'?'✓':state==='skipped'?'−':i+1}</button>`}).join('')}</div><div class="setrow" data-load-required="${strength&&loadRequired(e,selection.variant)}" data-key="${key}" data-status="${a.drafts?.[key]?'pending':log?.status||'pending'}">${strength?`<div class="logger-controls"><div class="control"><div class="weight-heading"><label for="weightInput">Peso</label><div class="unit" role="group" aria-label="Unidad de peso"><button data-unit="kg" class="${shownUnit==='kg'?'active':''}" aria-pressed="${shownUnit==='kg'}">kg</button><button data-unit="lb" class="${shownUnit==='lb'?'active':''}" aria-pressed="${shownUnit==='lb'}">lb</button></div></div><small id="loadBasisLabel" class="load-basis">${basisLabels[basis]}</small><div class="stepper"><button data-bump="weight:-1" aria-label="Disminuir peso 5 ${shownUnit}">−5</button><input id="weightInput" data-field="weight" inputmode="decimal" maxlength="100" value="${h(d.weight)}" placeholder="—" aria-label="Peso, kg o lb" aria-describedby="weightError"><button data-bump="weight:1" aria-label="Aumentar peso 5 ${shownUnit}">+5</button></div><details class="load-options"><summary>Ajuste y base del peso</summary><p class="secondary-copy">Ajuste de registro: <span id="weightStep">5 ${shownUnit}</span>. Anota la carga real; estos botones no indican progresión ni el equipo disponible.</p><div class="quick-load">${[-10,-5,-0.5,0.5,5,10].map(n=>`<button data-quick-load="${n}">${n>0?'+':''}${n}</button>`).join('')}</div><label for="loadBasis">Qué peso registras</label><select id="loadBasis" data-field="loadBasis">${BASES.map(b=>`<option value="${b}" ${b===basis?'selected':''}>${basisLabels[b]}</option>`).join('')}</select></details><button class="clear-field" id="clearWeight">Borrar peso</button><p id="unitNotice" class="secondary-copy" role="status">${d.weight&&!knownLoad(d)?'Texto guardado sin conversión automática.':''}</p><button class="zero-button" id="zeroWeight" aria-pressed="${d.loadIntent==='zero'}">Confirmar 0 de carga externa</button><p id="weightError" class="field-error" role="alert" hidden></p>${unloadedAlternative(e)?`<button class="zero-button" id="alternativeNoLoad" aria-pressed="${d.loadIntent==='unloaded-alternative'}">Usé la alternativa sin peso</button>`:''}</div><div class="control"><label for="repsInput">Repeticiones</label><div class="stepper"><button data-bump="reps:-1" aria-label="Disminuir repeticiones">−</button><input id="repsInput" data-field="reps" inputmode="numeric" maxlength="100" value="${h(d.reps)}" placeholder="—" aria-label="Repeticiones"><button data-bump="reps:1" aria-label="Aumentar repeticiones">+</button></div><button class="clear-field" id="clearReps">Borrar repeticiones</button></div></div><div class="control control-rir"><label for="rirInput">RIR real · objetivo ${h(e.rir)}</label><select id="rirInput" data-field="rir" aria-label="RIR real">${rirOptions.map(v=>`<option value="${h(v)}" ${v===actualRir?'selected':''}>${v===''?'Sin registrar':v==='técnica'?'Técnica':v}</option>`).join('')}</select></div>`:`<div class="control"><label for="repsInput">Resultado o duración</label><input class="result-input" id="repsInput" data-field="reps" value="${h(d.reps)}" maxlength="100" placeholder="${h(e.reps)}"><button class="clear-field" id="clearReps">Borrar resultado</button></div>`}<details class="set-note"><summary>Nota de esta ${strength?'serie':'sesión'}</summary><label class="field">Nota o alternativa usada<input data-field="note" maxlength="2000" value="${h(d.note)}"></label></details><p class="set-state">${a.drafts?.[key]?'Borrador guardado · confirma u omite':log?.status==='done'?'Serie guardada ✓':log?.status==='skipped'?'Omitida explícitamente':'Sin registrar'}</p></div>`}
+function renderSession(){renderRevision++;const a=snapshot.data.active,visible=a&&a.week===selectedWeek&&a.session===selectedSession,plan=visible?a.plan:prescription(selectedWeek,selectedSession);exerciseIndex=Math.min(exerciseIndex,plan.exercises.length-1);const e=plan.exercises[exerciseIndex];setIndex=Math.min(setIndex,e.sets-1);$('#sessionEyebrow').textContent='Semana '+selectedWeek+' · '+PROGRAM.plan[selectedWeek-1].phase;$('#sessionTitle').textContent=plan.title;all('[data-session]').forEach(b=>{const yes=b.dataset.session===selectedSession;b.classList.toggle('active',yes);b.setAttribute('aria-selected',String(yes))});let html='';
+
+ const variant=visible?formSelection(a,e,e.id+':'+(setIndex+1)).variant:'primary',resolved=visible&&setKeys(a.plan).every(k=>a.logs[k]&&!a.drafts?.[k]&&memoryDrafts.get(k)?.id!==a.id);
+ html+=`<article class="exercise" data-exercise-id="${h(e.id)}">${resolved?'<div class="completion-state" tabindex="-1"><h2>Todas las series resueltas</h2><p>Guarda la sesión completa con el botón inferior.</p></div>':''}<div class="exercise-orientation" tabindex="-1"><div class="exercise-topline"><span class="exercise-position">${selectedSession==='C'?'Tu registro':plan.emergency?'Plan B':'Ejercicio '+(exerciseIndex+1)+' de '+plan.exercises.length}</span><div class="exercise-arrows" ${plan.exercises.length===1?'hidden':''}><button id="prevExercise" aria-label="Ejercicio anterior" ${exerciseIndex===0?'disabled':''}>‹</button><button id="nextExercise" aria-label="Ejercicio siguiente" ${exerciseIndex===plan.exercises.length-1?'disabled':''}>›</button></div></div><h2 class="exercise-title">${h(e.name)}</h2>${visible?`<p class="current-set">${plan.emergency||selectedSession==='C'?'Registro':'Serie'} ${setIndex+1} de ${e.sets}${variant!=='primary'?' · Alternativa':''}</p>`:''}${gearMarkup(e)}</div>${selectedSession==='C'?'':`<dl class="prescription"><div><dt>Series × reps</dt><dd>${e.sets} × ${h(e.reps)}</dd></div><div><dt>RIR</dt><dd>${h(e.rir)}</dd></div><div><dt>Descanso</dt><dd>${h(e.rest)}</dd></div></dl>${proTip(e,variant)}<details class="technique" id="technique"><summary>Técnica y alternativa</summary><p><b>Tempo:</b> ${h(e.tempo)} · E–P–C–P: bajada, pausa, subida, pausa.</p><p>${h(e.cue)}</p><p><b>Alternativa:</b> ${h(e.alt)}</p>${coachingMarkup(e,variant)}</details>`}${selectedSession==='C'?proTip(e)+conditioning(plan):''}${alternativeMarkup(e,variant,!!visible)}${visible?logger(a,e):''}</article>`;
+ if(plan.exercises.length>1)html+=`<details class="exercise-menu"><summary>Ver los ${plan.exercises.length} ejercicios</summary><div class="exercise-list">${plan.exercises.map((e,i)=>`<button class="exercise-link" data-exercise="${i}" aria-pressed="${i===exerciseIndex}">${i+1}. ${h(e.name)}</button>`).join('')}</div></details>`;
+ $('#sessionContent').innerHTML=html;if(visible&&$('#technique'))$('.exercise').append($('#technique'));$('#sessionActions').innerHTML='';let dock='';
+ if(visible){const complete=setKeys(a.plan).every(k=>a.logs[k]&&!a.drafts?.[k]&&memoryDrafts.get(k)?.id!==a.id);dock=complete?'<button class="btn primary" id="finishSession">Guardar sesión completa</button>':'<button class="btn quiet" id="skipSet" data-log-action="skipped">Omitir</button><button class="btn primary" id="saveSet" data-log-action="done">Guardar '+(selectedSession==='C'||plan.emergency?'registro':'serie')+' →</button>';$('#sessionProgress').textContent=setKeys(a.plan).filter(k=>a.logs[k]&&!a.drafts?.[k]).length+'/'+setKeys(a.plan).length+' registros resueltos. Omitir no cuenta como realizado.'}
+ else if(a){dock='<button class="btn primary" id="resumeSession">Continuar sesión activa</button>';$('#sessionProgress').textContent='Hay una sesión en curso: '+a.plan.title+'.'}
+ else if(completed(selectedWeek,selectedSession)){dock='<button class="btn primary" id="showHistory">Ver sesión guardada</button>';const saved=progress(snapshot.data,selectedWeek).sessions.find(x=>x.week===selectedWeek&&x.session===selectedSession);$('#sessionProgress').textContent=saved.whollySkipped?'Sesión cerrada · todas las series omitidas':`Sesión guardada · ${saved.performed} series realizadas / ${saved.skipped} omitidas`}
+ else {dock='<button class="btn primary" id="startSession">Comenzar sesión</button>';$('#sessionProgress').textContent='';if(selectedSession!=='C')$('#sessionActions').innerHTML='<details class="workout-options"><summary>¿Hoy tienes poco tiempo?</summary><div class="emergency-preview">'+proTip({id:'emergency',cue:''})+'</div><button class="btn secondary" id="startEmergency">Usar Plan B en lugar de esta fuerza</button><p class="secondary-copy">Reemplaza esta sesión; no añade una cuarta.</p></details>'}
+ $('#sessionDock').innerHTML=dock;bindSession(a,e,visible);
+}
+function bindSession(a,e,visible){all('[data-exercise]').forEach(b=>b.onclick=()=>{exerciseIndex=Number(b.dataset.exercise);setIndex=0;renderSession()});all('[data-set]').forEach(b=>b.onclick=()=>{setIndex=Number(b.dataset.set);renderSession()});if($('#prevExercise'))$('#prevExercise').onclick=()=>{exerciseIndex--;setIndex=0;renderSession()};if($('#nextExercise'))$('#nextExercise').onclick=()=>{exerciseIndex++;setIndex=0;renderSession()};
+ const start=isEmergency=>mutate(raw=>store.start(raw,selectedWeek,selectedSession,isEmergency),'Sesión lista.',false).then(ok=>{if(ok){focusNext(snapshot.data.active);render()}});
+ if($('#startSession'))$('#startSession').onclick=()=>start(false);if($('#startEmergency'))$('#startEmergency').onclick=()=>start(true);if($('#resumeSession'))$('#resumeSession').onclick=resume;if($('#showHistory'))$('#showHistory').onclick=()=>{navigate('hoy');$('#progressPanel').open=true;$('#progressPanel').scrollIntoView({block:'start'})};
+ if($('#finishSession'))$('#finishSession').onclick=()=>{const b=$('#finishSession');b.disabled=true;mutate(raw=>store.finish(raw,a.id),'Sesión guardada. Buen trabajo.',false).then(ok=>{if(ok){restStore.invalidate(a.id).catch(timerWarning);syncRest();navigate('hoy');$('#progressPanel').open=true}else b.disabled=false})};
+ if(!visible)return;const key=e.id+':'+(setIndex+1);
+ // Keep legacy free-text fields and optional/unknown log fields intact when hidden in this view.
+ let presented=formSelection(a,e,key).value;const value=()=>{const previous=(memoryDrafts.get(key)?.id===a.id?memoryDrafts.get(key).value:null)||snapshot.data.active?.drafts?.[key]||snapshot.data.active?.logs?.[key]||presented;const fields=previous.recallFields?{...previous,...presented}:previous;return {...fields,weight:fields.weight||'',reps:fields.reps||'',note:fields.note||'',...Object.fromEntries(all('.setrow [data-field]').map(i=>[i.dataset.field,i.value]))}};
+ const draft=(patch={})=>{if(logPending)return;const pending={id:a.id,value:{...value(),recallFields:false,...patch}};memoryDrafts.set(key,pending);$('.set-state').textContent='Guardando borrador…';$('.completion-state')?.remove();if($('#finishSession')){$('#sessionDock').innerHTML='<button class="btn quiet" id="skipSet" data-log-action="skipped">Omitir</button><button class="btn primary" id="saveSet" data-log-action="done">Guardar serie →</button>';$('#saveSet').onclick=()=>save('done');$('#skipSet').onclick=()=>save('skipped')}mutate(raw=>store.draft(raw,a.id,key,pending.value),'Borrador guardado.',false).then(ok=>{if(ok&&memoryDrafts.get(key)===pending){memoryDrafts.delete(key);const row=$('.setrow');if(row?.dataset.key===key)$('.set-state').textContent='Borrador guardado · confirma u omite'}})};
+ const clearWeightError=()=>{if($('#weightError'))$('#weightError').hidden=true;$('#weightInput')?.removeAttribute('aria-invalid')};
+ const paintUnits=chosen=>{all('[data-bump^="weight:"]').forEach(b=>b.setAttribute('aria-label',(b.dataset.bump.endsWith('-1')?'Disminuir':'Aumentar')+' peso 5 '+chosen));all('[data-unit]').forEach(b=>{const active=b.dataset.unit===chosen;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});if($('#weightStep'))$('#weightStep').textContent='5 '+chosen};
+ const activeUnit=()=>$('.unit [aria-pressed="true"]')?.dataset.unit||displayUnit;
+ const editedWeight=()=>{clearWeightError();$('#zeroWeight').setAttribute('aria-pressed','false');$('#alternativeNoLoad')?.setAttribute('aria-pressed','false');const record=editLoad(value(),$('#weightInput').value,activeUnit(),$('#loadBasis').value);record.loadIntent='entered';if(knownLoad(record)){paintUnits(record.displayUnit);$('#unitNotice').textContent='Unidad y base registradas; sin progresión automática.'}else $('#unitNotice').textContent='Texto conservado; sin conversión automática.';draft(record)};
+ all('.setrow [data-field]').forEach(i=>i.addEventListener(i.tagName==='SELECT'?'change':'input',()=>{
+  if(i.dataset.field==='weight')editedWeight();
+  else if(i.dataset.field==='loadBasis'){$('#loadBasisLabel').textContent=basisLabels[i.value];draft({loadBasis:i.value})}
+  else draft();
+ }));
+ all('[data-unit]').forEach(b=>b.onclick=()=>{
+  displayUnit=b.dataset.unit;const chosen=displayUnit,converted=switchLoad(value(),chosen);paintUnits(chosen);
+  mutate(raw=>store.preference(raw,{displayUnit:chosen}),'Unidad de visualización guardada.',false);
+  if(converted){$('#weightInput').value=converted.weight;if(!value().recallFields&&(memoryDrafts.get(key)?.id===a.id||snapshot.data.active?.drafts?.[key]||snapshot.data.active?.logs?.[key]))draft(converted);else presented=converted;$('#unitNotice').textContent='Vista convertida desde la misma carga original.'}
+  else $('#unitNotice').textContent=$('#weightInput').value?'Texto histórico o unidad sin confirmar: se conserva sin convertir.':'Unidad para tu próxima entrada numérica.';
+ });
+ all('[data-bump],[data-unit],[data-quick-load],[data-log-action],[data-use-movement],.clear-field').forEach(b=>b.addEventListener('pointerdown',event=>{if(document.activeElement?.matches('.setrow input'))event.preventDefault()}));
+ const bump=(field,delta)=>{const input=$('[data-field="'+field+'"]'),next=bumpValue(input.value,field,delta,activeUnit());if(next===null){status('Tu texto se conserva. Escribe un número para usar + o −.',true);return}input.value=next;if(field==='weight')editedWeight();else draft()};
+ all('[data-bump]').forEach(b=>b.onclick=()=>{const[field,delta]=b.dataset.bump.split(':');bump(field,Number(delta)*(field==='weight'?adjustment(activeUnit()):1))});
+ all('[data-quick-load]').forEach(b=>b.onclick=()=>bump('weight',Number(b.dataset.quickLoad)));
+ if($('#zeroWeight'))$('#zeroWeight').onclick=()=>{$('#weightInput').value='0';clearWeightError();$('#zeroWeight').setAttribute('aria-pressed','true');$('#alternativeNoLoad')?.setAttribute('aria-pressed','false');draft({...editLoad(value(),'0',activeUnit(),$('#loadBasis').value),loadIntent:'zero'})};
+ const selectMovement=id=>{if(logPending||stale)return;const identity=movementIdentity(e,id);if(!identity)return;
+  const previous=value();
+  const clean={...previous,weight:'',reps:'',rir:'',weightKg:undefined,enteredWeight:undefined,enteredUnit:undefined,displayUnit:undefined,loadIntent:undefined,loadBasis:identity.basis,variantId:id,movement:identity,recallFields:true};
+  if(movements(e).find(m=>m.id===id)?.unloaded)clean.loadIntent='unloaded-alternative';
+  draft(clean);renderSession();
+ };
+ all('[data-use-movement]').forEach(b=>b.onclick=()=>{if(b.getAttribute('aria-pressed')!=='true')selectMovement(b.dataset.useMovement)});
+ if($('#alternativeNoLoad'))$('#alternativeNoLoad').onclick=()=>selectMovement(movements(e).find(m=>m.unloaded).id);
+ if($('#clearWeight'))$('#clearWeight').onclick=()=>{$('#weightInput').value='';clearWeightError();$('#zeroWeight').setAttribute('aria-pressed','false');draft({...editLoad(value(),'',activeUnit(),$('#loadBasis').value),loadIntent:undefined})};
+ $('#clearReps').onclick=()=>{$('#repsInput').value='';draft()};
+ const save=outcome=>{if(logPending||stale)return;const record={...value(),recallFields:false,status:outcome};if(outcome==='done'&&!record.reps.trim()){status('Anota repeticiones, duración o resultado antes de guardar.',true);$('#repsInput').focus({preventScroll:true});return}const previous=snapshot.data.active?.logs?.[key],legacyZero=previous&&!previous.loadIntent&&record.weight===previous.weight&&!record.loadIntent;const missing=loadRequired(e,record.variantId||'primary')&&!record.weight.trim()&&record.loadIntent!=='unloaded-alternative';const unconfirmedZero=zeroLoad(record.weight)&&record.loadIntent!=='zero'&&!legacyZero;if(outcome==='done'&&$('#weightInput')&&(missing||unconfirmedZero)){const error=$('#weightError');error.textContent=unconfirmedZero?'Confirma 0 de carga externa con el botón, o anota el peso usado.':'Anota el peso usado o elige explícitamente 0 o la alternativa sin peso.';error.hidden=false;$('#weightInput').setAttribute('aria-invalid','true');$('#weightInput').focus({preventScroll:true});return}logPending=true;const focusedId=document.activeElement?.matches('.setrow input')?document.activeElement.id:null,revision=renderRevision;
+ logBusy(true);mutate(raw=>store.log(raw,a.id,key,{...record,confirmedAt:new Date().toISOString()}),'Serie '+(outcome==='skipped'?'omitida explícitamente.':'guardada.'),false).then(async ok=>{if(ok){memoryDrafts.delete(key);if(outcome==='done'){try{await restStore.start(a.id,key);timerWarning(null)}catch(error){timerWarning(error)}}syncRest();logPending=false;if(revision===renderRevision&&snapshot.data.active?.id===a.id&&!stale){focusNext(snapshot.data.active);if(outcome==='done'&&restSnapshot?.record?.sourceKey===key&&restSnapshot.record.state!=='skipped')openRest();else{render();positionAfterLog(focusedId)}}}else{logPending=false;logBusy(false)}})};
+ if($('#saveSet'))$('#saveSet').onclick=()=>save('done');if($('#skipSet'))$('#skipSet').onclick=()=>save('skipped');if(logPending)logBusy(true);
+}
+function timerWarning(error){const el=$('#restWarning');el.hidden=!error;el.textContent=error?'El descanso no pudo guardarse con seguridad. Tus series guardadas siguen intactas. Puedes continuar en el registro; el temporizador podría no sobrevivir al cierre.':'';}
+function stopRestTicker(){if(restTicker!==null){clearInterval(restTicker);restTicker=null;}document.documentElement.dataset.restTicker='stopped';}
+function syncRest(){
+ if(!restStore)return;
+ try{const current=store.read();restSession=current.data.active;restSnapshot=restStore.read();
+  if(restSnapshot.record?.sessionId!==restSession?.id||restSnapshot.record?.state==='skipped')restSnapshot=null;
+  if(current.raw!==snapshot.raw&&!logPending&&!stale){stale=true;status('Otra pestaña cambió los datos. Vuelve a leerlos antes de continuar.',true);$('#refresh').hidden=false;}
+ }catch(error){restSnapshot=null;restSession=null;timerWarning(error);}
+ if(!restSnapshot?.record)stopRestTicker();
+}
+async function changeRest(action,value){
+ if(restBusy||!restSnapshot?.record)return false;restBusy=true;
+ try{restSnapshot=await restStore.change(restSnapshot.raw,action,value);timerWarning(null);return true;}
+ catch(error){timerWarning(error);syncRest();if(view==='descanso'){if(!restSnapshot?.record)navigate(restSession?routeFor(restSession.session):'hoy',{scroll:false});else if($('#restView').dataset.timerId!==restSnapshot.record.id)renderRest();}return false;}
+ finally{restBusy=false;paintRest();}
+}
+function paintRest(){
+ const r=restSnapshot?.record,active=!!r&&r.state!=='skipped';$('#restMini').hidden=!active||view==='descanso';
+ if(!active){stopRestTicker();return;}
+ const state=restState(r),left=remainingMs(r),clock=restTime(left),ready=state==='expired';
+ for(const id of ['restClock','restDockClock','restMiniClock'])if($('#'+id))$('#'+id).textContent=clock;
+ if($('#restStatus'))$('#restStatus').textContent=ready?'LISTO · READY':state==='paused'?'DESCANSO · PAUSADO':state==='manual'?'DESCANSO · MANUAL':'DESCANSO';
+ if($('#restClock'))$('#restClock').classList.toggle('ready',ready);
+ if($('#restStart'))$('#restStart').textContent=ready?'Empezar siguiente set':'Empezar ahora';
+ if($('#pauseRest')){$('#pauseRest').textContent=state==='paused'?'Continuar descanso':'Pausar';$('#pauseRest').disabled=!['running','paused'].includes(state)||restBusy;}
+ for(const id of ['minus15','plus15','resetRest'])if($('#'+id))$('#'+id).disabled=r.originalDurationMs===null||restBusy;
+ if($('#manualRest'))$('#manualRest').hidden=state!=='manual';
+ const announcement=ready?'Descanso terminado. Puedes empezar el siguiente set.':state==='paused'?'Descanso pausado.':'';
+ if($('#restAnnounce').textContent!==announcement)$('#restAnnounce').textContent=announcement;
+ if(document.visibilityState!=='hidden'&&state==='running'){
+  if(restTicker===null){restTicker=setInterval(paintRest,250);document.documentElement.dataset.restTicker='running';}
+ }else stopRestTicker();
+ // One expiry write, never a persisted per-second decrement; no alarms/notifications to duplicate.
+ if(state==='expired'&&r.state==='running'&&restExpiryRaw!==restSnapshot.raw){restExpiryRaw=restSnapshot.raw;void changeRest('expire');}
+}
+function openRest(){syncRest();if(!restSnapshot?.record)return;document.activeElement?.blur();navigate('descanso');}
+async function continueRest(){
+ if(restBusy)return;const r=restSnapshot?.record,a=restSession;if(!r||!a)return;
+ await changeRest('skip');const i=a.plan.exercises.findIndex(e=>r.nextKey.startsWith(e.id+':'));if(i<0)return;
+ selectedWeek=a.week;selectedSession=a.session;exerciseIndex=i;setIndex=Number(r.nextKey.split(':').at(-1))-1;
+ // Skipping rest changes no workout outcome. The record remains editable and unresolved.
+ view=routeFor(a.session);history.replaceState(null,'','#'+view);render();positionAfterLog(null);
+}
+function renderRest(){
+ const r=restSnapshot?.record,a=restSession;if(!r||!a)return;
+ const source=a.plan.exercises.find(e=>r.sourceKey.startsWith(e.id+':')),next=a.plan.exercises.find(e=>r.nextKey.startsWith(e.id+':')),log=a.logs[r.sourceKey],number=r.nextKey.split(':').at(-1),variant=a.drafts?.[r.nextKey]?.variantId||'primary';
+ $('#restView').dataset.timerId=r.id;
+ $('#restView').innerHTML=`<div class="rest-clock-panel"><h1 id="restStatus" tabindex="-1">DESCANSO</h1><div class="rest-time" id="restClock" aria-label="Tiempo restante" aria-live="off">${restTime(remainingMs(r))}</div><p class="rest-prescribed">Descanso prescrito: <b>${h(r.prescribedRest)}</b>${r.prescribedMs===null?' · sin duración fija':''}</p></div><div class="rest-body"><div class="rest-last"><b>Último set:</b> ${h(log.movement?.name||source.name)} · serie ${h(r.sourceKey.split(':').at(-1))}<br>${h(log.weight)}${knownLoad(log)?' · '+h(basisLabels[log.loadBasis]):''} × ${h(log.reps)}</div><div class="rest-next"><p class="eyebrow">${source.id===next.id?'Mismo ejercicio · siguiente':'Siguiente ejercicio'}</p><h2>${h(next.name)} · set ${h(number)}/${next.sets}</h2><p>${h(next.gear)}</p><p>${h(next.reps)} · RIR ${h(next.rir)} · tempo ${h(next.tempo)}</p>${proTip(next,variant)}</div><div class="timer-controls"><button id="minus15">−15 s</button><button id="plus15">+15 s</button><button id="pauseRest">Pausar</button><button id="resetRest">Reiniciar</button><button id="skipRest">Saltar descanso</button></div><div id="manualRest"><label for="manualRestSeconds">Temporizador manual · elige segundos</label><input id="manualRestSeconds" inputmode="numeric" maxlength="6" placeholder="Sin duración elegida"><button id="startManualRest">Iniciar temporizador manual</button></div><button class="text-button" id="restToWorkout">Volver al registro sin terminar el descanso</button><p class="secondary-copy">El tiempo transcurre aunque la app deje de ejecutar. Al volver se calcula desde la hora de término guardada. Puedes empezar antes; el reloj no registra ninguna serie.</p></div><div class="rest-dock"><div><span><time id="restDockClock"></time> · set ${h(number)}/${next.sets}</span><b>${h(next.name)}</b></div><button class="btn primary" id="restStart">Empezar ahora</button></div>`;
+ for(const [id,action,value]of [['minus15','adjust',-15000],['plus15','adjust',15000],['resetRest','reset']])$('#'+id).onclick=()=>changeRest(action,value);
+ $('#pauseRest').onclick=()=>changeRest(restState(restSnapshot.record)==='paused'?'resume':'pause');
+ $('#skipRest').onclick=continueRest;$('#restStart').onclick=continueRest;
+ $('#restToWorkout').onclick=()=>navigate(routeFor(a.session));
+ $('#startManualRest').onclick=()=>{const text=$('#manualRestSeconds').value;if(!/^\d+$/.test(text)||Number(text)<=0){$('#manualRestSeconds').setAttribute('aria-invalid','true');return;}void changeRest('manual',Number(text)*1000);};
+ paintRest();
+}
+function updateViewport(){
+ const viewport=window.visualViewport,bottom=Math.max(0,innerHeight-(viewport?viewport.height+viewport.offsetTop:innerHeight)),root=document.documentElement;
+ root.style.setProperty('--vv-bottom',bottom+'px');root.style.setProperty('--vv-height',(viewport?.height||innerHeight)+'px');root.style.setProperty('--vv-top',(viewport?.offsetTop||0)+'px');
+ const dock=view==='descanso'?$('.rest-dock'):$('.session-dock:not([hidden])')?.getBoundingClientRect().height&&document.body.classList.contains('workout-mode')?$('#sessionDock'):$('.tab-bar');
+ root.style.setProperty('--dock-height',(dock?.getBoundingClientRect().height||90)+'px');
+}
+function renderHistory(){
+ const p=progress(snapshot.data,selectedWeek);$('#totalCount').textContent=p.recorded+'/36';
+ $('#progressSummary').innerHTML=`<dl class="progress-detail"><div><dt>Guardadas / planificadas</dt><dd>${p.recorded}/36</dd></div><div><dt>Con series realizadas</dt><dd>${p.performed}</dd></div><div><dt>Todas las series omitidas</dt><dd>${p.whollySkipped}</dd></div><div><dt>Semanas con tres sesiones realizadas</dt><dd>${p.completeWeeks}/12</dd></div><div><dt>Esta semana</dt><dd>${p.weekPerformed}/3 realizadas · ${p.weekSaved}/3 guardadas</dd></div></dl><p>${p.active?`En curso: semana ${p.active.week} · ${nameFor(p.active.session)}. Aún no cuenta como guardada.`:'Sin sesión activa.'}</p><p>${p.next?`Próxima sesión pendiente del plan: semana ${p.next.week} · ${nameFor(p.next.session)}.`:'Las 36 sesiones están registradas.'}</p><p class="secondary-copy">Cada semana + sesión se cuenta una vez. Una semana completa requiere alguna serie realizada en cada una de sus tres sesiones. Progreso local a esta instalación de Safari / Home Screen; sin sincronización.</p>`;
+ $('#history').innerHTML=[...p.sessions].reverse().map(saved=>{const entry=saved.record;return `<details class="log"><summary>Semana ${entry.week} · ${h(entry.plan.title)} · ${saved.performed} realizadas / ${saved.skipped} omitidas</summary>${saved.copies>1?`<p class="secondary-copy">${saved.copies} registros de la misma sesión; se cuenta una vez. Se muestra el último con movimiento confirmado, si existe.</p>`:''}${entry.plan.exercises.map(e=>`<p><b>${h(e.name)}</b> · ${e.sets} × ${h(e.reps)} · RIR ${h(e.rir)} · Tempo ${h(e.tempo)} · Descanso ${h(e.rest)}</p>`).join('')}${Object.entries(entry.logs).map(([k,v])=>`<p>${h(k)}${v.movement?' · '+h(v.variantId==='primary'?'Ejercicio principal':'Alternativa')+': '+h(v.movement.name):''} · ${v.status==='done'?'Realizada':'Omitida'} · ${v.loadIntent==='unloaded-alternative'?'Alternativa sin peso':h(v.weight)}${knownLoad(v)?' · '+h(basisLabels[v.loadBasis]):''} · ${h(v.reps)}${v.rir?' · RIR real '+h(v.rir):''} · ${h(v.note)}</p>`).join('')}</details>`}).join('');
+ if(document.activeElement!==$('#feedback'))$('#feedback').value=snapshot.data.feedback;
+}
+function render(){if(!snapshot)return;renderHome();renderCalendar();renderSession();renderHistory();syncRest();if(view==='descanso')renderRest();applyView();paintRest();updateViewport()}
+function download(data){const url=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download='home-gym-respaldo.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+let offlineRunning=false;
+async function offline() {
+ if(offlineRunning)return;offlineRunning=true;const retry=$('#retryOffline');retry.disabled=true;retry.hidden=true;document.documentElement.dataset.offline='preparing';
+ const statusOffline=text=>{$('#offlineStatus').textContent=text;$('#offlineBadge').textContent=({ready:'Lista',installed:'Reabrir',unavailable:'Sin confirmar',preparing:'Preparando'})[document.documentElement.dataset.offline]};
+ statusOffline('Comprobando instalación sin conexión…');let timer,channel;
+ try {
+  if(!('serviceWorker' in navigator))throw Error('offline-unsupported');
+  // Bound the entire readiness check; a failed first install can leave ready pending forever.
+  const check=async()=>{const r=await navigator.serviceWorker.register(new URL('sw.js',base),{scope:base.pathname,updateViaCache:'none'});await navigator.serviceWorker.ready;if(!navigator.serviceWorker.controller)return {r,controlled:false};channel=new MessageChannel();const response=new Promise(resolve=>{channel.port1.onmessage=e=>resolve(e.data)});navigator.serviceWorker.controller.postMessage({type:'HOME_GYM_OFFLINE_STATUS'},[channel.port2]);return {r,controlled:true,info:await response}};
+  const result=await Promise.race([check(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('offline-readiness-timeout')),10000)})]);
+  const {r,controlled,info}=result;if(controlled&&!info?.ready)throw Error('offline-incomplete');
+  document.documentElement.dataset.offline=controlled?'ready':'installed';statusOffline(controlled?'Listo sin conexión en este navegador.':'Instalación completa. Cierra y vuelve a abrir para comprobar el uso sin conexión.');
+  const showUpdate=()=>{if(r.waiting)statusOffline('Actualización lista. Guarda tu sesión y respaldo; cierra todas las pestañas y vuelve a abrir.');};r.addEventListener('updatefound',()=>r.installing?.addEventListener('statechange',showUpdate));showUpdate();
+ } catch(_) {document.documentElement.dataset.offline='unavailable';statusOffline('No se confirmó la instalación. Reconecta a internet y pulsa Reintentar instalación. Conserva tus datos y esta sesión.');retry.hidden=false;}
+ finally{clearTimeout(timer);channel?.port1.close();channel?.port2.close();offlineRunning=false;retry.disabled=false;}
+}
+function boot(){
+ if(location.hostname==='fevaldez.github.io'){status('Home Gym requiere un origen independiente. No se permite abrirlo en el origen de FV.',true);$('#offlineStatus').textContent='Instalación bloqueada en el origen FV.';document.documentElement.dataset.boot='blocked-origin';return}
+ for(let w=1;w<=12;w++)$('#weekSelect').add(new Option('Semana '+w,w));
+ for(const[k,text]of Object.entries(PROGRAM.guidance))if($('#'+k))$('#'+k).textContent=text;
+ $('#equipment').textContent='Equipo del programa: '+PROGRAM.equipment.join(', ')+'.';$('#equipmentSafetyCopy').textContent=PROGRAM.guidance.equipmentSafety;
+ $('#equipmentGrid').innerHTML=equipment.map(([id,title,label,note])=>`<article class="equipment-card" data-equipment="${id}">${visual(id,label)}<h2>${title}</h2><p>${note}</p></article>`).join('');
+ $('#version').textContent=PROGRAM.title+' · '+PROGRAM.programVersion+' · Plantilla anónima. Inspiración: Tactical Barbell Mass; adaptación propia 2+1, sin reproducir sus plantillas.';
+ document.addEventListener('click',event=>{const resource=event.target.closest('[data-technique-resource]');if(resource&&!navigator.onLine){event.preventDefault();status('Necesitas conexión para abrir la guía externa. Tu entrenamiento y registro siguen disponibles.');return}const next=event.target.closest('[data-next-week]');if(next){selectWeek(Number(next.dataset.nextWeek));navigate('semana');return}const route=event.target.closest('[data-route]');if(route){navigate(route.dataset.route);return}const week=event.target.closest('[data-week]');if(week)selectWeek(Number(week.dataset.week))});
+ $('#weekSelect').onchange=e=>selectWeek(Number(e.target.value));$('#prevWeek').onclick=()=>selectWeek(Math.max(1,selectedWeek-1));$('#nextWeek').onclick=()=>selectWeek(Math.min(12,selectedWeek+1));
+ all('[data-session]').forEach(b=>b.onclick=()=>navigate(routeFor(b.dataset.session)));
+ $('#exportProgress').onclick=()=>{try{const backup=store.exportRaw();if(memoryDrafts.size){backup.unconfirmedDrafts=Object.fromEntries(memoryDrafts);try{const data=JSON.parse(backup.raw);for(const[k,d]of memoryDrafts)if(data.active?.id===d.id)data.active.drafts={...data.active.drafts,[k]:d.value};backup.raw=JSON.stringify(data)}catch(_){backup.unconfirmedDrafts=Object.fromEntries(memoryDrafts)}}download(backup);status('Respaldo descargado. Guárdalo en un lugar privado.')}catch(e){fail(e)}};
+ $('#importFile').onchange=async e=>{const file=e.target.files[0];if(!file)return;try{if(file.size>4000000)throw Error('wrong-backup');const data=JSON.parse(await file.text());if(confirm('¿Restaurar este respaldo de Home Gym? Solo se admite en un navegador sin progreso.'))await mutate(raw=>store.restore(raw,data),'Respaldo restaurado.',false).then(ok=>{if(ok){restoreContext();render()}})}catch(e){fail(e)}finally{e.target.value=''}};
+ $('#saveFeedback').onclick=()=>mutate(raw=>store.feedback(raw,$('#feedback').value));$('#refresh').onclick=()=>{try{snapshot=store.read();stale=false;$('#refresh').hidden=true;syncRest();render();status('Datos guardados leídos. Puedes continuar.')}catch(e){fail(e)}};
+ addEventListener('beforeunload',e=>{if(memoryDrafts.size){e.preventDefault();e.returnValue=''}});addEventListener('storage',e=>{if(e.key===KEY){stale=true;status('Otra pestaña cambió los datos. Vuelve a leerlos antes de continuar.',true);$('#refresh').hidden=false}});addEventListener('hashchange',()=>navigate(location.hash.slice(1)));
+ try{store=createStore(localStorage,navigator.locks);restStore=createRestStore(localStorage,navigator.locks);snapshot=store.read();restoreContext();syncRest();view=['hoy','semana','equipo','fuerza-a','fuerza-b','condicion','descanso'].includes(location.hash.slice(1))?location.hash.slice(1):'hoy';const s={'fuerza-a':'A','fuerza-b':'B','condicion':'C'}[view];if(s&&(!snapshot.data.active||snapshot.data.active.session===s))selectedSession=s;else if(s)view=routeFor(selectedSession);if(view==='descanso'&&!restSnapshot?.record)view=snapshot.data.active?routeFor(snapshot.data.active.session):'hoy';render();status('Datos locales listos.');document.documentElement.dataset.boot='ready'}catch(e){fail(e);document.documentElement.dataset.boot='storage-error'}
+ $('#restMini').onclick=openRest;
+ const foreground=()=>{if(document.visibilityState==='hidden'){stopRestTicker();return;}syncRest();if(view==='descanso'){if(restSnapshot?.record){if($('#restView').dataset.timerId!==restSnapshot.record.id)renderRest();}else navigate(snapshot.data.active?routeFor(snapshot.data.active.session):'hoy',{scroll:false});}paintRest();updateViewport();};
+ document.addEventListener('visibilitychange',foreground);addEventListener('focus',foreground);addEventListener('pageshow',foreground);addEventListener('pagehide',stopRestTicker);
+ addEventListener('storage',event=>{if([KEY,REST_KEY].includes(event.key))foreground()});
+ addEventListener('resize',updateViewport);visualViewport?.addEventListener('resize',updateViewport);visualViewport?.addEventListener('scroll',updateViewport);
+ $('#retryOffline').onclick=()=>offline();offline();
+}
+boot();

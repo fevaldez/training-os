@@ -4,8 +4,8 @@ const assert=require('node:assert/strict');
 const {H,A,U,M,E,J,B,O,fixture,copy,source,Storage,Locks,seed,production,historical,realV3,realRC4}=require('./storage_g3_support.cjs');
 function workflowGate(){
  const fs=require('node:fs'),{createHash}=require('node:crypto');
- // Exact authorized PR-A workflow delta. Mutation rejection and manual publication predicates remain tested.
- const pins={'.github/workflows/validate-pr.yml':'0e7669f2731b77cb089dabe278a7b1f78cca33d9f7158265d9c9012babb3b841','.github/workflows/release-pages.yml':'7be8b03c71d02afb52c488fd3d4cd4b81aaeab625c54963efa3bfd7fcbe870e6'};
+ // Exact authorized Home Gym read-only PR CI addition; FV workflow unchanged. Mutation rejection and manual publication predicates remain tested.
+ const pins={'.github/workflows/validate-pr.yml':'08863acb1d3b9ad8d6aaebd0235d3c086395e196a65c01692fa593f6dc911d32','.github/workflows/release-pages.yml':'7be8b03c71d02afb52c488fd3d4cd4b81aaeab625c54963efa3bfd7fcbe870e6'};
  for(const[file,pin]of Object.entries(pins))assert.equal(createHash('sha256').update(fs.readFileSync(file)).digest('hex'),pin,file);
 }
 async function run({reviewed=false}={}){
