@@ -16,7 +16,7 @@ export const remainingMs=(r,now=Date.now())=>r?.state==='running'?Math.max(0,r.e
 export const restState=(r,now=Date.now())=>r?.state==='running'&&remainingMs(r,now)===0?'expired':r?.state;
 export const restTime=ms=>{const s=Math.ceil(Math.max(0,ms)/1000);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
 export function validRest(r,a) {
- if(!r||r.schema!==1||r.programId!==PROGRAM.programId||!a||r.sessionId!==a.id||a.programId!==r.programId
+ if(!r||r.schema!==1||r.programId!==PROGRAM.programId||!a||a.session==='C'||r.sessionId!==a.id||a.programId!==r.programId
   ||typeof r.id!=='string'||!['running','paused','expired','skipped','manual'].includes(r.state)
   ||!Number.isSafeInteger(r.revision)||r.revision<1||!Number.isFinite(r.updatedAt)
   ||typeof r.sourceKey!=='string'||typeof r.nextKey!=='string'||typeof r.sourceConfirmedAt!=='string')return false;
@@ -50,7 +50,7 @@ export function createRestStore(storage,locks,{now=()=>Date.now()}={}) {
   read,
   start:(sessionId,sourceKey)=>locked(()=>{
    const a=workout.read().data.active,source=a?.logs?.[sourceKey];
-   if(a?.id!==sessionId||source?.status!=='done'||a.drafts?.[sourceKey]||typeof source.confirmedAt!=='string')return {raw:null,record:null};
+   if(a?.session==='C'||a?.id!==sessionId||source?.status!=='done'||a.drafts?.[sourceKey]||typeof source.confirmedAt!=='string')return {raw:null,record:null};
    const nextKey=nextRestSet(a,sourceKey);if(!nextKey)return {raw:null,record:null};
    const previous=read();
    // A repeated acknowledgement/render cannot reset or revive the same rest.
@@ -63,11 +63,9 @@ export function createRestStore(storage,locks,{now=()=>Date.now()}={}) {
   change:(expected,action,value)=>locked(()=>{
    const current=read();if(!current.record||current.raw!==expected)throw Error('stale-timer');
    const r={...current.record},t=now(),left=remainingMs(r,t);
-   if(action==='pause'&&r.state==='running'){r.state=left?'paused':'expired';r.remainingMs=left;r.endsAt=null;}
-   else if(action==='resume'&&r.state==='paused'){r.state=left?'running':'expired';r.endsAt=left?t+left:null;r.remainingMs=left?null:0;}
-   else if(action==='adjust'&&r.originalDurationMs!==null&&[-15000,15000].includes(value)){
-    if(r.state==='paused'){r.remainingMs=Math.max(0,left+value);if(r.remainingMs===0)r.state='expired';}
-    else if(['running','expired'].includes(r.state)){const next=Math.max(0,left+value);r.state=next?'running':'expired';r.endsAt=next?t+next:null;r.remainingMs=next?null:0;}
+   if(r.state==='paused'&&action!=='skip')throw Error('legacy-rest-interrupted');
+   if(action==='adjust'&&r.originalDurationMs!==null&&[-15000,15000].includes(value)){
+    if(['running','expired'].includes(r.state)){const next=Math.max(0,left+value);r.state=next?'running':'expired';r.endsAt=next?t+next:null;r.remainingMs=next?null:0;}
     else throw Error('timer-action-unavailable');
    }
    else if(action==='manual'&&r.state==='manual'&&Number.isSafeInteger(value)&&value>0){r.originalDurationMs=value;r.state='running';r.endsAt=t+value;r.remainingMs=null;}

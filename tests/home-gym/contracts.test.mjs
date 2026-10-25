@@ -1,3 +1,4 @@
+import { createConditionStore, CONDITION_KEY, timeline, position, conditionRange, clockChanged } from '../../apps/home-gym/condition.mjs';
 import { createRestStore, REST_KEY, restDuration, remainingMs, restState, restTime } from '../../apps/home-gym/rest.mjs';
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -115,14 +116,14 @@ await test('4 emergency replaces one strength session and cannot become a fourth
  await assert.rejects(()=>h.store.start(s.raw,1,'B'),/already-completed/);assert.equal(s.data.history.length,1);
 });
 await test('4 complete offline install, scoped pins and safe lifecycle',async()=>{
- const w=worker();await w.event('install');await w.event('activate');const {BUILD,CACHE}=w.meta();assert.equal(w.store.get(CACHE).size,12);
+ const w=worker();await w.event('install');await w.event('activate');const {BUILD,CACHE}=w.meta();assert.equal(w.store.get(CACHE).size,14);
  assert(!w.calls.some(x=>['skipWaiting','claim'].includes(x[0])));
  const r=await w.event('fetch',{request:{url:scope,method:'GET',mode:'navigate'}});assert.equal(await r.text(),read(root+'index.html').toString());
  for(const [url,method,mode]of [[scope+'other/','GET','navigate'],['https://else.invalid/','GET','cors'],[scope,'POST','navigate']])assert.equal(await w.event('fetch',{request:{url,method,mode}}),undefined);
  for(const registrationScope of ['https://synthetic.invalid/foreign/','https://foreign.invalid/']){const bad=worker({registrationScope});await assert.rejects(()=>bad.event('install'));assert.equal(bad.store.size,0)}
  let replies=[];await w.event('message',{data:{type:'HOME_GYM_OFFLINE_STATUS'},source:{url:scope},ports:[{postMessage:x=>replies.push(x)}]});assert.equal(replies.at(-1).ready,true);
  const before=replies.length;await w.event('message',{data:{type:'HOME_GYM_OFFLINE_STATUS'},source:{url:scope+'foreign/'},ports:[{postMessage:x=>replies.push(x)}]});assert.equal(replies.length,before);
- assert.equal(BUILD.assets.length,12);
+ assert.equal(BUILD.assets.length,14);
 });
 for(const fault of ['network','http','hash','portal','size','quota','cache-open','cache-read','redirect']) await test('4 failed offline installation: '+fault+' retains previous and unrelated caches',async()=>{
  const store=new Map([['home-gym-shell-v1-previous',new Map()],['tos-shell-v1-sentinel',new Map()],['unrelated',new Map()]]);
@@ -136,7 +137,7 @@ await test('4 corrupted cache fails closed offline and repairs only its own vers
 await test('6 deterministic allowlist, independent artifact and mandatory read-only PR CI',()=>{
  execFileSync('python3',[root+'build.py','--check']);
  const artifact=JSON.parse(read(root+'artifact.json'));
- assert.equal(Object.keys(artifact.files).length,13);
+ assert.equal(Object.keys(artifact.files).length,15);
  for(const[n,pin]of Object.entries(artifact.files)){assert.equal(read(root+n).length,pin.size);assert.equal(sha(read(root+n)),pin.sha256)}
  const code=`import importlib.util; s=importlib.util.spec_from_file_location('b','${root}build.py'); m=importlib.util.module_from_spec(s); s.loader.exec_module(m); import sys; sys.stdout.buffer.write(m.archive(m.build()))`;
  const first=execFileSync('python3',['-B','-c',code]);assert.deepEqual(first,execFileSync('python3',['-B','-c',code]));
@@ -278,14 +279,18 @@ await test('V4.1 E/F/G/J wall-clock jumps 30/90/180 seconds reconstruct without 
   if(elapsed>=90000){const expired=await h.timer.change(raw,'expire');assert.equal(expired.record.state,'expired');assert.equal(remainingMs(expired.record,h.clock()),0);await assert.rejects(()=>h.timer.change(raw,'expire'),/stale-timer/);}
  }
 });
-await test('V4.1 K/L explicit pause, resume, +/-15, zero clamp, reset and skip preserve workout data',async()=>{
- const h=await timerHarness('45 s'),before=h.storage.map.get(KEY);let r=await h.timer.start(h.sessionId,'asq:1');h.jump(10000);r=await h.timer.change(r.raw,'pause');assert.equal(r.record.remainingMs,35000);h.jump(180000);assert.equal(remainingMs(h.timer.read().record,h.clock()),35000);
- r=await h.timer.change(r.raw,'adjust',15000);assert.equal(r.record.remainingMs,50000);r=await h.timer.change(r.raw,'resume');assert.equal(r.record.endsAt,h.clock()+50000);
- r=await h.timer.change(r.raw,'adjust',-15000);assert.equal(remainingMs(r.record,h.clock()),35000);for(let i=0;i<4;i++)r=await h.timer.change(r.raw,'adjust',-15000);assert.equal(remainingMs(r.record,h.clock()),0);assert.equal(r.record.state,'expired');
- r=await h.timer.change(r.raw,'adjust',15000);assert.equal(remainingMs(r.record,h.clock()),15000);r=await h.timer.change(r.raw,'reset');assert.equal(remainingMs(r.record,h.clock()),45000);
- r=await h.timer.change(r.raw,'skip');assert.equal(r.record.state,'skipped');assert.equal(h.storage.map.get(KEY),before);assert.equal((await h.timer.start(h.sessionId,'asq:1')).record.state,'skipped');
- const manual=await timerHarness('Lo necesario');r=await manual.timer.start(manual.sessionId,'asq:1');assert.equal(r.record.state,'manual');assert.equal(r.record.endsAt,null);assert.equal(r.record.prescribedMs,null);assert.equal(r.record.originalDurationMs,null);
- r=await manual.timer.change(r.raw,'manual',75000);assert.equal(r.record.endsAt,manual.clock()+75000);r=await manual.timer.change(r.raw,'reset');assert.equal(remainingMs(r.record,manual.clock()),75000);assert.equal(r.record.prescribedRest,'Lo necesario');r=await manual.timer.change(r.raw,'pause');for(let i=0;i<5;i++)r=await manual.timer.change(r.raw,'adjust',-15000);assert.equal(r.record.state,'expired');assert.equal(restTime(remainingMs(r.record,manual.clock())),'00:00');
+await test('V4.2 no new rest pause/resume; legacy paused passage and retained adjustments preserve workout bytes',async()=>{
+ const h=await timerHarness('45 s'),before=h.storage.map.get(KEY);let r=await h.timer.start(h.sessionId,'asq:1');h.jump(10000);
+ for(const action of ['pause','resume'])await assert.rejects(()=>h.timer.change(r.raw,action),/timer-action-unavailable/);
+ r=await h.timer.change(r.raw,'adjust',15000);assert.equal(remainingMs(r.record,h.clock()),50000);
+ r=await h.timer.change(r.raw,'adjust',-15000);for(let i=0;i<4;i++)r=await h.timer.change(r.raw,'adjust',-15000);assert.equal(remainingMs(r.record,h.clock()),0);
+ r=await h.timer.change(r.raw,'reset');assert.equal(remainingMs(r.record,h.clock()),45000);
+ const legacy={...r.record,state:'paused',endsAt:null,remainingMs:35000,future:{keep:true}};h.storage.map.set(REST_KEY,JSON.stringify(legacy));r=h.timer.read();h.jump(180000);
+ assert.deepEqual(h.timer.read().record,legacy);assert.equal(remainingMs(r.record,h.clock()),35000);
+ for(const [action,value]of [['pause'],['resume'],['reset'],['adjust',15000]])await assert.rejects(()=>h.timer.change(r.raw,action,value),/legacy-rest-interrupted/);
+ r=await h.timer.change(r.raw,'skip');assert.equal(r.record.state,'skipped');assert.deepEqual(r.record.future,{keep:true});assert.equal(h.storage.map.get(KEY),before);
+ const manual=await timerHarness('Lo necesario');r=await manual.timer.start(manual.sessionId,'asq:1');assert.equal(r.record.state,'manual');assert.equal(r.record.originalDurationMs,null);
+ r=await manual.timer.change(r.raw,'manual',75000);assert.equal(r.record.endsAt,manual.clock()+75000);r=await manual.timer.change(r.raw,'reset');assert.equal(remainingMs(r.record,manual.clock()),75000);
 });
 await test('V4.1 N/O stale timer tabs, source revisions, completed and replaced sessions cannot resurrect rest',async()=>{
  const h=await timerHarness();let r=await h.timer.start(h.sessionId,'asq:1'),old=r.raw;r=await h.timer.change(r.raw,'adjust',15000);await assert.rejects(()=>h.timer.change(old,'reset'),/stale-timer/);
@@ -299,6 +304,98 @@ await test('V4.1 P timer quota/readback failures cannot mutate workout bytes or 
   await assert.rejects(()=>h.timer.start(h.sessionId,'asq:1'));assert.equal(h.storage.map.get(KEY),before);h.storage.fault=null;
   const imported=harness();await imported.store.restore(null,backup);assert.deepEqual(imported.store.read().data.active,h.store.read().data.active);assert.equal(imported.storage.map.has(REST_KEY),false);
  }
+});
+async function conditionHarness(week=1){
+ const storage=new Storage({'fv4.history':'synthetic sentinel'}),locks=new Locks(),store=createStore(storage,locks);let t=1000000;
+ const timer=createConditionStore(storage,locks,{now:()=>t});let s=await store.start(null,week,'C');
+ return {storage,locks,store,timer,id:s.data.active.id,jump:ms=>t+=ms,now:()=>t};
+}
+const declared=(level='partial',seconds=60,cycles=0)=>({weight:'',reps:seconds+' s declarados',note:'synthetic',status:level==='not_performed'?'skipped':'done',completionLevel:level,actualReportedSeconds:seconds,cyclesReported:cycles,reviewed:true,clockReviewed:true,modality:'walk',confirmedAt:'synthetic-confirmation'});
+await test('V4.2 12 source timelines; W1/W6/W9/W12 exact phases, durations, boundaries and RPE',()=>{
+ for(const source of PROGRAM.plan){const p=timeline(source);assert.equal(p.length,source.week===6?1:source.intervals*2+2);
+  if(source.week===6){assert.equal(p[0].seconds,900);assert.equal(p[0].effort,'RPE 3–4');assert.equal(timeline(source,{walk:20})[0].seconds,1200);}
+  else{assert.equal(p[0].seconds,300);assert.equal(p.at(-1).seconds,180);assert.equal(timeline(source,{cooldown:5}).at(-1).seconds,300);
+   for(const phase of p.filter(p=>p.kind==='effort')){assert.equal(phase.seconds,source.hard);assert.equal(phase.effort,source.effort);}
+   for(const phase of p.filter(p=>p.kind==='easy')){assert.equal(phase.seconds,source.easy);assert(phase.effort.includes('conversacional'));}
+  }
+ }
+ for(const [w,n,hard,easy,range]of [[1,4,45,75,'16–18 min'],[9,6,30,90,'20–22 min'],[12,4,45,75,'16–18 min']]){
+  const p=PROGRAM.plan[w-1];assert.deepEqual([p.intervals,p.hard,p.easy],[n,hard,easy]);assert.equal(conditionRange(w),range);
+ }
+ assert.equal(conditionRange(6),'15–20 min');assert.throws(()=>timeline(PROGRAM.plan[5],{walk:14}));assert.throws(()=>timeline(PROGRAM.plan[5],{modality:'row'}));assert.throws(()=>timeline(PROGRAM.plan[0],{cooldown:2}));
+});
+await test('V4.2 start acknowledgement, immutable deadline/snapshot, rapid duplicate start and concurrent tabs',async()=>{
+ const h=await conditionHarness();const s=h.store.read(),before=s.raw;
+ await assert.rejects(()=>h.timer.start(null,h.id),/active-conflict/);assert.equal(h.storage.map.has(CONDITION_KEY),false);
+ const [a,b]=await Promise.all([h.timer.start(s.raw,h.id,{cooldown:4}),h.timer.start(s.raw,h.id,{cooldown:5})]);assert.equal(a.raw,b.raw);assert.equal(a.record.durationMs,1020000);assert.equal(a.record.endsAt,h.now()+1020000);
+ const raw=a.raw;h.jump(180000);assert.equal((await h.timer.start(s.raw,h.id,{cooldown:3})).raw,raw);assert.equal(h.storage.map.get(KEY),before);
+ assert.equal(a.record.sourceSHA256,PROGRAM.sourceSHA256);assert.equal(a.record.programVersion,s.data.active.programVersion);assert.deepEqual(a.record.snapshot,s.data.active.plan.conditioning);
+ assert(!('remainingMs'in a.record));assert.equal(h.timer.pause,undefined);assert.equal(h.timer.resume,undefined);assert.equal(h.timer.adjust,undefined);
+});
+await test('V4.2 fake 30/90/180s and phase/full-deadline jumps never write outcomes or decrement counters',async()=>{
+ const h=await conditionHarness(),s=h.store.read(),r=await h.timer.start(s.raw,h.id),workout=h.storage.map.get(KEY),writes=h.storage.events.filter(e=>e[0]==='set').length;
+ for(const elapsed of [30000,90000,180000,300000,345000,420000,960000,1900000]){
+  const p=position(r.record,r.record.startedAt+elapsed);assert.equal(h.timer.read().raw,r.raw);assert.equal(h.storage.map.get(KEY),workout);assert.equal(h.storage.events.filter(e=>e[0]==='set').length,writes);
+  if(elapsed===300000){assert.equal(p.phase.kind,'effort');assert.equal(p.remaining,45000);}
+  if(elapsed===345000){assert.equal(p.phase.kind,'easy');assert.equal(p.remaining,75000);}
+  if(elapsed===420000){assert.equal(p.phase.cycle,2);assert.equal(p.phase.kind,'effort');}
+  if(elapsed>=960000){assert(p.reached);assert.equal(p.remaining,0);}
+ }
+ assert.equal(h.store.read().data.history.length,0);assert.deepEqual(h.store.read().data.active.logs,{});
+ assert(!clockChanged(100,100,1000,1000));assert(clockChanged(100,100,100000,1000));assert(clockChanged(100000,1000,100,2000));
+});
+await test('V4.2 explicit full/partial/not-performed only; stop and accidental cancellation never fabricate credit',async()=>{
+ for(const level of ['full','partial','not_performed']){const h=await conditionHarness(),s=h.store.read();let r=await h.timer.start(s.raw,h.id);
+  await assert.rejects(()=>h.timer.outcome(s.raw,h.id,r.raw,declared('full',960,4)),/stop-before-outcome/);
+  if(level==='full')h.jump(960000);else{h.jump(30000);r=await h.timer.stop(r.raw);}
+  if(level!=='full')await assert.rejects(()=>h.timer.outcome(s.raw,h.id,r.raw,declared('full',960,4)),/full-condition-not-confirmed/);
+  const result=await h.timer.outcome(s.raw,h.id,r.raw,declared(level,level==='full'?960:level==='partial'?30:0,level==='full'?4:0));
+  assert.equal(result.snapshot.data.active.logs['condition:1'].completionLevel,level);assert.equal(h.timer.read().record,null);assert.equal(result.snapshot.data.history.length,0);
+  await assert.rejects(()=>h.timer.cancel(result.snapshot.raw,h.id,h.storage.getItem(CONDITION_KEY)),/confirmed-session-cannot-cancel/);
+  const finished=await h.store.finish(result.snapshot.raw,h.id);assert.equal(finished.data.history.length,1);assert.equal(h.timer.read().record,null);
+ }
+ const h=await conditionHarness(),s=h.store.read();let r=await h.timer.start(s.raw,h.id);await assert.rejects(()=>h.timer.cancel(s.raw,h.id,r.raw),/stop-before-cancel/);r=await h.timer.stop(r.raw);
+ const canceled=await h.timer.cancel(s.raw,h.id,r.raw);assert.equal(canceled.data.active,null);assert.equal(canceled.data.history.length,0);assert.equal(h.timer.read().record,null);assert.equal(h.storage.map.get('fv4.history'),'synthetic sentinel');
+});
+await test('V4.2 time-reached persists without credit and cannot restart after a backwards clock change',async()=>{
+ const h=await conditionHarness(),s=h.store.read();let r=await h.timer.start(s.raw,h.id);
+ await assert.rejects(()=>h.timer.reach(r.raw),/condition-time-not-reached/);h.jump(960000);r=await h.timer.reach(r.raw);assert.equal(r.record.state,'time_reached');assert.equal(r.record.endsAt,r.record.startedAt+960000);
+ h.jump(-300000);assert(position(h.timer.read().record,h.now()).reached);assert.equal(position(r.record,h.now()).remaining,0);assert.deepEqual(h.store.read().data.active.logs,{});assert.equal(h.store.read().data.history.length,0);
+});
+await test('V4.2 timer quota/readback and failed stop cannot damage workout; outcome acknowledgement stays authoritative',async()=>{
+ for(const failure of ['quota','readback']){const h=await conditionHarness(),s=h.store.read();let wrote=false;
+  h.storage.fault=(op,key)=>{if(key!==CONDITION_KEY)return;if(failure==='quota'&&op==='set')throw Error('quota');if(failure==='readback'){if(op==='set')wrote=true;if(op==='get'&&wrote)return null;}};
+  await assert.rejects(()=>h.timer.start(s.raw,h.id));assert.equal(h.storage.map.get(KEY),s.raw);h.storage.fault=null;
+ }
+ const h=await conditionHarness(),s=h.store.read();let r=await h.timer.start(s.raw,h.id);h.storage.fault=(op,key)=>{if(op==='set'&&key===CONDITION_KEY)throw Error('quota')};
+ await assert.rejects(()=>h.timer.stop(r.raw),/quota/);assert.equal(h.storage.map.get(CONDITION_KEY),r.raw);assert.equal(h.storage.map.get(KEY),s.raw);h.storage.fault=null;r=await h.timer.stop(r.raw);
+ h.storage.fault=(op,key)=>{if(op==='set'&&key===KEY)throw Error('workout quota')};await assert.rejects(()=>h.timer.outcome(s.raw,h.id,r.raw,declared()),/workout quota/);assert.equal(h.storage.map.get(KEY),s.raw);
+ h.storage.fault=(op,key)=>{if(op==='set'&&key===CONDITION_KEY)throw Error('timer quota')};const result=await h.timer.outcome(s.raw,h.id,r.raw,declared());assert(result.timerWarning);assert.equal(result.snapshot.data.active.logs['condition:1'].status,'done');assert.equal(h.timer.read().record,null);
+});
+await test('V4.2 stale tabs, replacement sessions, clock review and immutable saved histories/backups',async()=>{
+ const h=await conditionHarness(),s=h.store.read();let r=await h.timer.start(s.raw,h.id);const old=r.raw;r=await h.timer.flagClock(r.raw);assert(r.record.clockWarning);assert.equal(r.record.endsAt,JSON.parse(old).endsAt);
+ await assert.rejects(()=>h.timer.stop(old),/stale-condition/);r=await h.timer.stop(r.raw);await assert.rejects(()=>h.timer.outcome(s.raw,h.id,r.raw,{...declared(),clockReviewed:false}),/clock-review-required/);
+ const result=await h.timer.outcome(s.raw,h.id,r.raw,{...declared(),future:{keep:true}});const finished=await h.store.finish(result.snapshot.raw,h.id),history=JSON.stringify(finished.data.history);
+ const target=harness();await target.store.restore(null,h.store.exportRaw());assert.equal(JSON.stringify(target.store.read().data.history),history);assert.equal(target.storage.map.has(CONDITION_KEY),false);
+ const later=await h.store.start(finished.raw,2,'C');assert.equal(h.timer.read().record,null);await assert.rejects(()=>h.timer.stop(r.raw),/stale-condition/);assert.equal(JSON.stringify(later.data.history),history);
+});
+await test('V4.2 failed outcome readback and competing declarations cannot duplicate or resurrect confirmed activity',async()=>{
+ const h=await conditionHarness(),s=h.store.read();let r=await h.timer.start(s.raw,h.id);r=await h.timer.stop(r.raw);let rejectRead=false;
+ h.storage.fault=(op,key,value)=>{if(key!==KEY)return;if(op==='set'&&JSON.parse(value).active?.logs['condition:1'])rejectRead=true;if(op==='get'&&rejectRead){rejectRead=false;return s.raw;}};
+ await assert.rejects(()=>h.timer.outcome(s.raw,h.id,r.raw,declared()),/read-back-failed/);h.storage.fault=null;
+ const verified=h.store.read();assert.equal(verified.data.active.logs['condition:1'].completionLevel,'partial');assert.equal(h.timer.read().record,null);
+ await assert.rejects(()=>h.timer.outcome(s.raw,h.id,r.raw,declared()),/stale-tab/);const done=await h.store.finish(verified.raw,h.id);assert.equal(done.data.history.length,1);
+ const concurrent=await conditionHarness(),before=concurrent.store.read();let clock=await concurrent.timer.start(before.raw,concurrent.id);clock=await concurrent.timer.stop(clock.raw);
+ const attempts=await Promise.allSettled([concurrent.timer.outcome(before.raw,concurrent.id,clock.raw,declared()),concurrent.timer.outcome(before.raw,concurrent.id,clock.raw,declared('not_performed',0,0))]);
+ assert.equal(attempts.filter(x=>x.status==='fulfilled').length,1);assert.equal(Object.keys(concurrent.store.read().data.active.logs).length,1);
+});
+await test('V4.2 old condition:1, unfinished backups and unknown-version plans stay readable without a ghost clock',async()=>{
+ const h=await conditionHarness();let s=h.store.read();s.data.future={keep:true};s.data.active.programVersion='future-version';delete s.data.active.plan.conditioning;h.storage.map.set(KEY,JSON.stringify(s.data));s=h.store.read();
+ await assert.rejects(()=>h.timer.start(s.raw,h.id),/condition-version-unavailable/);assert.equal(h.storage.map.has(CONDITION_KEY),false);
+ const result=await h.timer.outcome(s.raw,h.id,null,declared());const finished=await h.store.finish(result.snapshot.raw,h.id);assert.deepEqual(finished.data.future,{keep:true});
+ const old=await conditionHarness();s=old.store.read();s=await old.store.log(s.raw,old.id,'condition:1',{...log,future:'keep'});s=await old.store.finish(s.raw,old.id);
+ const restored=harness();await restored.store.restore(null,old.store.exportRaw());assert.deepEqual(restored.store.read().data.history,s.data.history);
+ const activeBackup=await conditionHarness();s=activeBackup.store.read();await activeBackup.timer.start(s.raw,activeBackup.id);const imported=harness();await imported.store.restore(null,activeBackup.store.exportRaw());assert.equal(createConditionStore(imported.storage,new Locks()).read().record,null);assert(imported.store.read().data.active);
 });
 console.log(`HOME_GYM_CONTRACT_TOTAL ${tests.filter(Boolean).length}/${tests.length} PASS`);
 if(tests.some(x=>!x))process.exitCode=1;

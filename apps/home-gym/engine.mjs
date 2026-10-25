@@ -16,6 +16,7 @@ export function prescription(week, session) {
   const p = PROGRAM.plan[week - 1];
   if (session === 'C') return {
     title: 'Condición progresiva', week, session, phase: p.phase, effort: p.effort,
+    conditioning: { ...clone(p), sourceSHA256: PROGRAM.sourceSHA256 },
     protocol: week === 6
       ? '15–20 min de caminata muy suave, ritmo conversacional. Sin intervalos.'
       : `Camina o pedalea si se dispone de equipo adecuado: 5 min suave → ${p.intervals} ciclos de ${p.hard} s a ${p.effort} + ${p.easy} s suave → 3–5 min muy suave. Sin sprints; intensidad controlada.`,
@@ -130,6 +131,22 @@ export function createStore(storage, locks, options = {}) {
       if (data.active?.id !== id || !setKeys(data.active.plan).includes(key)) throw Error('active-conflict');
       data.active.logs[key] = clone(value);
       if (data.active.drafts) delete data.active.drafts[key];
+    }),
+    // Conditioning still resolves one historical key. Its clock guard runs inside
+    // this existing atomic workout transaction, never in a second lock domain.
+    conditionOutcome: (expected, id, value, guard) => change(expected, data => {
+      const a = data.active;
+      if (a?.id !== id || a.session !== 'C' || a.logs['condition:1'] || typeof guard !== 'function') throw Error('active-conflict');
+      guard(a);
+      a.logs['condition:1'] = clone(value);
+      if (a.drafts) delete a.drafts['condition:1'];
+    }),
+    cancelCondition: (expected, id, guard) => change(expected, data => {
+      const a = data.active;
+      if (a?.id !== id || a.session !== 'C' || Object.keys(a.logs).length
+          || data.history.some(h => h.id === id) || typeof guard !== 'function') throw Error('confirmed-session-cannot-cancel');
+      guard(a);
+      data.active = null;
     }),
     finish: async (expected, id) => {
       // A failed acknowledgement can be retried without duplicating an already committed log.

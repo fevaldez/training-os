@@ -16,7 +16,7 @@
 <header class="app-header"><button class="back-button" data-route="hoy" aria-label="Volver a Hoy">‹ <span>Hoy</span></button><span class="brand">HOME GYM</span><button class="week-badge" data-route="semana" id="weekBadge">Semana 1</button></header>
 <div class="save-banner" id="saveState" role="status" aria-live="polite">Comprobando almacenamiento…</div>
 <button class="btn secondary refresh" id="refresh" hidden>Volver a leer los datos guardados</button>
-<p id="restWarning" class="timer-warning" role="status" hidden></p><button id="restMini" class="rest-mini" hidden><span>DESCANSO · <b id="restMiniClock">00:00</b></span><span>Volver al descanso →</span></button><p id="restAnnounce" class="sr-only" role="status" aria-live="polite"></p><main>
+<p id="restWarning" class="timer-warning" role="status" hidden></p><button id="restMini" class="rest-mini" hidden><span>DESCANSO · <b id="restMiniClock">00:00</b></span><span>Volver al descanso →</span></button><p id="restAnnounce" class="sr-only" role="status" aria-live="polite"></p><button id="conditionMini" class="rest-mini" hidden><span><span id="conditionMiniState">CONDICIÓN</span> · <b id="conditionMiniClock">00:00</b></span><span>Volver al entrenamiento →</span></button><p id="conditionWarning" class="timer-warning" role="status" hidden></p><p id="conditionAnnounce" class="sr-only" role="status" aria-live="polite"></p><main>
 <section class="view" id="hoy" data-view="hoy">
 <div class="page-heading"><p class="eyebrow">Un paso a la vez</p><h1 tabindex="-1">Hoy</h1><p class="subtitle" id="homeSubtitle">Dos días de fuerza. Uno de condición.</p></div>
 <div id="todayCard"></div><div class="progress-brief" id="homeProgress" aria-label="Resumen de progreso local"></div>
@@ -51,5 +51,6 @@
 </main>
 </div>
 <nav class="tab-bar" aria-label="Navegación principal"><button data-route="hoy" aria-current="page"><span aria-hidden="true">⌂</span>Hoy</button><button data-route="semana"><span aria-hidden="true">▦</span>Semana</button><button data-route="equipo"><span aria-hidden="true">▥</span>Equipo</button></nav>
+<dialog id="conditionGuide" aria-labelledby="guideTitle"><div id="conditionGuideContent"></div></dialog>
 <noscript>Activa JavaScript para abrir el calendario y guardar sesiones.</noscript>
 </body></html>
