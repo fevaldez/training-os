@@ -1,4 +1,4 @@
-import { createConditionStore, CONDITION_KEY, timeline, position, conditionRange, clockChanged } from '../../apps/home-gym/condition.mjs';
+import { createConditionStore, CONDITION_KEY, timeline, position, conditionRange, clockChanged, guidedResult } from '../../apps/home-gym/condition.mjs';
 import { createRestStore, REST_KEY, restDuration, remainingMs, restState, restTime } from '../../apps/home-gym/rest.mjs';
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -330,7 +330,7 @@ await test('V4.2 start acknowledgement, immutable deadline/snapshot, rapid dupli
  const [a,b]=await Promise.all([h.timer.start(s.raw,h.id,{cooldown:4}),h.timer.start(s.raw,h.id,{cooldown:5})]);assert.equal(a.raw,b.raw);assert.equal(a.record.durationMs,1020000);assert.equal(a.record.endsAt,h.now()+1020000);
  const raw=a.raw;h.jump(180000);assert.equal((await h.timer.start(s.raw,h.id,{cooldown:3})).raw,raw);assert.equal(h.storage.map.get(KEY),before);
  assert.equal(a.record.sourceSHA256,PROGRAM.sourceSHA256);assert.equal(a.record.programVersion,s.data.active.programVersion);assert.deepEqual(a.record.snapshot,s.data.active.plan.conditioning);
- assert(!('remainingMs'in a.record));assert.equal(h.timer.pause,undefined);assert.equal(h.timer.resume,undefined);assert.equal(h.timer.adjust,undefined);
+ assert(!('remainingMs'in a.record));assert.equal(typeof h.timer.pause,'function');assert.equal(typeof h.timer.resume,'function');assert.equal(h.timer.adjust,undefined);
 });
 await test('V4.2 fake 30/90/180s and phase/full-deadline jumps never write outcomes or decrement counters',async()=>{
  const h=await conditionHarness(),s=h.store.read(),r=await h.timer.start(s.raw,h.id),workout=h.storage.map.get(KEY),writes=h.storage.events.filter(e=>e[0]==='set').length;
@@ -396,6 +396,47 @@ await test('V4.2 old condition:1, unfinished backups and unknown-version plans s
  const old=await conditionHarness();s=old.store.read();s=await old.store.log(s.raw,old.id,'condition:1',{...log,future:'keep'});s=await old.store.finish(s.raw,old.id);
  const restored=harness();await restored.store.restore(null,old.store.exportRaw());assert.deepEqual(restored.store.read().data.history,s.data.history);
  const activeBackup=await conditionHarness();s=activeBackup.store.read();await activeBackup.timer.start(s.raw,activeBackup.id);const imported=harness();await imported.store.restore(null,activeBackup.store.exportRaw());assert.equal(createConditionStore(imported.storage,new Locks()).read().record,null);assert(imported.store.read().data.active);
+});
+await test('V4.3 pause freezes guided time, survives reload and resume writes a fresh absolute deadline',async()=>{
+ const h=await conditionHarness(),s=h.store.read();let r=await h.timer.start(s.raw,h.id);h.jump(30000);r=await h.timer.pause(r.raw);
+ const frozen=r.raw,p=position(r.record,h.now());assert.equal(r.record.state,'paused');assert.equal(r.record.endsAt,null);assert.equal(r.record.remainingMs,930000);
+ h.jump(180000);assert.deepEqual(position(r.record,h.now()),p);assert.equal(h.timer.read().raw,frozen);
+ const again=createConditionStore(h.storage,h.locks,{now:h.now});r=await again.resume(frozen);assert.equal(r.record.endsAt,h.now()+930000);h.jump(10000);
+ assert.equal(position(r.record,h.now()).played,40000);assert.equal(position(r.record,h.now()).remaining,260000);assert.deepEqual(r.record.events.map(e=>e.type),['pause','resume']);assert.equal(h.store.read().raw,s.raw);
+});
+await test('V4.3 next and skip preserve distinct events and exclude unperformed time and cycles',async()=>{
+ const h=await conditionHarness(),s=h.store.read();let r=await h.timer.start(s.raw,h.id);h.jump(20000);r=await h.timer.advance(r.raw,'next');assert.equal(position(r.record,h.now()).phase.kind,'effort');h.jump(10000);r=await h.timer.advance(r.raw,'skip');
+ assert.deepEqual(r.record.events.map(e=>e.type),['next','skip']);assert.equal(position(r.record,h.now()).played,30000);assert.equal(position(r.record,h.now()).phase.kind,'easy');
+ h.jump(r.record.endsAt-h.now());r=await h.timer.reach(r.raw);const g=guidedResult(r.record,h.now());assert.equal(g.level,'partial');assert.equal(g.seconds,645);assert.equal(g.cycles,3);
+ await assert.rejects(()=>h.timer.finalize(s.raw,h.id,r.raw,declared('full',960,4)),/full-condition-not-confirmed/);
+ const done=await h.timer.finalize(s.raw,h.id,r.raw,declared('partial',g.seconds,g.cycles));assert.equal(done.data.active,null);assert.equal(done.data.history[0].logs['condition:1'].conditionSnapshot.advancedMs,315000);
+});
+await test('V4.3 one action atomically finalizes and closes, is idempotent and preserves unknown fields/backups',async()=>{
+ const h=await conditionHarness();let s=h.store.read();s.data.future={keep:true};s.data.active.future={keep:true};h.storage.map.set(KEY,JSON.stringify(s.data));s=h.store.read();let r=await h.timer.start(s.raw,h.id);h.jump(30000);r=await h.timer.stop(r.raw);
+ const count=()=>h.storage.events.filter(e=>e[0]==='set'&&e[1]===KEY).length,before=count();const done=await h.timer.finalize(s.raw,h.id,r.raw,declared('partial',30));assert.equal(count(),before+1);assert.equal(done.data.active,null);assert.equal(done.data.history.length,1);assert.deepEqual(done.data.future,{keep:true});assert.deepEqual(done.data.history[0].future,{keep:true});
+ const same=await h.timer.finalize(s.raw,h.id,r.raw,declared('partial',30));assert.equal(same.raw,done.raw);assert.equal(count(),before+1);
+ const next=await h.store.start(done.raw,2,'A');assert.equal((await h.timer.finalize(s.raw,h.id,r.raw,declared())).raw,next.raw);
+ const target=harness();await target.store.restore(null,h.store.exportRaw());assert.deepEqual(target.store.read().data.history,done.data.history);assert.equal(target.storage.map.has(CONDITION_KEY),false);
+});
+await test('V4.3 finalization quota, lost acknowledgement and competing tabs never lose or duplicate a result',async()=>{
+ const h=await conditionHarness(),s=h.store.read();let r=await h.timer.start(s.raw,h.id);h.jump(30000);r=await h.timer.stop(r.raw);
+ h.storage.fault=(op,k)=>{if(op==='set'&&k===KEY)throw Error('quota')};await assert.rejects(()=>h.timer.finalize(s.raw,h.id,r.raw,declared()),/quota/);assert.equal(h.storage.map.get(KEY),s.raw);
+ let lost=false;h.storage.fault=(op,k)=>{if(k===KEY&&op==='set')lost=true;if(k===KEY&&op==='get'&&lost){lost=false;return s.raw;}};
+ await assert.rejects(()=>h.timer.finalize(s.raw,h.id,r.raw,declared()),/read-back-failed/);h.storage.fault=null;assert.equal(h.store.read().data.history.length,1);assert.equal(h.store.read().data.active,null);
+ await h.timer.finalize(s.raw,h.id,r.raw,declared());assert.equal(h.store.read().data.history.length,1);
+ const c=await conditionHarness(),a=c.store.read();let t=await c.timer.start(a.raw,c.id);c.jump(60000);t=await c.timer.stop(t.raw);
+ await Promise.allSettled([c.timer.finalize(a.raw,c.id,t.raw,declared()),c.timer.finalize(a.raw,c.id,t.raw,declared())]);assert.equal(c.store.read().data.history.length,1);
+});
+await test('V4.3 V4.2 schema-1 clock reads without mutation and upgrades only on explicit control',async()=>{
+ const h=await conditionHarness(),s=h.store.read();let r=await h.timer.start(s.raw,h.id);const old={...r.record,schema:1,future:{keep:true}};for(const k of ['cursorMs','playedMs','segmentStartedAt','events'])delete old[k];h.storage.map.set(CONDITION_KEY,JSON.stringify(old));
+ const raw=h.storage.map.get(CONDITION_KEY);assert.equal(h.timer.read().raw,raw);h.jump(30000);assert.equal(position(h.timer.read().record,h.now()).remaining,270000);
+ r=await h.timer.pause(raw);assert.equal(r.record.schema,2);assert.deepEqual(r.record.future,{keep:true});assert.equal(r.record.playedMs,30000);assert.deepEqual(r.record.phases,old.phases);
+ await assert.rejects(()=>h.timer.resume(raw),/stale-condition/);r=await h.timer.stop(r.raw);const done=await h.timer.finalize(s.raw,h.id,r.raw,declared('partial',30));assert.equal(done.data.history.length,1);
+});
+await test('V4.3 cooldown jump, zero-activity skips and backwards-clock pauses cannot fabricate full credit',async()=>{
+ const h=await conditionHarness(),s=h.store.read();let r=await h.timer.start(s.raw,h.id);r=await h.timer.advance(r.raw,'cooldown');assert.equal(position(r.record,h.now()).phase.kind,'cooldown');r=await h.timer.advance(r.raw,'skip');assert.equal(guidedResult(r.record,h.now()).level,'not_performed');
+ const done=await h.timer.finalize(s.raw,h.id,r.raw,declared('not_performed',0,0));assert.equal(done.data.history[0].logs['condition:1'].status,'skipped');
+ const c=await conditionHarness(),a=c.store.read();let t=await c.timer.start(a.raw,c.id);c.jump(-1000);t=await c.timer.pause(t.raw);assert(t.record.clockWarning);assert.equal(t.record.playedMs,0);assert.equal(position(t.record,c.now()).remaining,300000);assert.equal(c.store.read().data.history.length,0);
 });
 console.log(`HOME_GYM_CONTRACT_TOTAL ${tests.filter(Boolean).length}/${tests.length} PASS`);
 if(tests.some(x=>!x))process.exitCode=1;

@@ -1,11 +1,12 @@
 import { PROGRAM } from './program.mjs';
-import { createConditionStore, CONDITION_KEY, conditionSource, conditionRange, timeline, position, clockChanged } from './condition.mjs';
+import { createConditionStore, CONDITION_KEY, conditionSource, conditionRange, timeline, position, clockChanged, stoppedCondition, guidedResult } from './condition.mjs';
 import { restTime } from './rest.mjs';
 export { CONDITION_KEY, conditionRange };
 export function createConditionUI(o) {
  const {$,h,visual,store}=o,timer=createConditionStore(localStorage,navigator.locks);
  let snap={raw:null,record:null},ticker=null,pending=false,localStop=null,manual=false,missed=false,lastPhase=null,anchor=null,reachRaw=null;
- let tone=null,audio=null,sound=false,soundMessage='',wake=null,wakeWanted=false,wakeMessage='Pantalla: control del dispositivo.';
+ const cueKey='home-gym.v1.condition.view';let hiddenPhase=null,stopIntent=null;
+ let tone=null,audio=null,sound=false,soundMessage='',wake=null,wakeWanted=false,wakePending=false,wakeMessage='Pantalla: control del dispositivo.';
  const current=()=>localStop||snap.record;
  const visible=()=>o.view()==='condicion';
  const active=()=>o.snapshot().data.active;
@@ -13,15 +14,19 @@ export function createConditionUI(o) {
  function stopTicker(){if(ticker!==null)clearInterval(ticker);ticker=null;document.documentElement.dataset.conditionTicker='stopped';}
  function releaseWake(){const held=wake;wake=null;if(held)void held.release().catch(()=>{});}
  async function requestWake(){
-  if(!wakeWanted||wake||!visible()||document.visibilityState==='hidden'||current()?.state!=='running')return;
+  if(!wakeWanted||wake||wakePending||!visible()||document.visibilityState==='hidden'||current()?.state!=='running')return;
   if(!navigator.wakeLock){wakeMessage='Pantalla: función opcional no disponible.';return;}
-  try{wake=await navigator.wakeLock.request('screen');wakeMessage='Pantalla activa mientras el navegador lo permita.';
+  wakePending=true;
+  try{const held=await navigator.wakeLock.request('screen');
+   if(!visible()||document.visibilityState==='hidden'||current()?.state!=='running'){await held.release();return;}
+   wake=held;wakeMessage='Pantalla activa mientras el navegador lo permita.';
    wake.addEventListener('release',()=>{wake=null;wakeMessage='Pantalla: el dispositivo liberó el bloqueo.';paint();});
   }catch(_){wakeMessage='Pantalla: no se pudo mantener activa; usa el control del dispositivo.';}
+  finally{wakePending=false;}
  }
  function silence(){if(tone){try{tone.stop()}catch(_){}tone=null;}}
  function cue(){
-  if(!sound||document.visibilityState==='hidden'||audio?.state!=='running'||localStop)return;
+  if(!sound||document.visibilityState==='hidden'||audio?.state!=='running'||localStop||!visible())return;
   try{const oscillator=audio.createOscillator(),gain=audio.createGain();oscillator.connect(gain);gain.connect(audio.destination);
    gain.gain.setValueAtTime(0.07,audio.currentTime);gain.gain.exponentialRampToValueAtTime(0.001,audio.currentTime+0.13);
    tone=oscillator;oscillator.frequency.value=660;oscillator.start();oscillator.stop(audio.currentTime+0.14);
@@ -33,15 +38,28 @@ export function createConditionUI(o) {
    sound=audio.state==='running';soundMessage=sound?'Sonido opcional solo en primer plano.':'Sonido no disponible; usa las indicaciones visibles.';
   }catch(_){sound=false;soundMessage='Sonido no disponible; usa las indicaciones visibles.';}paint();
  }
+ function remember(background=false){
+  const r=current();if(!r)return;const p=position(r);
+  const marker={id:r.id,sessionId:r.sessionId,index:lastPhase??p.index,reached:p.reached,background,missed};
+  if(background)hiddenPhase=marker;
+  try{localStorage.setItem(cueKey,JSON.stringify(marker));}catch(_){/* Cue hints are optional; never touch the workout. */}
+ }
  function sync({returning=false}={}){
   try{
    const before=snap.record;snap=timer.read();
-   if(localStop&&(localStop.sessionId!==active()?.id||snap.record?.id!==localStop.id||snap.record?.state!=='running'))localStop=null;
-   if(returning&&snap.record){missed=true;lastPhase=null;}
-   if(before?.id!==snap.record?.id){lastPhase=null;manual=false;}
-   if(snap.unusable)warning('No se pudo verificar el reloj guardado. Tus registros siguen intactos. Puedes declarar lo realizado manualmente.');
+   if(localStop&&(localStop.sessionId!==active()?.id||snap.record?.id!==localStop.id||!['running','paused'].includes(snap.record?.state)))localStop=null;
+   if(before?.id!==snap.record?.id){lastPhase=null;manual=false;missed=false;}
+   if(returning&&snap.record){
+    let seen=hiddenPhase;try{seen??=JSON.parse(localStorage.getItem(cueKey));}catch(_){}
+    const p=position(snap.record);
+    if(seen?.id===snap.record.id&&seen.sessionId===snap.record.sessionId){
+     missed=!!seen.missed||!!seen.background&&(seen.index!==p.index||!seen.reached&&p.reached);
+    }
+    hiddenPhase=null;
+   }
+   if(snap.unusable)warning('El reloj anterior no se pudo verificar. Puedes ajustar y guardar tu actividad sin modificar el historial.');
    if(snap.record&&Date.now()<snap.record.updatedAt&&!snap.record.clockWarning)flagClock();
-  }catch(_){warning('No se pudo leer el reloj. No se confirma persistencia; conserva tu respaldo.');}
+  }catch(_){warning('No se pudo leer el reloj guardado. Vuelve a leer los datos antes de continuar.');}
   anchor={wall:Date.now(),mono:performance.now()};paint();
  }
  function flagClock(){
@@ -63,7 +81,7 @@ export function createConditionUI(o) {
  function guideHTML(){
   const r=current(),p=r?position(r).phase:timeline(conditionSource(active()?.session==='C'?active():{week:o.week(),programVersion:PROGRAM.programVersion,plan:{}}),choices())[0];
   const ref=r||{choices:choices()},copy=phaseCopy(p,ref),icon=ref.choices.modality==='row'?'rower':ref.choices.modality==='ski'?'ski':'treadmill';
-  return `<div class="guide-heading"><p class="eyebrow">GUÍA AMPLIADA · ${r?position(r).reached?'tiempo alcanzado':r.state==='stopped_early'?'detenido':'el reloj sigue':'planificar'}</p><h2 id="guideTitle">${r&&position(r).reached?'Objetivo de tiempo alcanzado':h(p.label)}</h2><time id="conditionGuideClock">${r?restTime(position(r).remaining):''}</time></div><div class="guide-body">${visual(icon,p.label)}<p class="condition-effort">${h(p.effort)}</p>${copy.map(text=>`<p>${h(text)}</p>`).join('')}<p class="resource" data-resource-status="UNVERIFIED">UNVERIFIED · Vídeo no verificado. Ilustración de referencia; guía escrita disponible sin conexión.</p><details><summary>Seguridad</summary><p>${h(PROGRAM.guidance.safety)}</p><p>${h(PROGRAM.guidance.cardioAlternatives)}</p></details></div><div class="guide-dock">${r?.state==='running'&&!position(r).reached?'<button class="btn danger" id="guideStopCondition">Detener entrenamiento</button>':''}<button class="btn secondary" id="closeConditionGuide">Volver ${r?'al entrenamiento':'al plan'}</button></div>`;
+  return `<div class="guide-heading"><p class="eyebrow">GUÍA AMPLIADA · ${r?position(r).reached?'tiempo alcanzado':r.state==='paused'?'en pausa':r.state==='stopped_early'?'finalizado':'el reloj sigue':'planificar'}</p><h2 id="guideTitle">${r&&position(r).reached?'Objetivo de tiempo alcanzado':h(p.label)}</h2><time id="conditionGuideClock">${r?restTime(position(r).remaining):''}</time></div><div class="guide-body">${visual(icon,p.label)}<p class="condition-effort">${h(p.effort)}</p>${copy.map(text=>`<p>${h(text)}</p>`).join('')}<p class="resource" data-resource-status="UNVERIFIED">UNVERIFIED · Vídeo no verificado. Ilustración de referencia; guía escrita disponible sin conexión.</p><details><summary>Seguridad</summary><p>${h(PROGRAM.guidance.safety)}</p><p>${h(PROGRAM.guidance.cardioAlternatives)}</p></details></div><div class="guide-dock">${['running','paused'].includes(r?.state)&&!position(r).reached?'<button class="btn danger" id="guideStopCondition">Finalizar</button>':''}<button class="btn secondary" id="closeConditionGuide">Volver ${r?'al entrenamiento':'al plan'}</button></div>`;
  }
  function renderGuide(){
   const dialog=$('#conditionGuide');if(!dialog.open)return;
@@ -82,56 +100,72 @@ export function createConditionUI(o) {
    let a=active();
    if(!a){const ok=await o.write(raw=>store.start(raw,o.week(),'C'),'Sesión iniciada; comprobando reloj.');if(!ok)return;a=active();}
    snap=await timer.start(o.snapshot().raw,a.id,selected);localStop=null;manual=false;missed=false;lastPhase=null;warning('');
-   o.notice('Entrenamiento iniciado · reloj guardado.');o.render();await requestWake();$('#conditionPhase')?.focus({preventScroll:true});
+   o.notice('Entrenamiento iniciado · reloj guardado.');o.render();void requestWake();$('#conditionPhase')?.focus({preventScroll:true});
   }catch(_){warning('No se confirmó el inicio persistente del reloj. No se registró actividad. Vuelve a leer los datos antes de reintentar.');sync();o.render();}
   finally{pending=false;if($('#startSession'))$('#startSession').disabled=false;}
  }
- async function stop(){
-  const r=current();if(!r||r.state!=='running')return;
-  // Immediate local safety action, before waiting on a lock or persistence.
-  const expected=snap.raw,t=Date.now();localStop={...r,stoppedAt:t,state:t>=r.endsAt?'time_reached':'stopped_early'};
-  sound=false;silence();stopTicker();releaseWake();o.render();$('#conditionOutcomeTitle')?.focus({preventScroll:true});
-  await persistStop(expected);
+ async function control(action){
+  if(pending||localStop||!current()||current().sessionId!==active()?.id)return;pending=true;
+  const expected=snap.raw;
+  try{
+   snap=action==='pause'?await timer.pause(expected):action==='resume'?await timer.resume(expected):await timer.advance(expected,action);
+   if(stopIntent?.id===snap.record.id)stopIntent.raw=snap.raw;
+   warning('');anchor={wall:Date.now(),mono:performance.now()};paint();remember();renderGuide();void requestWake();
+  }catch(_){warning('No se confirmó el cambio del reloj. Vuelve a leer los datos; el registro del entrenamiento sigue intacto.');}
+  finally{pending=false;if(localStop)void persistStop();}
  }
- async function persistStop(expected=snap.raw){
-  if(pending)return;
-  if(localStop&&localStop.id!==snap.record?.id){warning('Otra sesión reemplazó este reloj. Vuelve a leer los datos; no se detuvo la sesión nueva.');return;}
-  pending=true;
-  try{snap=await timer.stop(expected);localStop=null;warning('');o.notice('Detención guardada · confirma resultado.');o.render();}
-  catch(_){warning('Detenido en esta pantalla. No se confirmó la detención guardada: al reabrir podría reaparecer el reloj anterior. Reintenta guardar la detención.');o.render();}
+ async function stop(){
+  const r=current();if(!r||!['running','paused'].includes(r.state))return;
+  if(r.sessionId!==active()?.id){warning('Otra sesión está activa. Vuelve a leer los datos.');return;}
+  stopIntent={id:r.id,sessionId:r.sessionId,raw:snap.raw,at:Date.now()};
+  localStop=stoppedCondition(r,stopIntent.at);sound=false;silence();stopTicker();releaseWake();
+  o.render();$('#conditionOutcomeTitle')?.focus({preventScroll:true});await persistStop();
+ }
+ async function persistStop(){
+  if(pending)return;pending=true;
+  try{
+   if(!stopIntent||stopIntent.id!==snap.record?.id||stopIntent.sessionId!==active()?.id)throw Error('stale-condition');
+   snap=await timer.stop(stopIntent.raw,stopIntent.at);localStop=null;stopIntent=null;warning('');
+   if($('#saveConditionOutcome')){$('#saveConditionOutcome').disabled=false;$('#retryConditionStop')?.remove();}
+   else o.render();
+  }
+  catch(_){warning('Detenido aquí. No se confirmó la detención guardada. Reintenta guardarla antes de cerrar.');}
   finally{pending=false;}
  }
  function form(a,r){
-  const d=a.drafts?.['condition:1']||{},reached=!!r&&position(r).reached&&r.state!=='stopped_early',cycles=r?.snapshot.intervals??a.plan.conditioning?.intervals??(a.programVersion===PROGRAM.programVersion?PROGRAM.plan[a.week-1].intervals:null);
-  return `<div class="condition-outcome">${!r?'<details><summary>Protocolo guardado de esta sesión</summary><p>'+h(a.plan.protocol||'Sin protocolo verificable; conserva el registro anterior.')+'</p></details>':''}<h2 id="conditionOutcomeTitle" tabindex="-1">${localStop?'Detención local · pendiente de guardar':reached?'Objetivo de tiempo alcanzado':r?'Entrenamiento detenido':'Declaración manual'}</h2><p>El reloj no demuestra actividad. Declara lo que realmente hiciste. Un parcial ocupa la sesión C de esta semana; no añade otra sesión.</p>${missed?'<p id="conditionOutcomeMissed" class="timer-warning">Pudieron perderse indicaciones al salir. Verifica manualmente la actividad real; el plazo cumplido no confirma que la realizaste.</p>':''}<p id="conditionOutcomeClockWarning" class="timer-warning" ${r?.clockWarning?'':'hidden'}>La hora del dispositivo cambió o no pudo verificarse. Revisa especialmente el tiempo y los ciclos reales.</p>${localStop?'<button class="btn secondary" id="retryConditionStop">Reintentar guardar detención</button>':''}<label for="conditionLevel">Resultado real</label><select id="conditionLevel"><option value="">Elige un resultado</option>${reached?'<option value="full">Completo · todas las fases elegidas</option>':''}<option value="partial">Parcial · hice parte del entrenamiento</option><option value="not_performed">No realizado · ninguna actividad</option></select><div class="reported-time"><label>Minutos reales<input id="conditionMinutes" inputmode="numeric" value="${h(d.reportMinutes||'')}" maxlength="4" placeholder="—"></label><label>Segundos adicionales<input id="conditionSeconds" inputmode="numeric" value="${h(d.reportSeconds||'')}" maxlength="2" placeholder="0–59"></label></div>${cycles===null?'<label for="conditionCycles">Ciclos reales del plan anterior</label><input id="conditionCycles" inputmode="numeric" maxlength="4" placeholder="—">':cycles?`<label for="conditionCycles">Ciclos realmente realizados</label><select id="conditionCycles"><option value="">Elige</option>${Array.from({length:cycles+1},(_,n)=>`<option value="${n}">${n}</option>`).join('')}</select>`:'<p>Sin ciclos: caminata continua.</p>'}<label for="conditionNote">Nota opcional</label><textarea id="conditionNote" maxlength="2000">${h(d.note||'')}</textarea><label class="review-check"><input type="checkbox" id="conditionReviewed" ${d.reviewed?'checked':''}> Confirmo la actividad, duración y ciclos reales; revisé cualquier cambio de hora.</label><p id="conditionFormError" role="alert" class="field-error"></p><button class="btn primary" id="saveConditionOutcome" ${localStop?'disabled':''}>Guardar resultado declarado</button><button class="text-button" id="cancelCondition">Cancelar inicio accidental sin registro</button></div>`;
+  const d=a.drafts?.['condition:1']||{},g=guidedResult(r),cycles=r?.snapshot.intervals??a.plan.conditioning?.intervals??0;
+  const level=d.completionLevel||g.level,seconds=Number.isFinite(Number(d.reportMinutes))&&d.reportMinutes!==undefined&&d.reportMinutes!==''?Number(d.reportMinutes)*60+Number(d.reportSeconds||0):g.seconds;
+  return `<div class="condition-outcome"><h2 id="conditionOutcomeTitle" tabindex="-1">${localStop?'Entrenamiento detenido':positionSafe(r)?'Tiempo completado':'Tu resumen'}</h2><p class="condition-summary">${restTime(g.seconds*1000)} de tiempo guiado${g.cycles?' · '+g.cycles+' ciclos completos':''}${g.advancedMs?' · fases adelantadas':''}</p><p class="secondary-copy">${r?.clockWarning?'La hora del dispositivo cambió; el tiempo es una estimación. ':''}Guarda lo realizado o ajusta los detalles.</p>${!r?'<details><summary>Protocolo guardado</summary><p>'+h(a.plan.protocol||'Conserva el plan anterior; registra solo lo realizado.')+'</p></details>':''}${missed?'<p id="conditionOutcomeMissed" class="timer-warning">Cambió la fase mientras estabas fuera. Revisa lo realizado.</p>':''}${localStop?'<button class="btn secondary" id="retryConditionStop">Reintentar guardar detención</button>':''}<details id="conditionDetails"><summary>Ajustar detalles</summary><label for="conditionLevel">Resultado</label><select id="conditionLevel">${g.level==='full'?'<option value="full">Completo</option>':''}<option value="partial">Parcial</option><option value="not_performed">No realizado</option></select><div class="reported-time"><label>Minutos<input id="conditionMinutes" inputmode="numeric" value="${h(Math.floor(seconds/60))}" maxlength="4"></label><label>Segundos<input id="conditionSeconds" inputmode="numeric" value="${h(seconds%60)}" maxlength="2"></label></div><label for="conditionCycles">Ciclos</label><select id="conditionCycles">${Array.from({length:cycles+1},(_,n)=>`<option value="${n}">${n}</option>`).join('')}</select><label for="conditionNote">Nota opcional</label><textarea id="conditionNote" maxlength="2000">${h(d.note||'')}</textarea></details><p id="conditionFormError" role="alert" class="field-error"></p><button class="text-button" id="cancelCondition">Cancelar inicio accidental</button></div>`;
  }
+ const positionSafe=r=>!!r&&position(r).reached;
  function bindForm(a,r){
-  const d=a.drafts?.['condition:1']||{};$('#conditionLevel').value=d.completionLevel||'';if($('#conditionCycles'))$('#conditionCycles').value=d.cyclesReported??'';
+  const d=a.drafts?.['condition:1']||{},g=guidedResult(r);let detailsEdited=!!d.detailsEdited;
+  $('#conditionLevel').value=d.completionLevel||g.level;$('#conditionCycles').value=d.cyclesReported??g.cycles;
   const draft=()=>({weight:'',reps:'',note:$('#conditionNote').value,completionLevel:$('#conditionLevel').value,
-   reportMinutes:$('#conditionMinutes').value,reportSeconds:$('#conditionSeconds').value,cyclesReported:$('#conditionCycles')?.value??'0',reviewed:$('#conditionReviewed').checked});
-  for(const id of ['conditionLevel','conditionMinutes','conditionSeconds','conditionCycles','conditionNote','conditionReviewed'])if($('#'+id))$('#'+id).addEventListener('input',()=>{
-   if(id==='conditionLevel'&&$('#conditionLevel').value==='not_performed'){$('#conditionMinutes').value='0';$('#conditionSeconds').value='0';if($('#conditionCycles'))$('#conditionCycles').value='0';}
-   const value=draft();void o.write(raw=>store.draft(raw,a.id,'condition:1',value),'Declaración pendiente; aún sin confirmar.');
+   reportMinutes:$('#conditionMinutes').value,reportSeconds:$('#conditionSeconds').value,cyclesReported:$('#conditionCycles').value,reviewed:true,detailsEdited:true});
+  const label=()=>{const level=$('#conditionLevel').value;$('#saveConditionOutcome').textContent=level==='full'?'Finalizar y guardar':level==='not_performed'?'Guardar sin actividad':'Guardar parcial';};label();
+  for(const id of ['conditionLevel','conditionMinutes','conditionSeconds','conditionCycles','conditionNote'])$('#'+id).addEventListener('input',()=>{
+   detailsEdited=true;
+   if(id==='conditionLevel'&&$('#conditionLevel').value==='not_performed'){$('#conditionMinutes').value='0';$('#conditionSeconds').value='0';$('#conditionCycles').value='0';}
+   label();const value=draft();void o.write(raw=>store.draft(raw,a.id,'condition:1',value),'Detalles pendientes.');
   });
   $('#saveConditionOutcome').onclick=async()=>{
    if(pending||localStop)return;const fields=draft(),level=fields.completionLevel;
    const validTime=/^\d+$/.test(fields.reportMinutes)&&/^\d+$/.test(fields.reportSeconds)&&Number(fields.reportSeconds)<60;
    const seconds=Number(fields.reportMinutes)*60+Number(fields.reportSeconds),cycles=Number(fields.cyclesReported);
-   if(!level||!validTime||fields.cyclesReported===''||!fields.reviewed||level!=='not_performed'&&seconds===0
-     ||level==='not_performed'&&(seconds!==0||cycles!==0)||level==='full'&&(seconds<r.durationMs/1000||cycles!==r.snapshot.intervals)){
-    $('#conditionFormError').textContent='Elige el resultado y declara tiempo/ciclos reales. Completo requiere todas las fases elegidas; usa Parcial si hiciste menos. Confirma la revisión.';return;
+   if(!validTime||level!=='not_performed'&&seconds===0||level==='not_performed'&&(seconds!==0||cycles!==0)){
+    $('#conditionDetails').open=true;$('#conditionFormError').textContent='Revisa el tiempo indicado o elige No realizado.';return;
    }
    pending=true;$('#saveConditionOutcome').disabled=true;
-   const record={weight:'',reps:`${seconds} s · ${cycles} ciclos declarados`,note:fields.note,status:level==='not_performed'?'skipped':'done',
+   const record={weight:'',reps:`${seconds} s ${detailsEdited?'declarados':'guiados'} · ${cycles} ciclos`,note:fields.note,status:level==='not_performed'?'skipped':'done',
     completionLevel:level,actualReportedSeconds:seconds,cyclesReported:cycles,modality:r?.choices.modality||'walk',reviewed:true,clockReviewed:true,
-    clockWarning:!!r?.clockWarning,reviewedAt:new Date().toISOString(),confirmedAt:new Date().toISOString(),
-    conditionSnapshot:r?{programVersion:r.programVersion,sourceSHA256:r.sourceSHA256,phases:r.phases,choices:r.choices,startedAt:r.startedAt,endsAt:r.endsAt,stoppedAt:r.stoppedAt}:null};
-   let optionalWarning=false;
-   const ok=await o.write(async raw=>{const result=await timer.outcome(raw,a.id,snap.raw,record);optionalWarning=result.timerWarning;return result.snapshot;},'Resultado declarado guardado. Falta cerrar la sesión.');
-   pending=false;if(ok){localStop=null;manual=false;sync();warning(optionalWarning?'Resultado confirmado. No se confirmó el cierre del reloj auxiliar; no afecta tu registro.':'');o.render();}else $('#saveConditionOutcome').disabled=false;
+    durationBasis:detailsEdited?'reported':'guided',clockWarning:!!r?.clockWarning,
+    reviewedAt:new Date().toISOString(),confirmedAt:new Date().toISOString()};
+   const ok=await o.write(raw=>timer.finalize(raw,a.id,snap.raw,record),'Sesión guardada en el historial.');pending=false;
+   if(ok){localStop=null;manual=false;sync();o.history();}else if($('#saveConditionOutcome'))$('#saveConditionOutcome').disabled=false;
   };
   $('#cancelCondition').onclick=()=>cancel(a);
-  if($('#retryConditionStop'))$('#retryConditionStop').onclick=()=>persistStop();
+  if($('#retryConditionStop'))$('#retryConditionStop').onclick=persistStop;
  }
  async function cancel(a){
   if(pending||!confirm('¿Fue un inicio accidental sin actividad? Se descartarán solo esta sesión sin registros confirmados y su declaración pendiente. El historial se conserva.'))return;
@@ -148,11 +182,15 @@ export function createConditionUI(o) {
    return;
   }
   if(r||mine&&manual){
-   const p=r&&position(r),running=r?.state==='running'&&!p.reached&&!localStop;
+   const p=r&&position(r),playing=r&&['running','paused'].includes(r.state)&&!p.reached&&!localStop;
    $('#sessionDock').hidden=true;
-   $('#sessionContent').innerHTML=`<div class="condition-frame"><div class="condition-clock-panel"><p class="eyebrow">EJECUTAR · SEMANA ${a.week}</p><h2 id="conditionPhase" tabindex="-1">${r?h(p.phase.label):'Resultado real'}</h2><div class="rest-time" id="conditionClock">${r?restTime(p.remaining):'00:00'}</div><p id="conditionCycle"></p><p class="condition-effort" id="conditionEffort"></p></div><div class="condition-body">${running?`<p id="conditionNext"></p><progress id="conditionProgress" max="${r.durationMs}" value="${p.elapsed}" aria-label="Tiempo del protocolo, no actividad confirmada"></progress><aside class="pro-tip" data-pro-tip="condition"><strong>Pro tip 1%</strong><p id="conditionCoaching"></p></aside><p id="conditionMissed" class="timer-warning" ${missed?'':'hidden'}>Pudieron perderse indicaciones al salir. El reloj sigue por hora absoluta; verifica manualmente la actividad real al terminar.</p><p id="conditionClockWarning" class="timer-warning" hidden>La hora del dispositivo cambió o no pudo verificarse. El plazo no se modificó; revisa lo realmente realizado al terminar.</p><button class="btn secondary" id="openConditionGuide">Guía ampliada</button><button class="text-button" id="conditionSound">Sonido opcional: desactivado</button><p id="conditionCapability" class="secondary-copy"></p><p class="secondary-copy">Sin avisos garantizados con pantalla bloqueada o app suspendida. El plazo no cambia al visitar Hoy o la guía. Detén el entrenamiento si necesitas interrumpirlo.</p>`:form(a,r)}</div>${running?'<div class="condition-dock"><button class="btn danger" id="stopCondition">Detener entrenamiento</button></div>':''}</div>`;
-   if(running){$('#stopCondition').onclick=stop;$('#openConditionGuide').onclick=openGuide;$('#conditionSound').onclick=toggleSound;}
-   else bindForm(a,r);
+   $('#sessionContent').innerHTML=`<div class="condition-frame"><div class="condition-clock-panel" ${playing?'':'hidden'}><div class="condition-phase-copy"><h2 id="conditionPhase" tabindex="-1"></h2><p><span id="conditionCycle"></span> · <span class="condition-effort" id="conditionEffort"></span></p></div><div id="conditionClock" role="timer" aria-live="off">${r?restTime(p.remaining):'00:00'}</div><p id="conditionNext"></p><progress id="conditionProgress" max="${r?.durationMs||1}" value="${p?.elapsed||0}" aria-label="Avance del protocolo"></progress></div><div class="condition-body">${playing?`<aside class="pro-tip" data-pro-tip="condition"><strong>Pro tip 1%</strong><p id="conditionCoaching"></p></aside><p id="conditionMissed" class="timer-warning" hidden>Cambió la fase mientras estabas fuera. Revisa lo realizado.</p><p id="conditionClockWarning" class="timer-warning" hidden>La hora cambió. Puedes ajustar el tiempo al finalizar.</p><button class="btn secondary" id="openConditionGuide">Guía ampliada</button><div class="condition-options"><button class="text-button" id="conditionSound">Sonido desactivado</button>${r.phases.some((x,i)=>i>p.index&&x.kind==='cooldown')?'<button class="text-button" id="conditionCooldownNow">Ir al cierre suave</button>':''}</div><p id="conditionCapability" class="secondary-copy"></p>`:form(a,r)}</div><div class="condition-dock">${playing?'<button class="btn primary" id="pauseCondition">Pausar</button><button class="btn secondary" id="nextCondition">Siguiente fase</button><button class="btn quiet" id="skipCondition">Omitir fase</button><button class="btn condition-finish" id="stopCondition" aria-label="Finalizar y detener ahora">Finalizar</button>':`<button class="btn primary" id="saveConditionOutcome" ${localStop?'disabled':''}>Guardar parcial</button>`}</div></div>`;
+   if(playing){
+    $('#stopCondition').onclick=stop;$('#pauseCondition').onclick=()=>control(current()?.state==='paused'?'resume':'pause');
+    $('#nextCondition').onclick=()=>control('next');$('#skipCondition').onclick=()=>control('skip');
+    if($('#conditionCooldownNow'))$('#conditionCooldownNow').onclick=()=>control('cooldown');
+    $('#openConditionGuide').onclick=openGuide;$('#conditionSound').onclick=toggleSound;
+   }else bindForm(a,r);
    paint();return;
   }
   let source,phases;try{source=mine?conditionSource(a):{...PROGRAM.plan[o.week()-1],sourceSHA256:PROGRAM.sourceSHA256};phases=timeline(source);}catch(_){manual=true;warning('El plan anterior no tiene un reloj verificable. Conserva su prescripción y declara solo la actividad real; no se reconstruirá un protocolo nuevo.');render(a,plan);return;}
@@ -166,33 +204,37 @@ export function createConditionUI(o) {
  function paint(){
   const r=current(),mini=$('#conditionMini');mini.hidden=!r||visible()&&active()?.week===o.week()&&active()?.id===r.sessionId;
   if(!r){stopTicker();releaseWake();return;}
-  const p=position(r),running=r.state==='running'&&!p.reached&&!localStop;
-  if(p.reached&&r.state==='running'&&!localStop&&reachRaw!==snap.raw){const expected=snap.raw;reachRaw=expected;void timer.reach(expected).then(result=>{if(snap.raw===expected){snap=result;paint();}}).catch(()=>warning('El plazo está cumplido, pero no se confirmó ese estado del reloj. No se guardó actividad automáticamente.'));}
-  $('#conditionMiniClock').textContent=restTime(p.remaining);$('#conditionMiniState').textContent=running?'CONDICIÓN':p.reached?'TIEMPO ALCANZADO':'RESULTADO PENDIENTE';
+  const p=position(r),playing=['running','paused'].includes(r.state)&&!p.reached&&!localStop,running=playing&&r.state==='running';
+  if(p.reached&&r.state==='running'&&!localStop&&reachRaw!==snap.raw){const expected=snap.raw;reachRaw=expected;void timer.reach(expected).then(result=>{if(snap.raw===expected){snap=result;paint();}}).catch(()=>warning('Tiempo alcanzado; no se confirmó el estado del reloj. No se guardó actividad automáticamente.'));}
+  $('#conditionMiniClock').textContent=restTime(p.remaining);$('#conditionMiniState').textContent=r.state==='paused'?'EN PAUSA':playing?'CONDICIÓN':'RESUMEN PENDIENTE';
   if(visible()&&$('#conditionClock')){
-   $('#conditionClock').textContent=restTime(p.remaining);$('#conditionPhase').textContent=p.reached?'Objetivo de tiempo alcanzado':r.state==='stopped_early'?'Entrenamiento detenido':p.phase.label;
-   $('#conditionCycle').textContent=r.snapshot.intervals?(p.phase.cycle?`Ciclo ${p.phase.cycle}/${r.snapshot.intervals}`:'Sin ciclo · '+p.phase.label):'Caminata continua · sin intervalos';
+   $('#conditionClock').textContent=restTime(p.remaining);$('#conditionPhase').textContent=(r.state==='paused'?'En pausa · ':'')+p.phase.label;
+   $('#conditionCycle').textContent=r.snapshot.intervals?(p.phase.cycle?`Ciclo ${p.phase.cycle}/${r.snapshot.intervals}`:'Semana '+r.week):'Sin intervalos';
    $('#conditionEffort').textContent=p.phase.effort;
-   if($('#conditionNext'))$('#conditionNext').textContent=r.phases[p.index+1]?'Después: '+r.phases[p.index+1].label+' · '+restTime(r.phases[p.index+1].seconds*1000):'Después: declarar lo realmente realizado';
-   if($('#conditionProgress'))$('#conditionProgress').value=p.elapsed;
+   $('#conditionNext').textContent=r.phases[p.index+1]?'Después: '+r.phases[p.index+1].label+' · '+restTime(r.phases[p.index+1].seconds*1000):'Después: resumen';
+   $('#conditionProgress').value=p.elapsed;
    if($('#conditionCoaching'))$('#conditionCoaching').textContent=phaseCopy(p.phase,r)[0];
-   if($('#conditionOutcomeClockWarning'))$('#conditionOutcomeClockWarning').hidden=!r.clockWarning;
    if($('#conditionMissed'))$('#conditionMissed').hidden=!missed;if($('#conditionClockWarning'))$('#conditionClockWarning').hidden=!r.clockWarning;
-   if($('#conditionSound')){$('#conditionSound').textContent='Sonido opcional: '+(sound?'activado':'desactivado');$('#conditionSound').setAttribute('aria-pressed',String(sound));}
-   if($('#conditionCapability'))$('#conditionCapability').textContent=[soundMessage,wakeMessage].filter(Boolean).join(' ');
-   if(!running&&$('#stopCondition')){sound=false;releaseWake();render(active(),active().plan);renderGuide();o.layout();return;}
+   if($('#pauseCondition')){$('#pauseCondition').textContent=r.state==='paused'?'Reanudar':'Pausar';$('#pauseCondition').setAttribute('aria-pressed',String(r.state==='paused'));}
+   if($('#conditionSound')){$('#conditionSound').textContent='Sonido '+(sound?'activado':'desactivado');$('#conditionSound').setAttribute('aria-pressed',String(sound));}
+   if($('#conditionCapability'))$('#conditionCapability').textContent=[soundMessage,wakeWanted?wakeMessage:''].filter(Boolean).join(' ');
+   if(!playing&&$('#stopCondition')){sound=false;releaseWake();render(active(),active().plan);renderGuide();o.layout();return;}
   }
-  if(lastPhase!==null&&lastPhase!==p.index){if(p.index===lastPhase+1&&['effort','easy'].includes(p.phase.kind))cue();$('#conditionAnnounce').textContent=p.phase.label+' · '+p.phase.effort;renderGuide();}
-  lastPhase=p.index;
+  if(lastPhase!==null&&lastPhase!==p.index){
+   if(running&&p.index===lastPhase+1&&['effort','easy'].includes(p.phase.kind))cue();
+   $('#conditionAnnounce').textContent=p.phase.label+' · '+p.phase.effort;renderGuide();
+  }
+  if(lastPhase!==p.index&&document.visibilityState!=='hidden'){lastPhase=p.index;remember();}
   if($('#conditionGuideClock'))$('#conditionGuideClock').textContent=restTime(p.remaining);
   if(document.visibilityState!=='hidden'&&running){if(ticker===null){anchor={wall:Date.now(),mono:performance.now()};ticker=setInterval(tick,250);document.documentElement.dataset.conditionTicker='running';}}
   else{stopTicker();releaseWake();}
  }
  $('#conditionMini').onclick=()=>o.open();
  return {render,sync,paint,executing:()=>visible()&&active()?.session==='C'&&active().week===o.week()&&!!(current()||manual),
-  lifecycle:()=>{if(document.visibilityState==='hidden'){if(current())missed=true;silence();stopTicker();releaseWake();anchor=null;return;}
-   const drift=anchor&&clockChanged(anchor.wall,anchor.mono,Date.now(),performance.now());sync({returning:true});if(drift)flagClock();if(visible())o.render();void requestWake();},
-  pagehide:()=>{silence();stopTicker();releaseWake();anchor=null;},
+  lifecycle:()=>{if(document.visibilityState==='hidden'){remember(true);silence();stopTicker();releaseWake();anchor=null;return;}
+   const drift=anchor&&clockChanged(anchor.wall,anchor.mono,Date.now(),performance.now());sync({returning:true});if(drift)flagClock();
+   if(visible()&&!$('#conditionDetails')?.open&&(!current()||!$('#conditionClock')))o.render();void requestWake();},
+  pagehide:()=>{remember(true);silence();stopTicker();releaseWake();anchor=null;},
   navigated:()=>{if(!visible())releaseWake();else void requestWake();paint();}
  };
 }

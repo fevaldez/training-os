@@ -141,6 +141,22 @@ export function createStore(storage, locks, options = {}) {
       a.logs['condition:1'] = clone(value);
       if (a.drafts) delete a.drafts['condition:1'];
     }),
+    // One atomic write both confirms condition:1 and closes the session. A lost
+    // acknowledgement can be retried even after another session has started.
+    finishCondition: async (expected, id, value, guard) => {
+      const current = read();
+      if (current.data.history.some(h => h.id === id)) return current;
+      return change(expected, data => {
+        const a = data.active;
+        if (a?.id !== id || a.session !== 'C' || a.logs['condition:1'] || typeof guard !== 'function') throw Error('active-conflict');
+        guard(a);
+        a.logs['condition:1'] = clone(value);
+        if (a.drafts) delete a.drafts['condition:1'];
+        if (Object.keys(a.drafts || {}).length) throw Error('resolve-every-set');
+        data.history.push({ ...clone(a), endedAt: new Date().toISOString() });
+        data.active = null;
+      });
+    },
     cancelCondition: (expected, id, guard) => change(expected, data => {
       const a = data.active;
       if (a?.id !== id || a.session !== 'C' || Object.keys(a.logs).length
