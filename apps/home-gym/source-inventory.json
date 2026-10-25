@@ -1,0 +1,35 @@
+{
+  "sourceFile": "tactical_mass_hybrid_personalizado_v1_1.html",
+  "sourceSHA256": "938c51d609eaef258919a71ce7dbeb8c898c97568f64c5073e13ea993ed0d4a2",
+  "sourceBytes": 721194,
+  "weeks": 12,
+  "strengthExercises": {
+    "A": [
+      "asq",
+      "apress",
+      "arow",
+      "ardl",
+      "acore"
+    ],
+    "B": [
+      "bhinge",
+      "bpush",
+      "brow",
+      "bsq",
+      "bcarry"
+    ]
+  },
+  "calendar": "Odd weeks A/C/B, even weeks B/C/A; Monday/Wednesday/Friday suggested; movable; no catch-up doubling.",
+  "progression": "mainSets/auxSets/coreSets and conditioning preserved per week; week 6 deload; week 12 technical evaluation.",
+  "embeddedPhotographs": 8,
+  "externalAssetRequests": 0,
+  "externalReferenceLinks": 4,
+  "removed": [
+    "Eight embedded home photographs and photo UI",
+    "Anthropometrics, health responses, personal availability and completed questionnaire defaults",
+    "Personalized header, nutrition/health-profile statements and household-specific labels"
+  ],
+  "feedback": "All source questions already answered; optional observations only, blank and local. No automatic program adjustment.",
+  "publicReview": "Anonymous candidate authorized for Draft PR; hosting/publication requires separate owner approval.",
+  "sourceRights": "Source prose/program only; embedded media excluded; no book templates reproduced."
+}

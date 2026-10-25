@@ -83,3 +83,13 @@ jobs:
           node tests/m5_scroll_browser.test.js
           node tests/superset_skip_browser.test.js
           node tests/offline_browser.test.js
+
+      - name: Home Gym program, durability, privacy and artifact contracts
+        run: |
+          python3 apps/home-gym/build.py --check
+          node tests/home-gym/contracts.test.mjs
+
+      - name: Home Gym mobile, origin isolation and offline browser gates
+        env:
+          PLAYWRIGHT_MODULE: ${{ runner.temp }}/tos-browser-deps/node_modules/playwright
+        run: node tests/home-gym/browser.test.cjs
