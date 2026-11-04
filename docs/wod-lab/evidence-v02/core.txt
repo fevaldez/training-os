@@ -1,0 +1,25 @@
+✔ UTC Monday boundary and year transition (0.957446ms)
+✔ deterministic 4+1 changes adjacent weeks with no duplicates and safe 45-minute sessions (11.800767ms)
+✔ published snapshots survive custom deletion/exercise mutation and eligibility enters future pool (0.421257ms)
+✔ pull-up requires explicit rated bar or selected row substitution (0.228701ms)
+✔ v011 migration retains exact active, history, unknown fields and raw backup (0.896165ms)
+✔ backup write/readback failure leaves original untouched (0.522478ms)
+✔ main write failure and stale tab never replace saved state (0.341549ms)
+✔ merge is additive/idempotent and preserves active, feedback and unknown fields (0.508127ms)
+✔ same-ID/active/unknown-field conflicts fail without mutation (0.442559ms)
+✔ import archives competing plans without changing published destination (0.578101ms)
+✔ corrupt/unsupported/duplicate/malformed session data fail closed (0.240468ms)
+✔ weekly goals count unique full required slots; optional/partial/legacy do not inflate (0.398173ms)
+✔ endurance compares full matching prescriptions and context only (0.13456ms)
+✔ strength compares best matched set across sessions, never sets within one session (0.110294ms)
+✔ silent primary write/readback failure is detected (0.164546ms)
+✔ matching-slot imported plan metadata is archived, never lost (0.315901ms)
+✔ archived plan workouts cannot falsely credit destination slot (0.1808ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 23.473994

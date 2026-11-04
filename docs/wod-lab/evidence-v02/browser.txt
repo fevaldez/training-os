@@ -1,0 +1,22 @@
+WOD_BROWSER 155.0.8059.79
+PASS | stable published 4+1 across reload, locale and equipment edits
+PASS | adjacent UTC week rotates while prior published plan survives
+PASS | AMRAP full 45 minutes, pause ledger, save/reload no duplicate history
+PASS | planned strength completes with measured sets and exactly one weekly credit
+PASS | EMOM once per interval, pause next/skip/cool remain paused, partial ledger reconciles
+PASS | all 15 built-in prescriptions retain exact 2700-second segment total
+PASS | equipment blocks unsafe workout and pull-up substitution is explicit in saved WOD
+PASS | reusable bilingual custom exercise and WOD enter future safe plan pool
+PASS | v011 migration, active export and distinct-origin additive idempotent import
+PASS | paused v011 active and unknown fields survive migration/reload exactly
+PASS | second V0.2 tab is read-only under lifetime writer lock
+PASS | migration backup failure leaves exact v011 bytes until safe retry
+PASS | future custom weekly snapshot starts after custom library deletion
+PASS | imported names and IDs render as literal text without executable attributes
+PASS | invalid and conflicting imports retain durable and memory state
+PASS | write-failed favorite/rating/import/delete rollback without lost data
+PASS | save failure retains ready active for recovery/retry, then saves once
+PASS | malformed saved data blocks writes with raw recovery export
+PASS | stale tab blocks overwrites and offers recovery
+PASS | ES/EN 390x844 and 320x420: no overflow, reachable controls and 44px targets
+WOD_BROWSER_TOTAL 20/20 PASS
